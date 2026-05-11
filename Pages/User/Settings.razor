@@ -7,33 +7,137 @@
 
 <h3>User Settings</h3>
 
-<EditForm Model="user" OnValidSubmit="UpdateUser">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="row">
+    <div class="col-md-6">
+        <h4>Update Email</h4>
+        <EditForm Model="user" OnValidSubmit="UpdateUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-    <div class="form-group">
-        <label for="email">Email</label>
-        <InputText id="email" @bind-Value="user.Email" class="form-control" />
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="user.Email" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Email</button>
+        </EditForm>
     </div>
 
-    <button type="submit" class="btn btn-primary">Update</button>
-</EditForm>
+    <div class="col-md-6">
+        <h4>Change Password</h4>
+        <EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success">@successMessage</div>
+            }
+
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword" type="password" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <InputText id="newPassword" @bind-Value="passwordModel.NewPassword" type="password" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm New Password</label>
+                <InputText id="confirmPassword" @bind-Value="passwordModel.ConfirmPassword" type="password" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </EditForm>
+    </div>
+</div>
 
 @code {
     private IdentityUser user = new();
+    private PasswordChangeModel passwordModel = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var currentUser = authState.User;
-        if (currentUser.Identity.IsAuthenticated)
+        if (currentUser.Identity?.IsAuthenticated == true)
         {
-            user = await UserManager.GetUserAsync(currentUser);
+            var foundUser = await UserManager.GetUserAsync(currentUser);
+            if (foundUser is not null)
+            {
+                user = foundUser;
+            }
         }
     }
 
     private async Task UpdateUser()
     {
-        await UserManager.UpdateAsync(user);
+        try
+        {
+            var result = await UserManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                successMessage = "Email updated successfully.";
+                errorMessage = string.Empty;
+            }
+            else
+            {
+                errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
+        }
+        catch
+        {
+            errorMessage = "Failed to update email.";
+            successMessage = string.Empty;
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        if (passwordModel.NewPassword != passwordModel.ConfirmPassword)
+        {
+            errorMessage = "Passwords do not match.";
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUser = authState.User;
+        var foundUser = await UserManager.GetUserAsync(currentUser);
+
+        if (foundUser == null)
+        {
+            errorMessage = "User not found.";
+            return;
+        }
+
+        var result = await UserManager.ChangePasswordAsync(foundUser, passwordModel.CurrentPassword, passwordModel.NewPassword);
+        if (result.Succeeded)
+        {
+            successMessage = "Password changed successfully.";
+            passwordModel = new PasswordChangeModel();
+        }
+        else
+        {
+            errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+        }
+    }
+
+    private class PasswordChangeModel
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
