@@ -25,7 +25,7 @@ else
                         <p class="card-text">Date: @area.Date.ToShortDateString()</p>
                         <p class="card-text">Time: @area.TimeSlot</p>
                         <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
-                        <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!await CanRegister(area.Id))">Register</button>
+                        <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
                     </div>
                 </div>
             </div>
@@ -36,6 +36,7 @@ else
 @code {
     private List<Area> areas;
     private Dictionary<int, int> currentRegistrations = new();
+    private Dictionary<int, bool> canRegister = new();
     private string userId;
 
     protected override async Task OnInitializedAsync()
@@ -49,6 +50,7 @@ else
             foreach (var area in areas)
             {
                 currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+                canRegister[area.Id] = await AppointmentService.CanRegisterAsync(area.Id);
             }
         }
     }
@@ -64,10 +66,5 @@ else
         {
             // Handle error
         }
-    }
-
-    private async Task<bool> CanRegister(int areaId)
-    {
-        return await AppointmentService.CanRegisterAsync(areaId);
     }
 }
