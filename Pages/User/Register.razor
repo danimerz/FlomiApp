@@ -13,44 +13,57 @@
 {
     <p>Loading...</p>
 }
+else if (!areas.Any())
+{
+    <p>No areas available.</p>
+}
 else
 {
-    <div class="row">
-        @foreach (var area in areas)
-        {
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@area.Name</h5>
-                        <p class="card-text">Date: @area.Date.ToShortDateString()</p>
-                        <p class="card-text">Time: @area.TimeSlot</p>
-                        <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
-                        <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
+    @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
+    {
+        <h4>@group.Key</h4>
+        <div class="row">
+            @foreach (var area in group)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@area.Name</h5>
+                            <p class="card-text">Kategorie: @area.Category</p>
+                            <p class="card-text">Date: @area.Date.ToShortDateString()</p>
+                            <p class="card-text">Time: @area.TimeSlot</p>
+                            <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
+                            <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
+                            @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                            {
+                                <p class="text-muted small">@GetRegistrationNote(area)</p>
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 }
 
 @code {
-    private List<Area> areas;
+    private List<Area> areas = new();
     private Dictionary<int, int> currentRegistrations = new();
     private Dictionary<int, bool> canRegister = new();
-    private string userId;
+    private string userId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             areas = await AreaService.GetAllAreasAsync();
             foreach (var area in areas)
             {
                 currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
-                canRegister[area.Id] = await AppointmentService.CanRegisterAsync(area.Id);
+                canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id);
             }
         }
     }
@@ -62,9 +75,29 @@ else
             await AppointmentService.RegisterForAppointmentAsync(userId, areaId);
             Navigation.NavigateTo("/user/dashboard");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Handle error
+            // TODO: display user-friendly error message
         }
+    }
+
+    private string GetRegistrationNote(Area area)
+    {
+        if (canRegister.TryGetValue(area.Id, out var can) && can)
+        {
+            return string.Empty;
+        }
+
+        if (area.Category == AreaCategory.Verkauf)
+        {
+            return "Nur eine Verkauf-Registrierung ist möglich.";
+        }
+
+        if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
+        {
+            return "Bereich ist derzeit voll.";
+        }
+
+        return "Registrierung aktuell nicht möglich.";
     }
 }

@@ -8,13 +8,13 @@ public class Appointment
     public int Id { get; set; }
 
     [Required]
-    public string UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
-    public IdentityUser User { get; set; }
+    public IdentityUser User { get; set; } = null!;
 
     public int AreaId { get; set; }
 
-    public Area Area { get; set; }
+    public Area Area { get; set; } = null!;
 
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Registered;
 

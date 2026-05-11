@@ -25,9 +25,18 @@ public class AppointmentService : IAppointmentService
 
     public async Task RegisterForAppointmentAsync(string userId, int areaId)
     {
-        if (!await CanRegisterAsync(areaId))
+        var area = await _areaService.GetAreaByIdAsync(areaId);
+        if (area == null)
         {
-            throw new InvalidOperationException("Area is full.");
+            throw new InvalidOperationException("Area not found.");
+        }
+
+        if (!await CanRegisterAsync(userId, areaId))
+        {
+            var message = area.Category == AreaCategory.Verkauf
+                ? "You can only register for one Verkauf area."
+                : "Area is full.";
+            throw new InvalidOperationException(message);
         }
 
         var appointment = new Appointment
@@ -53,10 +62,33 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    public async Task<bool> CanRegisterAsync(int areaId)
+    public async Task<bool> CanRegisterAsync(string userId, int areaId)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
+        if (area == null)
+        {
+            return false;
+        }
+
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
-        return current < area.MaxCapacity;
+        if (current >= area.MaxCapacity)
+        {
+            return false;
+        }
+
+        if (area.Category == AreaCategory.Verkauf)
+        {
+            return !await UserHasRegisteredSaleAreaAsync(userId);
+        }
+
+        return true;
+    }
+
+    private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId)
+    {
+        return await _context.Appointments
+            .Include(a => a.Area)
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
+            .AnyAsync(a => a.Area.Category == AreaCategory.Verkauf);
     }
 }
