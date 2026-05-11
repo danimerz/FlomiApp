@@ -77,8 +77,8 @@ public class AppointmentService : IAppointmentService
             return false;
         }
 
-        // Check if user already has a registration on this date
-        if (await UserHasRegistrationOnDateAsync(userId, area.Date))
+        // Check if user has a conflicting registration on this date and time
+        if (await UserHasConflictingRegistrationAsync(userId, area.Date, area.TimeSlot))
         {
             return false;
         }
@@ -92,12 +92,67 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    private async Task<bool> UserHasRegistrationOnDateAsync(string userId, DateTime date)
+    private async Task<bool> UserHasConflictingRegistrationAsync(string userId, DateTime date, string timeSlot)
     {
-        return await _context.Appointments
+        var existingAppointments = await _context.Appointments
             .Include(a => a.Area)
-            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
-            .AnyAsync(a => a.Area.Date.Date == date.Date);
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered && a.Area.Date.Date == date.Date)
+            .ToListAsync();
+
+        foreach (var existing in existingAppointments)
+        {
+            if (TimeSlotConflict(timeSlot, existing.Area.TimeSlot))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool TimeSlotConflict(string slot1, string slot2)
+    {
+        // Parse time slots in format "HHMM-HHMM" or "HH:MM-HH:MM"
+        var times1 = ExtractTimeRange(slot1);
+        var times2 = ExtractTimeRange(slot2);
+
+        if (times1 == null || times2 == null)
+        {
+            // If we can't parse, assume no conflict (conservative approach)
+            return false;
+        }
+
+        var (start1, end1) = times1.Value;
+        var (start2, end2) = times2.Value;
+
+        // Check for overlap: start1 < end2 AND start2 < end1
+        return start1 < end2 && start2 < end1;
+    }
+
+    private (int, int)? ExtractTimeRange(string timeSlot)
+    {
+        if (string.IsNullOrWhiteSpace(timeSlot))
+        {
+            return null;
+        }
+
+        try
+        {
+            var parts = timeSlot.Split('-');
+            if (parts.Length != 2)
+            {
+                return null;
+            }
+
+            var start = int.Parse(parts[0].Replace(":", ""));
+            var end = int.Parse(parts[1].Replace(":", ""));
+
+            return (start, end);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId)
