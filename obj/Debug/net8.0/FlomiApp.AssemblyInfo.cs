@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FlomiApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86018aece58224c86f9a83720043e6c255a95600")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0800eed8808de54aebae786e96b03e2ed66cf130")]
 [assembly: System.Reflection.AssemblyProductAttribute("FlomiApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FlomiApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

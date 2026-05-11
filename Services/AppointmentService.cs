@@ -70,18 +70,34 @@ public class AppointmentService : IAppointmentService
             return false;
         }
 
+        // Check if area is at capacity
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
         if (current >= area.MaxCapacity)
         {
             return false;
         }
 
+        // Check if user already has a registration on this date
+        if (await UserHasRegistrationOnDateAsync(userId, area.Date))
+        {
+            return false;
+        }
+
+        // For Verkauf, check if user already has any Verkauf registration
         if (area.Category == AreaCategory.Verkauf)
         {
             return !await UserHasRegisteredSaleAreaAsync(userId);
         }
 
         return true;
+    }
+
+    private async Task<bool> UserHasRegistrationOnDateAsync(string userId, DateTime date)
+    {
+        return await _context.Appointments
+            .Include(a => a.Area)
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
+            .AnyAsync(a => a.Area.Date.Date == date.Date);
     }
 
     private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId)
