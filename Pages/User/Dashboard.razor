@@ -1,0 +1,71 @@
+@page "/user/dashboard"
+@using FlomiApp.Data.Models
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAppointmentService AppointmentService
+
+<PageTitle>Dashboard</PageTitle>
+
+<h3>Your Appointments</h3>
+
+@if (appointments == null)
+{
+    <p>Loading...</p>
+}
+else if (!appointments.Any())
+{
+    <p>No appointments found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Area</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appointment in appointments)
+            {
+                <tr>
+                    <td>@appointment.Area.Name</td>
+                    <td>@appointment.Area.Date.ToShortDateString()</td>
+                    <td>@appointment.Area.TimeSlot</td>
+                    <td>@appointment.Status</td>
+                    <td>
+                        @if (appointment.Status == AppointmentStatus.Registered)
+                        {
+                            <button class="btn btn-danger" @onclick="() => CancelAppointment(appointment.Id)">Cancel</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Appointment> appointments;
+    private string userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
+        }
+    }
+
+    private async Task CancelAppointment(int appointmentId)
+    {
+        await AppointmentService.CancelAppointmentAsync(appointmentId, userId);
+        appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
+        StateHasChanged();
+    }
+}

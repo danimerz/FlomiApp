@@ -1,0 +1,73 @@
+@page "/user/register"
+@using FlomiApp.Data.Models
+@inject IAreaService AreaService
+@inject IAppointmentService AppointmentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Register for Appointment</PageTitle>
+
+<h3>Available Areas</h3>
+
+@if (areas == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var area in areas)
+        {
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@area.Name</h5>
+                        <p class="card-text">Date: @area.Date.ToShortDateString()</p>
+                        <p class="card-text">Time: @area.TimeSlot</p>
+                        <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
+                        <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!await CanRegister(area.Id))">Register</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Area> areas;
+    private Dictionary<int, int> currentRegistrations = new();
+    private string userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            areas = await AreaService.GetAllAreasAsync();
+            foreach (var area in areas)
+            {
+                currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+            }
+        }
+    }
+
+    private async Task RegisterAppointment(int areaId)
+    {
+        try
+        {
+            await AppointmentService.RegisterForAppointmentAsync(userId, areaId);
+            Navigation.NavigateTo("/user/dashboard");
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+        }
+    }
+
+    private async Task<bool> CanRegister(int areaId)
+    {
+        return await AppointmentService.CanRegisterAsync(areaId);
+    }
+}

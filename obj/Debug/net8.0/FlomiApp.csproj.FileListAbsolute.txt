@@ -1,0 +1,9 @@
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.csproj.AssemblyReference.cache
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.AssemblyInfoInputs.cache
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.AssemblyInfo.cs
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.csproj.CoreCompileInputs.cache
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.RazorAssemblyInfo.cache
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.RazorAssemblyInfo.cs

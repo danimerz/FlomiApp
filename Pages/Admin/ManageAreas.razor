@@ -1,0 +1,108 @@
+@page "/admin/areas"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@inject IAreaService AreaService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Areas</PageTitle>
+
+<h3>Manage Areas</h3>
+
+<button class="btn btn-primary" @onclick="ShowCreateForm">Add New Area</button>
+
+@if (showCreateForm)
+{
+    <EditForm Model="newArea" OnValidSubmit="CreateArea">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>Name</label>
+            <InputText @bind-Value="newArea.Name" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Max Capacity</label>
+            <InputNumber @bind-Value="newArea.MaxCapacity" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <InputDate @bind-Value="newArea.Date" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Time Slot</label>
+            <InputText @bind-Value="newArea.TimeSlot" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Create</button>
+        <button type="button" class="btn btn-secondary" @onclick="HideCreateForm">Cancel</button>
+    </EditForm>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Max Capacity</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var area in areas)
+        {
+            <tr>
+                <td>@area.Name</td>
+                <td>@area.MaxCapacity</td>
+                <td>@area.Date.ToShortDateString()</td>
+                <td>@area.TimeSlot</td>
+                <td>
+                    <button class="btn btn-warning" @onclick="() => EditArea(area)">Edit</button>
+                    <button class="btn btn-danger" @onclick="() => DeleteArea(area.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Area> areas;
+    private Area newArea = new();
+    private bool showCreateForm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        areas = await AreaService.GetAllAreasAsync();
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+        newArea = new Area();
+    }
+
+    private void HideCreateForm()
+    {
+        showCreateForm = false;
+    }
+
+    private async Task CreateArea()
+    {
+        await AreaService.CreateAreaAsync(newArea);
+        areas = await AreaService.GetAllAreasAsync();
+        showCreateForm = false;
+        StateHasChanged();
+    }
+
+    private async Task EditArea(Area area)
+    {
+        // Implement edit logic
+    }
+
+    private async Task DeleteArea(int id)
+    {
+        await AreaService.DeleteAreaAsync(id);
+        areas = await AreaService.GetAllAreasAsync();
+        StateHasChanged();
+    }
+}
