@@ -171,3 +171,4 @@ C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\ref\FlomiApp.dll
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\User\Register.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\User\Dashboard.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\User\Settings.razor.rz.scp.css
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\index.razor.rz.scp.css
