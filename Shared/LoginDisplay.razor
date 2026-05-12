@@ -1,12 +1,57 @@
-﻿<AuthorizeView>
+﻿<AuthorizeView Context="authState">
     <Authorized>
-        <a href="Identity/Account/Manage">Hello, @context.User.Identity?.Name!</a>
-        <form method="post" action="Identity/Account/Logout">
-            <button type="submit" class="nav-link btn btn-link">Log out</button>
-        </form>
+        <div class="login-panel">
+            <div class="login-panel__user">
+                <div class="login-panel__avatar">
+                    @GetUserInitial(authState.User.Identity?.Name)
+                </div>
+
+                <div class="login-panel__meta">
+                    <span class="login-panel__label">Angemeldet</span>
+                    <span class="login-panel__name">@GetDisplayName(authState.User.Identity?.Name)</span>
+                </div>
+            </div>
+
+            <form method="post" action="Identity/Account/Logout" class="login-panel__actions">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="/" />
+                <button type="submit" class="login-panel__button login-panel__button--secondary">
+                    Abmelden
+                </button>
+            </form>
+        </div>
     </Authorized>
+
     <NotAuthorized>
-        <a href="Identity/Account/Register">Register</a>
-        <a href="Identity/Account/Login">Log in</a>
+        <div class="login-panel">
+            <div class="login-panel__meta login-panel__meta--guest">
+                <span class="login-panel__label">Nicht angemeldet</span>
+                <span class="login-panel__name">Bitte einloggen</span>
+            </div>
+
+            <div class="login-panel__actions login-panel__actions--stacked">
+                <a href="Identity/Account/Login" class="login-panel__button login-panel__button--primary">
+                    Anmelden
+                </a>
+            </div>
+        </div>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+    private string GetDisplayName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "Benutzer";
+
+        return name;
+    }
+
+    private string GetUserInitial(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "B";
+
+        return name.Substring(0, 1).ToUpperInvariant();
+    }
+}

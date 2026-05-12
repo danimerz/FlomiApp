@@ -6,40 +6,28 @@
     <aside class="sidebar">
         <div class="sidebar__inner">
             <div class="sidebar__brand">
-                <div class="sidebar__logo">F</div>
+                <div class="sidebar__logo">
+                    <img src="img/pfadi_logo.png" alt="Pfadi Flomi Logo" class="sidebar__logo-image" />
+                </div>
                 <div class="sidebar__brand-text">
-                    <span class="sidebar__eyebrow">Workspace</span>
+                    <span class="sidebar__eyebrow"> </span>
                     <strong>FlomiApp</strong>
                 </div>
             </div>
 
-            <NavMenu />
+            <div class="sidebar__nav">
+                <NavMenu />
+            </div>
+
+            <div class="sidebar__footer">
+                <LoginDisplay />
+            </div>
         </div>
     </aside>
 
-    <div class="main-area">
-        <header class="topbar">
-            <div class="topbar__left">
-                <div class="topbar__title-wrap">
-                    <span class="topbar__eyebrow">Pfadi Management</span>
-                    <h1>FlomiApp</h1>
-                </div>
-            </div>
-
-            <div class="topbar__right">
-                <a class="topbar__link" href="https://docs.microsoft.com/aspnet/" target="_blank" rel="noopener noreferrer">
-                    About
-                </a>
-                <div class="topbar__auth">
-                    <LoginDisplay />
-                </div>
-            </div>
-        </header>
-
-        <main class="main-content">
-            <article class="content-container">
-                @Body
-            </article>
-        </main>
-    </div>
+    <main class="main-area">
+        <article class="content-container">
+            @Body
+        </article>
+    </main>
 </div>

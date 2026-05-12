@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "mlxLgguo2Pg=",
+  "dgSpecHash": "erZymuzlIOg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
+  "projectFilePath": "c:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\merzd\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\merzd\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
