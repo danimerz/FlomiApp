@@ -28,6 +28,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlQXJlYXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/merzd/source/repos/FlomiApp/Pages/Admin/ManageEvents.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlRXZlbnRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/merzd/source/repos/FlomiApp/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -40,16 +44,8 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Dashboard.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxEYXNoYm9hcmQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Register.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxSZWdpc3Rlci5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Settings.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxTZXR0aW5ncy5yYXpvcg==
+[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Register_old.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxSZWdpc3Rlcl9vbGQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/merzd/source/repos/FlomiApp/Shared/LoginDisplay.razor]
@@ -64,6 +60,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxEYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-x6hkyvm1le
+
+[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxSZWdpc3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-a3sakhx0ve
+
+[C:/Users/merzd/source/repos/FlomiApp/Pages/User/Settings.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxTZXR0aW5ncy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-llpvyq16jn
+
 [C:/Users/merzd/source/repos/FlomiApp/Shared/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-bdwjw64er1
@@ -76,8 +84,16 @@ build_metadata.AdditionalFiles.CssScope = b-gnz5tgp79g
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dPdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/merzd/source/repos/FlomiApp/Areas/Identity/Pages/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/merzd/source/repos/FlomiApp/Areas/Identity/Pages/Shared/_LoginPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/merzd/source/repos/FlomiApp/Areas/Identity/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/merzd/source/repos/FlomiApp/Pages/Error.cshtml]

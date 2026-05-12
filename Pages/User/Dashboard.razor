@@ -5,51 +5,106 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<h3>Deine Anmeldungen</h3>
+<div class="dashboard-page">
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Dashboard</span>
+            <h1>Deine Anmeldungen</h1>
+            <p>
+                Hier findest du alle aktuellen Registrierungen übersichtlich an einem Ort.
+            </p>
+        </div>
+    </section>
 
-@if (appointments == null)
-{
-    <p>Loading...</p>
-}
-else if (!appointments.Any())
-{
-    <p>Keine Anmeldungen gefunden.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Person</th>
-                <th>Bereich</th>
-                <th>Event</th>
-                <th>Datum</th>
-                <th>Zeit</th>
-                <th>Status</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var appointment in appointments)
-            {
-                <tr>
-                    <td>@(appointment.FamilyMember != null ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}" : $"{appointment.User.FirstName} {appointment.User.LastName}")</td>
-                    <td>@appointment.Area.Name</td>
-                    <td>@appointment.Area.Event?.Name</td>
-                    <td>@appointment.Area.Date.ToShortDateString()</td>
-                    <td>@appointment.Area.TimeSlot</td>
-                    <td>@appointment.Status</td>
-                    <td>
-                        @if (appointment.Status == AppointmentStatus.Registered)
-                        {
-                            <button class="btn btn-danger" @onclick="() => CancelAppointment(appointment.Id)">Absagen</button>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    @if (appointments == null)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content">
+                <h3>Anmeldungen werden geladen</h3>
+                <p>Bitte warte einen kleinen Moment.</p>
+            </div>
+        </div>
+    }
+    else if (!appointments.Any())
+    {
+        <div class="state-card state-card--empty">
+            <div class="state-card__icon">📭</div>
+            <div class="state-card__content">
+                <h3>Keine Anmeldungen gefunden</h3>
+                <p>Aktuell sind noch keine Registrierungen vorhanden.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <section class="appointments-section">
+            <div class="appointments-section__header">
+                <h2>Übersicht</h2>
+                <span class="appointments-section__count">@appointments.Count Anmeldungen</span>
+            </div>
+
+            <div class="appointments-grid">
+                @foreach (var appointment in appointments)
+                {
+                    <article class="appointment-card">
+                        <div class="appointment-card__body">
+                            <div class="appointment-card__header">
+                                <div>
+                                    <div class="appointment-card__topline">Anmeldung</div>
+                                    <h3>@appointment.Area.Name</h3>
+                                </div>
+                                <span class="status-badge">@appointment.Status</span>
+                            </div>
+
+                            <div class="appointment-info-list">
+                                <div class="appointment-info-item">
+                                    <span class="label">Person</span>
+                                    <span class="value">
+                                        @(appointment.FamilyMember != null
+                                            ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}"
+                                            : $"{appointment.User.FirstName} {appointment.User.LastName}")
+                                    </span>
+                                </div>
+
+                                <div class="appointment-info-item">
+                                    <span class="label">Event</span>
+                                    <span class="value">@appointment.Area.Event?.Name</span>
+                                </div>
+
+                                <div class="appointment-info-item">
+                                    <span class="label">Datum</span>
+                                    <span class="value">@appointment.Area.Date.ToShortDateString()</span>
+                                </div>
+
+                                <div class="appointment-info-item">
+                                    <span class="label">Zeit</span>
+                                    <span class="value">@appointment.Area.TimeSlot</span>
+                                </div>
+
+                                <div class="appointment-info-item">
+                                    <span class="label">Status</span>
+                                    <span class="value">
+                                        <span class="status-pill">@appointment.Status</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="appointment-actions">
+                                @if (appointment.Status == AppointmentStatus.Registered)
+                                {
+                                    <button class="cancel-btn" @onclick="() => CancelAppointment(appointment.Id)">
+                                        Absagen
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
 
 @code {
     private List<Appointment> appointments = new();

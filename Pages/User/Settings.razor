@@ -7,156 +7,238 @@
 
 <PageTitle>Settings</PageTitle>
 
-<h3>User Settings</h3>
-
-<div class="row">
-    <div class="col-md-6">
-        <h4>Update Email</h4>
-        <EditForm Model="user" OnValidSubmit="UpdateUser">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="form-group">
-                <label for="firstName">Vorname</label>
-                <InputText id="firstName" @bind-Value="user.FirstName" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label for="lastName">Nachname</label>
-                <InputText id="lastName" @bind-Value="user.LastName" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label for="pfadiname">Pfadiname</label>
-                <InputText id="pfadiname" @bind-Value="user.Pfadiname" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label for="stufe">Stufe</label>
-                <InputSelect id="stufe" @bind-Value="user.Stufe" class="form-control">
-                    <option value="">Select stage</option>
-                    <option value="Biber">Biber</option>
-                    <option value="Wolf">Wolf</option>
-                    <option value="Pfadi">Pfadi</option>
-                    <option value="Pio">Pio</option>
-                    <option value="Leiter">Leiter</option>
-                    <option value="Sonstiges">Sonstiges</option>
-                </InputSelect>
-            </div>
-            <div class="form-group">
-                <label for="birthday">Geburtstag</label>
-                <InputDate id="birthday" @bind-Value="user.Birthday" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label for="phoneNumber">Telefonnummer</label>
-                <InputText id="phoneNumber" @bind-Value="user.PhoneNumber" class="form-control" placeholder="+41 41 750 06 49" />
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <InputText id="email" @bind-Value="user.Email" class="form-control" />
-            </div>
-
-            <button type="submit" class="btn btn-primary">Update Email</button>
-        </EditForm>
-
-        <div class="mt-5">
-            <h4>Familienmitglieder</h4>
-            <EditForm Model="newFamilyMember" OnValidSubmit="AddFamilyMember">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-
-                <div class="form-group">
-                    <label for="familyFirstName">Vorname</label>
-                    <InputText id="familyFirstName" @bind-Value="newFamilyMember.FirstName" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label for="familyLastName">Nachname</label>
-                    <InputText id="familyLastName" @bind-Value="newFamilyMember.LastName" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label for="familyPfadiname">Pfadiname</label>
-                    <InputText id="familyPfadiname" @bind-Value="newFamilyMember.Pfadiname" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label for="familyStufe">Stufe</label>
-                    <InputSelect id="familyStufe" @bind-Value="newFamilyMember.Stufe" class="form-control">
-                        <option value="">Select stage</option>
-                        <option value="Biber">Biber</option>
-                        <option value="Wolf">Wolf</option>
-                        <option value="Pfadi">Pfadi</option>
-                        <option value="Pio">Pio</option>
-                        <option value="Leiter">Leiter</option>
-                        <option value="Sonstiges">Sonstiges</option>
-                    </InputSelect>
-                </div>
-                <div class="form-group">
-                    <label for="familyBirthday">Geburtstag</label>
-                    <InputDate id="familyBirthday" @bind-Value="newFamilyMember.Birthday" class="form-control" />
-                </div>
-                <button type="submit" class="btn btn-secondary">Familienmitglied hinzufügen</button>
-            </EditForm>
-
-            @if (familyMembers.Any())
-            {
-                <table class="table mt-4">
-                    <thead>
-                        <tr>
-                            <th>Vorname</th>
-                            <th>Nachname</th>
-                            <th>Pfadiname</th>
-                            <th>Stufe</th>
-                            <th>Geburtstag</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var member in familyMembers)
-                        {
-                            <tr>
-                                <td>@member.FirstName</td>
-                                <td>@member.LastName</td>
-                                <td>@member.Pfadiname</td>
-                                <td>@member.Stufe</td>
-                                <td>@member.Birthday.ToShortDateString()</td>
-                                <td><button class="btn btn-danger btn-sm" @onclick="() => RemoveFamilyMember(member.Id)">Löschen</button></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
+<div class="settings-page">
+    <section class="settings-hero">
+        <div class="settings-hero__content">
+            <span class="settings-hero__badge">Einstellungen</span>
+            <h1>Benutzereinstellungen</h1>
+            <p>
+                Verwalte deine persönlichen Daten, Familienmitglieder und dein Passwort zentral an einem Ort.
+            </p>
         </div>
-    </div>
+    </section>
 
-    <div class="col-md-6">
-        <h4>Change Password</h4>
-        <EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <div class="alert alert-danger">@errorMessage</div>
-            }
-
-            @if (!string.IsNullOrEmpty(successMessage))
-            {
-                <div class="alert alert-success">@successMessage</div>
-            }
-
-            <div class="form-group">
-                <label for="currentPassword">Current Password</label>
-                <InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword" type="password" class="form-control" />
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="state-card state-card--error">
+            <div class="state-card__icon">⚠️</div>
+            <div class="state-card__content">
+                <h3>Fehler</h3>
+                <p>@errorMessage</p>
             </div>
+        </div>
+    }
 
-            <div class="form-group">
-                <label for="newPassword">New Password</label>
-                <InputText id="newPassword" @bind-Value="passwordModel.NewPassword" type="password" class="form-control" />
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="state-card state-card--success">
+            <div class="state-card__icon">✅</div>
+            <div class="state-card__content">
+                <h3>Erfolgreich</h3>
+                <p>@successMessage</p>
             </div>
+        </div>
+    }
 
-            <div class="form-group">
-                <label for="confirmPassword">Confirm New Password</label>
-                <InputText id="confirmPassword" @bind-Value="passwordModel.ConfirmPassword" type="password" class="form-control" />
-            </div>
+    <div class="settings-layout">
+        <div class="settings-column">
+            <section class="settings-card">
+                <div class="settings-card__header">
+                    <div>
+                        <div class="settings-card__topline">Profil</div>
+                        <h2>Persönliche Daten</h2>
+                    </div>
+                </div>
 
-            <button type="submit" class="btn btn-primary">Change Password</button>
-        </EditForm>
+                <div class="settings-card__body">
+                    <EditForm Model="user" OnValidSubmit="UpdateUser">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="validation-summary" />
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="firstName">Vorname</label>
+                                <InputText id="firstName" @bind-Value="user.FirstName" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Nachname</label>
+                                <InputText id="lastName" @bind-Value="user.LastName" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pfadiname">Pfadiname</label>
+                                <InputText id="pfadiname" @bind-Value="user.Pfadiname" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="stufe">Stufe</label>
+                                <InputSelect id="stufe" @bind-Value="user.Stufe" class="form-control-modern">
+                                    <option value="">Select stage</option>
+                                    <option value="Biber">Biber</option>
+                                    <option value="Wolf">Wolf</option>
+                                    <option value="Pfadi">Pfadi</option>
+                                    <option value="Pio">Pio</option>
+                                    <option value="Leiter">Leiter</option>
+                                    <option value="Sonstiges">Sonstiges</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="birthday">Geburtstag</label>
+                                <InputDate id="birthday" @bind-Value="user.Birthday" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phoneNumber">Telefonnummer</label>
+                                <InputText id="phoneNumber" @bind-Value="user.PhoneNumber" class="form-control-modern" placeholder="+41 41 750 06 49" />
+                            </div>
+
+                            <div class="form-group form-group--full">
+                                <label for="email">Email</label>
+                                <InputText id="email" @bind-Value="user.Email" class="form-control-modern" />
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn">Daten speichern</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </section>
+
+            <section class="settings-card">
+                <div class="settings-card__header">
+                    <div>
+                        <div class="settings-card__topline">Familie</div>
+                        <h2>Familienmitglieder</h2>
+                    </div>
+                </div>
+
+                <div class="settings-card__body">
+                    <EditForm Model="newFamilyMember" OnValidSubmit="AddFamilyMember">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="validation-summary" />
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="familyFirstName">Vorname</label>
+                                <InputText id="familyFirstName" @bind-Value="newFamilyMember.FirstName" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="familyLastName">Nachname</label>
+                                <InputText id="familyLastName" @bind-Value="newFamilyMember.LastName" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="familyPfadiname">Pfadiname</label>
+                                <InputText id="familyPfadiname" @bind-Value="newFamilyMember.Pfadiname" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="familyStufe">Stufe</label>
+                                <InputSelect id="familyStufe" @bind-Value="newFamilyMember.Stufe" class="form-control-modern">
+                                    <option value="">Select stage</option>
+                                    <option value="Biber">Biber</option>
+                                    <option value="Wolf">Wolf</option>
+                                    <option value="Pfadi">Pfadi</option>
+                                    <option value="Pio">Pio</option>
+                                    <option value="Leiter">Leiter</option>
+                                    <option value="Sonstiges">Sonstiges</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="familyBirthday">Geburtstag</label>
+                                <InputDate id="familyBirthday" @bind-Value="newFamilyMember.Birthday" class="form-control-modern" />
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="secondary-btn">Familienmitglied hinzufügen</button>
+                        </div>
+                    </EditForm>
+
+                    @if (familyMembers.Any())
+                    {
+                        <div class="member-list">
+                            @foreach (var member in familyMembers)
+                            {
+                                <article class="member-card">
+                                    <div class="member-card__content">
+                                        <div class="member-card__header">
+                                            <h3>@member.FirstName @member.LastName</h3>
+                                            <span class="member-stage">@member.Stufe</span>
+                                        </div>
+
+                                        <div class="member-info-list">
+                                            <div class="member-info-item">
+                                                <span class="label">Pfadiname</span>
+                                                <span class="value">@member.Pfadiname</span>
+                                            </div>
+                                            <div class="member-info-item">
+                                                <span class="label">Geburtstag</span>
+                                                <span class="value">@member.Birthday.ToShortDateString()</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="member-card__actions">
+                                        <button class="danger-btn" @onclick="() => RemoveFamilyMember(member.Id)">Löschen</button>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="inline-empty-state">
+                            <p>Noch keine Familienmitglieder hinterlegt.</p>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="settings-column">
+            <section class="settings-card">
+                <div class="settings-card__header">
+                    <div>
+                        <div class="settings-card__topline">Sicherheit</div>
+                        <h2>Passwort ändern</h2>
+                    </div>
+                </div>
+
+                <div class="settings-card__body">
+                    <EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="validation-summary" />
+
+                        <div class="form-grid form-grid--single">
+                            <div class="form-group">
+                                <label for="currentPassword">Aktuelles Passwort</label>
+                                <InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword" type="password" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newPassword">Neues Passwort</label>
+                                <InputText id="newPassword" @bind-Value="passwordModel.NewPassword" type="password" class="form-control-modern" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Neues Passwort bestätigen</label>
+                                <InputText id="confirmPassword" @bind-Value="passwordModel.ConfirmPassword" type="password" class="form-control-modern" />
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn">Passwort ändern</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 

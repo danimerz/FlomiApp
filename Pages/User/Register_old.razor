@@ -1,0 +1,190 @@
+﻿@page "/user/register1"
+@using FlomiApp.Data.Models
+@inject IAreaService AreaService
+@inject IAppointmentService AppointmentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Register for Appointment</PageTitle>
+
+<h3>Available Areas</h3>
+
+@if (events == null)
+{
+    <p>Loading events...</p>
+}
+else if (!events.Any())
+{
+    <p>No events available.</p>
+}
+else
+{
+    <div class="form-group mb-4">
+        <label>Choose an event</label>
+        <select class="form-control" value="@selectedEventId" @onchange="OnEventChanged">
+            @foreach (var evt in events)
+            {
+                <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group mb-4">
+        <label>Register as</label>
+        <select class="form-control" value="@selectedMemberId" @onchange="OnPersonChanged">
+            <option value="0">Mich selbst</option>
+            @foreach (var member in familyMembers)
+            {
+                <option value="@member.Id">@member.FirstName @member.LastName (@member.Stufe)</option>
+            }
+        </select>
+    </div>
+
+    @if (selectedEvent != null)
+    {
+        <h4>@selectedEvent.Name (@selectedEvent.Date.ToShortDateString())</h4>
+        <p>@selectedEvent.Description</p>
+    }
+
+    @if (areas == null)
+    {
+        <p>Loading areas for selected event...</p>
+    }
+    else if (!areas.Any())
+    {
+        <p>No areas available for this event.</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
+        {
+            <h4>@group.Key</h4>
+            <div class="row">
+                @foreach (var area in group)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">@area.Name</h5>
+                                <p class="card-text">Kategorie: @area.Category</p>
+                                <p class="card-text">Date: @area.Date.ToShortDateString()</p>
+                                <p class="card-text">Time: @area.TimeSlot</p>
+                                <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
+                                <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
+                                @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                                {
+                                    <p class="text-muted small">@GetRegistrationNote(area)</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+}
+
+@code {
+    private List<Event> events = new();
+    private Event? selectedEvent;
+    private int selectedEventId;
+    private List<Area>? areas;
+    private List<FamilyMember> familyMembers = new();
+    private int selectedMemberId = 0;
+    private Dictionary<int, int> currentRegistrations = new();
+    private Dictionary<int, bool> canRegister = new();
+    private string userId = string.Empty;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            familyMembers = await AppointmentService.GetFamilyMembersAsync(userId);
+            events = (await AreaService.GetAllEventsAsync()).Where(e => e.IsActive).OrderBy(e => e.Date).ToList();
+            if (events.Any())
+            {
+                selectedEventId = events[0].Id;
+                selectedEvent = events[0];
+                await LoadAreasForSelectedEvent();
+            }
+        }
+    }
+
+    private async Task OnEventChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var eventId))
+        {
+            selectedEventId = eventId;
+            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
+            await LoadAreasForSelectedEvent();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadAreasForSelectedEvent()
+    {
+        errorMessage = string.Empty;
+        areas = await AreaService.GetAreasByEventAsync(selectedEventId) ?? new List<Area>();
+
+        currentRegistrations.Clear();
+        canRegister.Clear();
+
+        foreach (var area in areas)
+        {
+            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+            canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, selectedMemberId == 0 ? null : selectedMemberId);
+        }
+    }
+
+    private async Task OnPersonChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var memberId))
+        {
+            selectedMemberId = memberId;
+            await LoadAreasForSelectedEvent();
+            StateHasChanged();
+        }
+    }
+
+    private async Task RegisterAppointment(int areaId)
+    {
+        try
+        {
+            await AppointmentService.RegisterForAppointmentAsync(userId, areaId, selectedMemberId == 0 ? null : selectedMemberId);
+            Navigation.NavigateTo("/user/dashboard");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private string GetRegistrationNote(Area area)
+    {
+        if (canRegister.TryGetValue(area.Id, out var can) && can)
+        {
+            return string.Empty;
+        }
+
+        if (area.Category == AreaCategory.Verkauf)
+        {
+            return "Nur eine Verkauf-Registrierung ist möglich.";
+        }
+
+        if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
+        {
+            return "Bereich ist derzeit voll.";
+        }
+
+        return "Registrierung aktuell nicht möglich.";
+    }
+}
