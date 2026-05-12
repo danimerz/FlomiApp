@@ -1,61 +1,115 @@
 @page
 @model FlomiApp.Areas.Identity.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Registrierung";
 }
 
-<h1>Register</h1>
+<link rel="stylesheet" href="/css/register.css" />
 
-<div class="row">
-    <div class="col-md-6">
-        <form method="post">
-            <div asp-validation-summary="All" class="text-danger"></div>
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Konto erstellen</span>
+            <h1>Registrierung</h1>
+            <p>
+                Erstelle dein Konto für die FlomiApp und hinterlege deine persönlichen Angaben.
+                Danach kannst du dich für Einsätze und Veranstaltungen anmelden.
+            </p>
+        </div>
+    </section>
 
-            <div class="form-group">
-                <label asp-for="Input.Email"></label>
-                <input asp-for="Input.Email" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Password"></label>
-                <input asp-for="Input.Password" type="password" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.ConfirmPassword"></label>
-                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.FirstName"></label>
-                <input asp-for="Input.FirstName" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.LastName"></label>
-                <input asp-for="Input.LastName" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Pfadiname"></label>
-                <input asp-for="Input.Pfadiname" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Stufe"></label>
-                <select asp-for="Input.Stufe" class="form-control">
-                    <option value="">Choose stage</option>
-                    <option value="Biber">Biber</option>
-                    <option value="Wolf">Wolf</option>
-                    <option value="Pfadi">Pfadi</option>
-                    <option value="Pio">Pio</option>
-                    <option value="Leiter">Leiter</option>
-                    <option value="Sonstiges">Sonstiges</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.Birthday"></label>
-                <input asp-for="Input.Birthday" type="date" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.PhoneNumber"></label>
-                <input asp-for="Input.PhoneNumber" placeholder="+41 41 750 06 49" class="form-control" />
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
-        </form>
-    </div>
+    <section class="register-card">
+        <div class="register-card__header">
+            <div class="register-card__topline">Benutzerdaten</div>
+            <h2>Persönliche Angaben</h2>
+            <p>Fülle die Felder aus, um dein Benutzerkonto zu erstellen.</p>
+        </div>
+
+        <div class="register-card__body">
+            <form method="post" class="register-form">
+                <div asp-validation-summary="All" class="register-validation"></div>
+
+                <div class="register-grid register-grid--full">
+                    <div class="register-field">
+                        <label asp-for="Input.Email" class="register-label"></label>
+                        <input asp-for="Input.Email" class="register-input" />
+                        <span asp-validation-for="Input.Email" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.Password" class="register-label"></label>
+                        <input asp-for="Input.Password" type="password" class="register-input" />
+                        <span asp-validation-for="Input.Password" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.ConfirmPassword" class="register-label"></label>
+                        <input asp-for="Input.ConfirmPassword" type="password" class="register-input" />
+                        <span asp-validation-for="Input.ConfirmPassword" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.FirstName" class="register-label"></label>
+                        <input asp-for="Input.FirstName" class="register-input" />
+                        <span asp-validation-for="Input.FirstName" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.LastName" class="register-label"></label>
+                        <input asp-for="Input.LastName" class="register-input" />
+                        <span asp-validation-for="Input.LastName" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.Pfadiname" class="register-label"></label>
+                        <input asp-for="Input.Pfadiname" class="register-input" />
+                        <span class="register-hint">Optional</span>
+                        <span asp-validation-for="Input.Pfadiname" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.Stufe" class="register-label"></label>
+                        <select asp-for="Input.Stufe" class="register-input">
+                            <option value="">Bitte wählen</option>
+                            <option value="Biber">Biber</option>
+                            <option value="Wolf">Wolf</option>
+                            <option value="Pfadi">Pfadi</option>
+                            <option value="Pio">Pio</option>
+                            <option value="Leiter">Leiter</option>
+                            <option value="Sonstiges">Sonstiges</option>
+                        </select>
+                        <span asp-validation-for="Input.Stufe" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.Birthday" class="register-label"></label>
+                        <input asp-for="Input.Birthday" type="date" class="register-input" />
+                        <span asp-validation-for="Input.Birthday" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.PhoneNumber" class="register-label"></label>
+                        <input asp-for="Input.PhoneNumber" class="register-input" placeholder="+41 41 750 06 49" />
+                        <span asp-validation-for="Input.PhoneNumber" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-actions">
+                    <button type="submit" class="register-button">Registrieren</button>
+                </div>
+            </form>
+        </div>
+    </section>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,7 +1,11 @@
 /* _content/FlomiApp/Pages/index.razor.rz.scp.css */
 .home-page[b-mh7w8zyaj1] {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
     display: grid;
     gap: 1.75rem;
+    color: #1f2937;
 }
 
 .home-hero[b-mh7w8zyaj1] {
@@ -204,6 +208,10 @@
 }
 
 @media (max-width: 768px) {
+    .home-page[b-mh7w8zyaj1] {
+        padding: 1rem 0.8rem 2rem;
+    }
+
     .home-hero__content[b-mh7w8zyaj1] {
         padding: 1.4rem;
     }
