@@ -119,6 +119,11 @@ else
     {
         errorMessage = string.Empty;
         areas = await AreaService.GetAreasByEventAsync(selectedEventId);
+        Console.WriteLine($"DEBUG: Loaded {areas?.Count ?? 0} areas for event {selectedEventId}");
+        foreach (var area in areas ?? Enumerable.Empty<Area>())
+        {
+            Console.WriteLine($"DEBUG: Area {area.Id}: {area.Name} - EventId: {area.EventId}");
+        }
         currentRegistrations.Clear();
         canRegister.Clear();
 
