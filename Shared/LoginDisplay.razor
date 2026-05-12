@@ -1,14 +1,19 @@
-﻿<AuthorizeView Context="authState">
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using FlomiApp.Data.Models
+@inject UserManager<ApplicationUser> UserManager
+
+<AuthorizeView Context="authState">
     <Authorized>
         <div class="login-panel">
             <div class="login-panel__user">
                 <div class="login-panel__avatar">
-                    @GetUserInitial(authState.User.Identity?.Name)
+                    @GetUserInitial()
                 </div>
 
                 <div class="login-panel__meta">
                     <span class="login-panel__label">Angemeldet</span>
-                    <span class="login-panel__name">@GetDisplayName(authState.User.Identity?.Name)</span>
+                    <span class="login-panel__name">@displayName</span>
                 </div>
             </div>
 
@@ -39,19 +44,50 @@
 </AuthorizeView>
 
 @code {
-    private string GetDisplayName(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return "Benutzer";
+    private string displayName = "Benutzer";
 
-        return name;
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask is null)
+            return;
+
+        var authState = await AuthenticationStateTask;
+        var principal = authState.User;
+
+        if (principal?.Identity?.IsAuthenticated != true)
+            return;
+
+        var user = await UserManager.GetUserAsync(principal);
+
+        if (user is null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(user.FirstName))
+        {
+            displayName = user.FirstName;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.UserName))
+        {
+            displayName = user.UserName;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.Email))
+        {
+            displayName = user.Email;
+        }
     }
 
-    private string GetUserInitial(string? name)
+    private string GetUserInitial()
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(displayName))
             return "B";
 
-        return name.Substring(0, 1).ToUpperInvariant();
+        return displayName.Substring(0, 1).ToUpperInvariant();
     }
 }
