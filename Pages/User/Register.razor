@@ -21,12 +21,12 @@ else
 {
     <div class="form-group mb-4">
         <label>Choose an event</label>
-        <InputSelect @bind-Value="selectedEventId" class="form-control" @onchange="OnEventChanged">
+        <select class="form-control" value="@selectedEventId" @onchange="OnEventChanged">
             @foreach (var evt in events)
             {
                 <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
             }
-        </InputSelect>
+        </select>
     </div>
 
     @if (selectedEvent != null)
@@ -95,7 +95,7 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            events = await AreaService.GetAllEventsAsync();
+            events = (await AreaService.GetAllEventsAsync()).OrderBy(e => e.Date).ToList();
             if (events.Any())
             {
                 selectedEventId = events[0].Id;
@@ -110,20 +110,17 @@ else
         if (int.TryParse(e.Value?.ToString(), out var eventId))
         {
             selectedEventId = eventId;
-            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
+            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId) ?? selectedEvent;
             await LoadAreasForSelectedEvent();
+            StateHasChanged();
         }
     }
 
     private async Task LoadAreasForSelectedEvent()
     {
         errorMessage = string.Empty;
-        areas = await AreaService.GetAreasByEventAsync(selectedEventId);
-        Console.WriteLine($"DEBUG: Loaded {areas?.Count ?? 0} areas for event {selectedEventId}");
-        foreach (var area in areas ?? Enumerable.Empty<Area>())
-        {
-            Console.WriteLine($"DEBUG: Area {area.Id}: {area.Name} - EventId: {area.EventId}");
-        }
+        areas = await AreaService.GetAreasByEventAsync(selectedEventId) ?? new List<Area>();
+
         currentRegistrations.Clear();
         canRegister.Clear();
 
