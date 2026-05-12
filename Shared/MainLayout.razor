@@ -2,19 +2,44 @@
 
 <PageTitle>FlomiApp</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar__inner">
+            <div class="sidebar__brand">
+                <div class="sidebar__logo">F</div>
+                <div class="sidebar__brand-text">
+                    <span class="sidebar__eyebrow">Workspace</span>
+                    <strong>FlomiApp</strong>
+                </div>
+            </div>
 
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            <NavMenu />
         </div>
+    </aside>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <div class="main-area">
+        <header class="topbar">
+            <div class="topbar__left">
+                <div class="topbar__title-wrap">
+                    <span class="topbar__eyebrow">Pfadi Management</span>
+                    <h1>FlomiApp</h1>
+                </div>
+            </div>
+
+            <div class="topbar__right">
+                <a class="topbar__link" href="https://docs.microsoft.com/aspnet/" target="_blank" rel="noopener noreferrer">
+                    About
+                </a>
+                <div class="topbar__auth">
+                    <LoginDisplay />
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <article class="content-container">
+                @Body
+            </article>
+        </main>
+    </div>
 </div>

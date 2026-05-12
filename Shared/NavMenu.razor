@@ -1,62 +1,93 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">FlomiApp</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+﻿<div class="navmenu-shell">
+    <div class="navmenu-mobile-header">
+        <span class="navmenu-mobile-title">Navigation</span>
+        <button title="Navigation menu" class="navmenu-toggler" @onclick="ToggleNavMenu">
+            <span class="navmenu-toggler__icon"></span>
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="user/dashboard">
-                        <span class="oi oi-dashboard" aria-hidden="true"></span> Dashboard
+    <div class="@NavMenuCssClass navmenu-links" @onclick="HandleNavClick">
+        <nav class="navmenu-list">
+            <div class="navmenu-section">
+                <div class="navmenu-section__label">Allgemein</div>
+
+                <div class="navmenu-item">
+                    <NavLink class="navmenu-link" href="" Match="NavLinkMatch.All">
+                        <span class="navmenu-icon">⌂</span>
+                        <span>Home</span>
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="user/register">
-                        <span class="oi oi-plus" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="user/settings">
-                        <span class="oi oi-cog" aria-hidden="true"></span> Settings
-                    </NavLink>
-                </div>
-                <AuthorizeView Roles="Admin">
-                    <Authorized Context="adminContext">
-                        <div class="nav-item px-3">
-                            <NavLink class="nav-link" href="admin/events">
-                                <span class="oi oi-calendar" aria-hidden="true"></span> Manage Events
+            </div>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="navmenu-section">
+                        <div class="navmenu-section__label">Benutzer</div>
+
+                        <div class="navmenu-item">
+                            <NavLink class="navmenu-link" href="user/dashboard">
+                                <span class="navmenu-icon">▦</span>
+                                <span>Dashboard</span>
                             </NavLink>
                         </div>
-                        <div class="nav-item px-3">
-                            <NavLink class="nav-link" href="admin/areas">
-                                <span class="oi oi-wrench" aria-hidden="true"></span> Manage Areas
+
+                        <div class="navmenu-item">
+                            <NavLink class="navmenu-link" href="user/register">
+                                <span class="navmenu-icon">＋</span>
+                                <span>Register</span>
                             </NavLink>
                         </div>
-                    </Authorized>
-                </AuthorizeView>
-            </Authorized>
-        </AuthorizeView>
-    </nav>
+
+                        <div class="navmenu-item">
+                            <NavLink class="navmenu-link" href="user/settings">
+                                <span class="navmenu-icon">⚙</span>
+                                <span>Settings</span>
+                            </NavLink>
+                        </div>
+                    </div>
+
+                    <AuthorizeView Roles="Admin">
+                        <Authorized Context="adminContext">
+                            <div class="navmenu-section">
+                                <div class="navmenu-section__label">Administration</div>
+
+                                <div class="navmenu-item">
+                                    <NavLink class="navmenu-link" href="admin/events">
+                                        <span class="navmenu-icon">🗓</span>
+                                        <span>Manage Events</span>
+                                    </NavLink>
+                                </div>
+
+                                <div class="navmenu-item">
+                                    <NavLink class="navmenu-link" href="admin/areas">
+                                        <span class="navmenu-icon">🛠</span>
+                                        <span>Manage Areas</span>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+    </div>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "navmenu-collapsed" : "navmenu-expanded";
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void HandleNavClick()
+    {
+        if (!collapseNavMenu)
+        {
+            collapseNavMenu = true;
+        }
     }
 }
