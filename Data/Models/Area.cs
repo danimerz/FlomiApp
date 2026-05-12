@@ -24,5 +24,8 @@ public class Area
 
     public AreaCategory Category { get; set; } = AreaCategory.Sammeln;
 
+    public int EventId { get; set; }
+    public Event Event { get; set; } = null!;
+
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

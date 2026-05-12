@@ -1,0 +1,135 @@
+@page "/admin/events"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@inject IAreaService AreaService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Manage Events</PageTitle>
+
+<h3>Manage Events</h3>
+
+<button class="btn btn-primary" @onclick="ShowCreateForm">Add New Event</button>
+
+@if (showCreateForm)
+{
+    <EditForm Model="currentEvent" OnValidSubmit="SubmitEventForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>Name</label>
+            <InputText @bind-Value="currentEvent.Name" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <InputDate @bind-Value="currentEvent.Date" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <InputTextArea @bind-Value="currentEvent.Description" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">@(isEditing ? "Update" : "Create")</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </EditForm>
+}
+
+@if (events == null)
+{
+    <p>Loading events...</p>
+}
+else if (!events.Any())
+{
+    <p>No events have been configured yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in events)
+            {
+                <tr>
+                    <td>@evt.Name</td>
+                    <td>@evt.Date.ToShortDateString()</td>
+                    <td>@evt.Description</td>
+                    <td>
+                        <button class="btn btn-warning" @onclick="() => EditEvent(evt)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteEvent(evt.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Event> events = new();
+    private Event currentEvent = new();
+    private bool showCreateForm = false;
+    private bool isEditing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await AreaService.GetAllEventsAsync();
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+        isEditing = false;
+        currentEvent = new Event { Date = DateTime.Today };
+    }
+
+    private void CancelEdit()
+    {
+        showCreateForm = false;
+        isEditing = false;
+        currentEvent = new Event();
+    }
+
+    private async Task SubmitEventForm()
+    {
+        if (isEditing)
+        {
+            await AreaService.UpdateEventAsync(currentEvent);
+        }
+        else
+        {
+            await AreaService.CreateEventAsync(currentEvent);
+        }
+
+        events = await AreaService.GetAllEventsAsync();
+        showCreateForm = false;
+        isEditing = false;
+        currentEvent = new Event();
+        StateHasChanged();
+    }
+
+    private void EditEvent(Event evt)
+    {
+        isEditing = true;
+        showCreateForm = true;
+        currentEvent = new Event
+        {
+            Id = evt.Id,
+            Name = evt.Name,
+            Date = evt.Date,
+            Description = evt.Description
+        };
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await AreaService.DeleteEventAsync(id);
+        events = await AreaService.GetAllEventsAsync();
+        StateHasChanged();
+    }
+}

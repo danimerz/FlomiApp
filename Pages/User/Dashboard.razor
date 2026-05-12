@@ -21,6 +21,7 @@ else
         <thead>
             <tr>
                 <th>Bereich</th>
+                <th>Event</th>
                 <th>Datum</th>
                 <th>Zeit</th>
                 <th>Status</th>
@@ -32,6 +33,7 @@ else
             {
                 <tr>
                     <td>@appointment.Area.Name</td>
+                    <td>@appointment.Area.Event?.Name</td>
                     <td>@appointment.Area.Date.ToShortDateString()</td>
                     <td>@appointment.Area.TimeSlot</td>
                     <td>@appointment.Status</td>
@@ -48,16 +50,16 @@ else
 }
 
 @code {
-    private List<Appointment> appointments;
-    private string userId;
+    private List<Appointment> appointments = new();
+    private string userId = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
         }
     }

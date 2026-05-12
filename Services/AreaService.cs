@@ -15,12 +15,25 @@ public class AreaService : IAreaService
 
     public async Task<List<Area>> GetAllAreasAsync()
     {
-        return await _context.Areas.Include(a => a.Appointments).ToListAsync();
+        return await _context.Areas.Include(a => a.Appointments).Include(a => a.Event).ToListAsync();
+    }
+
+    public async Task<List<Area>> GetAreasByEventAsync(int eventId)
+    {
+        return await _context.Areas
+            .Include(a => a.Appointments)
+            .Include(a => a.Event)
+            .Where(a => a.EventId == eventId)
+            .ToListAsync();
     }
 
     public async Task<Area> GetAreaByIdAsync(int id)
     {
-        return await _context.Areas.Include(a => a.Appointments).FirstOrDefaultAsync(a => a.Id == id);
+        return await _context.Areas
+            .Include(a => a.Appointments)
+            .Include(a => a.Event)
+            .FirstOrDefaultAsync(a => a.Id == id)
+            ?? throw new InvalidOperationException($"Area with id {id} not found.");
     }
 
     public async Task CreateAreaAsync(Area area)
@@ -50,5 +63,49 @@ public class AreaService : IAreaService
         return await _context.Appointments
             .Where(a => a.AreaId == areaId && a.Status == AppointmentStatus.Registered)
             .CountAsync();
+    }
+
+    public async Task<List<Event>> GetAllEventsAsync()
+    {
+        return await _context.Events.AsNoTracking().ToListAsync();
+    }
+
+    public async Task<Event> GetEventByIdAsync(int id)
+    {
+        return await _context.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new InvalidOperationException($"Event with id {id} not found.");
+    }
+
+    public async Task CreateEventAsync(Event evt)
+    {
+        _context.Events.Add(evt);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateEventAsync(Event evt)
+    {
+        var existingEvent = await _context.Events.FindAsync(evt.Id);
+        if (existingEvent != null)
+        {
+            existingEvent.Name = evt.Name;
+            existingEvent.Date = evt.Date;
+            existingEvent.Description = evt.Description;
+        }
+        else
+        {
+            _context.Events.Update(evt);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteEventAsync(int id)
+    {
+        var evt = await _context.Events.FindAsync(id);
+        if (evt != null)
+        {
+            _context.Events.Remove(evt);
+            await _context.SaveChangesAsync();
+        }
     }
 }

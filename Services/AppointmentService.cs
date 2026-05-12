@@ -19,6 +19,7 @@ public class AppointmentService : IAppointmentService
     {
         return await _context.Appointments
             .Include(a => a.Area)
+                .ThenInclude(area => area.Event)
             .Where(a => a.UserId == userId)
             .ToListAsync();
     }
@@ -83,10 +84,10 @@ public class AppointmentService : IAppointmentService
             return false;
         }
 
-        // For Verkauf, check if user already has any Verkauf registration
+        // For Verkauf, check if user already has a Verkauf registration for the same event
         if (area.Category == AreaCategory.Verkauf)
         {
-            return !await UserHasRegisteredSaleAreaAsync(userId);
+            return !await UserHasRegisteredSaleAreaAsync(userId, area.EventId);
         }
 
         return true;
@@ -155,11 +156,11 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId)
+    private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId, int eventId)
     {
         return await _context.Appointments
             .Include(a => a.Area)
-            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered && a.Area.EventId == eventId)
             .AnyAsync(a => a.Area.Category == AreaCategory.Verkauf);
     }
 }

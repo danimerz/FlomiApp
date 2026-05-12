@@ -1,4 +1,4 @@
-@page "/user/register"
+﻿@page "/user/register"
 @using FlomiApp.Data.Models
 @inject IAreaService AreaService
 @inject IAppointmentService AppointmentService
@@ -9,48 +9,84 @@
 
 <h3>Available Areas</h3>
 
-@if (areas == null)
+@if (events == null)
 {
-    <p>Loading...</p>
+    <p>Loading events...</p>
 }
-else if (!areas.Any())
+else if (!events.Any())
 {
-    <p>No areas available.</p>
+    <p>No events available.</p>
 }
 else
 {
-    @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
-    {
-        <h4>@group.Key</h4>
-        <div class="row">
-            @foreach (var area in group)
+    <div class="form-group mb-4">
+        <label>Choose an event</label>
+        <InputSelect @bind-Value="selectedEventId" class="form-control" @onchange="OnEventChanged">
+            @foreach (var evt in events)
             {
-                <div class="col-md-4 mb-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">@area.Name</h5>
-                            <p class="card-text">Kategorie: @area.Category</p>
-                            <p class="card-text">Date: @area.Date.ToShortDateString()</p>
-                            <p class="card-text">Time: @area.TimeSlot</p>
-                            <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
-                            <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
-                            @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
-                            {
-                                <p class="text-muted small">@GetRegistrationNote(area)</p>
-                            }
+                <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+            }
+        </InputSelect>
+    </div>
+
+    @if (selectedEvent != null)
+    {
+        <h4>@selectedEvent.Name (@selectedEvent.Date.ToShortDateString())</h4>
+        <p>@selectedEvent.Description</p>
+    }
+
+    @if (areas == null)
+    {
+        <p>Loading areas for selected event...</p>
+    }
+    else if (!areas.Any())
+    {
+        <p>No areas available for this event.</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
+        {
+            <h4>@group.Key</h4>
+            <div class="row">
+                @foreach (var area in group)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">@area.Name</h5>
+                                <p class="card-text">Kategorie: @area.Category</p>
+                                <p class="card-text">Date: @area.Date.ToShortDateString()</p>
+                                <p class="card-text">Time: @area.TimeSlot</p>
+                                <p class="card-text">Capacity: @currentRegistrations[area.Id] / @area.MaxCapacity</p>
+                                <button class="btn btn-primary" @onclick="() => RegisterAppointment(area.Id)" disabled="@(!canRegister[area.Id])">Register</button>
+                                @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                                {
+                                    <p class="text-muted small">@GetRegistrationNote(area)</p>
+                                }
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
     }
 }
 
 @code {
-    private List<Area> areas = new();
+    private List<Event> events = new();
+    private Event? selectedEvent;
+    private int selectedEventId;
+    private List<Area>? areas;
     private Dictionary<int, int> currentRegistrations = new();
     private Dictionary<int, bool> canRegister = new();
     private string userId = string.Empty;
+    private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -59,12 +95,37 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            areas = await AreaService.GetAllAreasAsync();
-            foreach (var area in areas)
+            events = await AreaService.GetAllEventsAsync();
+            if (events.Any())
             {
-                currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
-                canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id);
+                selectedEventId = events[0].Id;
+                selectedEvent = events[0];
+                await LoadAreasForSelectedEvent();
             }
+        }
+    }
+
+    private async Task OnEventChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var eventId))
+        {
+            selectedEventId = eventId;
+            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
+            await LoadAreasForSelectedEvent();
+        }
+    }
+
+    private async Task LoadAreasForSelectedEvent()
+    {
+        errorMessage = string.Empty;
+        areas = await AreaService.GetAreasByEventAsync(selectedEventId);
+        currentRegistrations.Clear();
+        canRegister.Clear();
+
+        foreach (var area in areas)
+        {
+            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+            canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id);
         }
     }
 
@@ -75,9 +136,9 @@ else
             await AppointmentService.RegisterForAppointmentAsync(userId, areaId);
             Navigation.NavigateTo("/user/dashboard");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // TODO: display user-friendly error message
+            errorMessage = ex.Message;
         }
     }
 
