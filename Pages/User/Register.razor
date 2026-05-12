@@ -95,7 +95,7 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            events = (await AreaService.GetAllEventsAsync()).OrderBy(e => e.Date).ToList();
+            events = (await AreaService.GetAllEventsAsync()).Where(e => e.IsActive).OrderBy(e => e.Date).ToList();
             if (events.Any())
             {
                 selectedEventId = events[0].Id;
@@ -110,7 +110,7 @@ else
         if (int.TryParse(e.Value?.ToString(), out var eventId))
         {
             selectedEventId = eventId;
-            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId) ?? selectedEvent;
+            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }

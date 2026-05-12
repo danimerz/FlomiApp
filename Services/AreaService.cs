@@ -106,6 +106,7 @@ public class AreaService : IAreaService
             existingEvent.Name = evt.Name;
             existingEvent.Date = evt.Date;
             existingEvent.Description = evt.Description;
+            existingEvent.IsActive = evt.IsActive;
         }
         else
         {

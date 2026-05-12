@@ -28,6 +28,10 @@
             <label>Description</label>
             <InputTextArea @bind-Value="currentEvent.Description" class="form-control" />
         </div>
+        <div class="form-group form-check">
+            <InputCheckbox @bind-Value="currentEvent.IsActive" class="form-check-input" id="activeCheck" />
+            <label class="form-check-label" for="activeCheck">Event aktiv</label>
+        </div>
 
         <button type="submit" class="btn btn-success">@(isEditing ? "Update" : "Create")</button>
         <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
@@ -50,6 +54,7 @@ else
                 <th>Name</th>
                 <th>Date</th>
                 <th>Description</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -60,9 +65,11 @@ else
                     <td>@evt.Name</td>
                     <td>@evt.Date.ToShortDateString()</td>
                     <td>@evt.Description</td>
+                    <td>@(evt.IsActive ? "Active" : "Inactive")</td>
                     <td>
-                        <button class="btn btn-warning" @onclick="() => EditEvent(evt)">Edit</button>
-                        <button class="btn btn-danger" @onclick="() => DeleteEvent(evt.Id)">Delete</button>
+                        <button class="btn btn-warning me-2" @onclick="() => EditEvent(evt)">Edit</button>
+                        <button class="btn btn-sm @(evt.IsActive ? "btn-secondary" : "btn-success")" @onclick="() => ToggleEventActive(evt.Id)">@(evt.IsActive ? "Deactivate" : "Activate")</button>
+                        <button class="btn btn-danger ms-2" @onclick="() => DeleteEvent(evt.Id)">Delete</button>
                     </td>
                 </tr>
             }
@@ -85,7 +92,7 @@ else
     {
         showCreateForm = true;
         isEditing = false;
-        currentEvent = new Event { Date = DateTime.Today };
+        currentEvent = new Event { Date = DateTime.Today, IsActive = true };
     }
 
     private void CancelEdit()
@@ -122,8 +129,18 @@ else
             Id = evt.Id,
             Name = evt.Name,
             Date = evt.Date,
-            Description = evt.Description
+            Description = evt.Description,
+            IsActive = evt.IsActive
         };
+    }
+
+    private async Task ToggleEventActive(int id)
+    {
+        var evt = await AreaService.GetEventByIdAsync(id);
+        evt.IsActive = !evt.IsActive;
+        await AreaService.UpdateEventAsync(evt);
+        events = await AreaService.GetAllEventsAsync();
+        StateHasChanged();
     }
 
     private async Task DeleteEvent(int id)
