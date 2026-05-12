@@ -20,11 +20,38 @@ public class AppointmentService : IAppointmentService
         return await _context.Appointments
             .Include(a => a.Area)
                 .ThenInclude(area => area.Event)
+            .Include(a => a.User)
+            .Include(a => a.FamilyMember)
             .Where(a => a.UserId == userId)
             .ToListAsync();
     }
 
-    public async Task RegisterForAppointmentAsync(string userId, int areaId)
+    public async Task<List<FamilyMember>> GetFamilyMembersAsync(string userId)
+    {
+        return await _context.FamilyMembers
+            .Where(f => f.UserId == userId)
+            .ToListAsync();
+    }
+
+    public async Task AddFamilyMemberAsync(string userId, FamilyMember familyMember)
+    {
+        familyMember.UserId = userId;
+        _context.FamilyMembers.Add(familyMember);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteFamilyMemberAsync(int familyMemberId, string userId)
+    {
+        var familyMember = await _context.FamilyMembers
+            .FirstOrDefaultAsync(f => f.Id == familyMemberId && f.UserId == userId);
+        if (familyMember != null)
+        {
+            _context.FamilyMembers.Remove(familyMember);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null)
@@ -32,7 +59,7 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException("Area not found.");
         }
 
-        if (!await CanRegisterAsync(userId, areaId))
+        if (!await CanRegisterAsync(userId, areaId, familyMemberId))
         {
             var message = area.Category == AreaCategory.Verkauf
                 ? "You can only register for one Verkauf area."
@@ -40,15 +67,85 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException(message);
         }
 
+        if (familyMemberId.HasValue)
+        {
+            var familyMember = await _context.FamilyMembers
+                .FirstOrDefaultAsync(f => f.Id == familyMemberId.Value && f.UserId == userId);
+            if (familyMember == null)
+            {
+                throw new InvalidOperationException("Selected family member not found.");
+            }
+        }
+
         var appointment = new Appointment
         {
             UserId = userId,
             AreaId = areaId,
+            FamilyMemberId = familyMemberId,
             Status = AppointmentStatus.Registered
         };
 
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null)
+    {
+        var area = await _areaService.GetAreaByIdAsync(areaId);
+        if (area == null)
+        {
+            return false;
+        }
+
+        // Check if area is at capacity
+        var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
+        if (current >= area.MaxCapacity)
+        {
+            return false;
+        }
+
+        // Check if person has a conflicting registration on this date and time
+        if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, area.TimeSlot))
+        {
+            return false;
+        }
+
+        // For Verkauf, check if person already has a Verkauf registration for the same event
+        if (area.Category == AreaCategory.Verkauf)
+        {
+            return !await PersonHasRegisteredSaleAreaAsync(userId, familyMemberId, area.EventId);
+        }
+
+        return true;
+    }
+
+    private async Task<bool> PersonHasConflictingRegistrationAsync(string userId, int? familyMemberId, DateTime date, string timeSlot)
+    {
+        var existingAppointments = await _context.Appointments
+            .Include(a => a.Area)
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
+            .Where(a => familyMemberId.HasValue ? a.FamilyMemberId == familyMemberId : a.FamilyMemberId == null)
+            .Where(a => a.Area.Date.Date == date.Date)
+            .ToListAsync();
+
+        foreach (var existing in existingAppointments)
+        {
+            if (TimeSlotConflict(timeSlot, existing.Area.TimeSlot))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task<bool> PersonHasRegisteredSaleAreaAsync(string userId, int? familyMemberId, int eventId)
+    {
+        return await _context.Appointments
+            .Include(a => a.Area)
+            .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered && a.Area.EventId == eventId)
+            .Where(a => familyMemberId.HasValue ? a.FamilyMemberId == familyMemberId : a.FamilyMemberId == null)
+            .AnyAsync(a => a.Area.Category == AreaCategory.Verkauf);
     }
 
     public async Task CancelAppointmentAsync(int appointmentId, string userId)

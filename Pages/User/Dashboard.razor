@@ -20,6 +20,7 @@ else
     <table class="table">
         <thead>
             <tr>
+                <th>Person</th>
                 <th>Bereich</th>
                 <th>Event</th>
                 <th>Datum</th>
@@ -32,6 +33,7 @@ else
             @foreach (var appointment in appointments)
             {
                 <tr>
+                    <td>@(appointment.FamilyMember != null ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}" : $"{appointment.User.FirstName} {appointment.User.LastName}")</td>
                     <td>@appointment.Area.Name</td>
                     <td>@appointment.Area.Event?.Name</td>
                     <td>@appointment.Area.Date.ToShortDateString()</td>

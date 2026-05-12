@@ -1,10 +1,15 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace FlomiApp.Data.Models;
 
-public class ApplicationUser : IdentityUser
+public class FamilyMember
 {
+    public int Id { get; set; }
+
+    public string UserId { get; set; } = string.Empty;
+
+    public ApplicationUser User { get; set; } = null!;
+
     [Required]
     public string FirstName { get; set; } = string.Empty;
 
@@ -13,10 +18,10 @@ public class ApplicationUser : IdentityUser
 
     public string Pfadiname { get; set; } = string.Empty;
 
+    [Required]
     public string Stufe { get; set; } = string.Empty;
 
+    [Required]
     [DataType(DataType.Date)]
-    public DateTime? Birthday { get; set; }
-
-    public ICollection<FamilyMember> FamilyMembers { get; set; } = new List<FamilyMember>();
+    public DateTime Birthday { get; set; }
 }

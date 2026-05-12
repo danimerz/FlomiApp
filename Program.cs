@@ -52,10 +52,12 @@ app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-// Seed admin user and role
+// Apply any pending EF Core migrations and seed admin user and role
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
     await SeedAdminUserAsync(services);
 }
 

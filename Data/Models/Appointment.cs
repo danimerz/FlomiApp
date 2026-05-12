@@ -15,6 +15,9 @@ public class Appointment
 
     public Area Area { get; set; } = null!;
 
+    public int? FamilyMemberId { get; set; }
+    public FamilyMember? FamilyMember { get; set; }
+
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Registered;
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;

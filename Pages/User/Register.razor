@@ -29,6 +29,17 @@ else
         </select>
     </div>
 
+    <div class="form-group mb-4">
+        <label>Register as</label>
+        <select class="form-control" value="@selectedMemberId" @onchange="OnPersonChanged">
+            <option value="0">Mich selbst</option>
+            @foreach (var member in familyMembers)
+            {
+                <option value="@member.Id">@member.FirstName @member.LastName (@member.Stufe)</option>
+            }
+        </select>
+    </div>
+
     @if (selectedEvent != null)
     {
         <h4>@selectedEvent.Name (@selectedEvent.Date.ToShortDateString())</h4>
@@ -83,6 +94,8 @@ else
     private Event? selectedEvent;
     private int selectedEventId;
     private List<Area>? areas;
+    private List<FamilyMember> familyMembers = new();
+    private int selectedMemberId = 0;
     private Dictionary<int, int> currentRegistrations = new();
     private Dictionary<int, bool> canRegister = new();
     private string userId = string.Empty;
@@ -95,6 +108,7 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            familyMembers = await AppointmentService.GetFamilyMembersAsync(userId);
             events = (await AreaService.GetAllEventsAsync()).Where(e => e.IsActive).OrderBy(e => e.Date).ToList();
             if (events.Any())
             {
@@ -127,7 +141,17 @@ else
         foreach (var area in areas)
         {
             currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
-            canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id);
+            canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, selectedMemberId == 0 ? null : selectedMemberId);
+        }
+    }
+
+    private async Task OnPersonChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var memberId))
+        {
+            selectedMemberId = memberId;
+            await LoadAreasForSelectedEvent();
+            StateHasChanged();
         }
     }
 
@@ -135,7 +159,7 @@ else
     {
         try
         {
-            await AppointmentService.RegisterForAppointmentAsync(userId, areaId);
+            await AppointmentService.RegisterForAppointmentAsync(userId, areaId, selectedMemberId == 0 ? null : selectedMemberId);
             Navigation.NavigateTo("/user/dashboard");
         }
         catch (Exception ex)

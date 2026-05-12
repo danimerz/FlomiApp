@@ -14,4 +14,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Area> Areas { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Event> Events { get; set; }
+    public DbSet<FamilyMember> FamilyMembers { get; set; }
 }

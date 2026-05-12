@@ -58,11 +58,14 @@ public class RegisterModel : PageModel
 
         public string Pfadiname { get; set; } = string.Empty;
 
+        [Required]
         public string Stufe { get; set; } = string.Empty;
 
+        [Required]
         [DataType(DataType.Date)]
         public DateTime? Birthday { get; set; }
 
+        [Required]
         [Phone]
         [Display(Name = "Phone number")]
         public string PhoneNumber { get; set; } = string.Empty;
@@ -70,13 +73,13 @@ public class RegisterModel : PageModel
 
     public async Task OnGetAsync(string returnUrl = null!)
     {
-        ReturnUrl = returnUrl ?? Url.Content("~");
+        ReturnUrl = string.IsNullOrEmpty(returnUrl) ? Url.Content("~/") : returnUrl;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
     public async Task<IActionResult> OnPostAsync(string returnUrl = null!)
     {
-        returnUrl = returnUrl ?? Url.Content("~");
+        returnUrl = string.IsNullOrEmpty(returnUrl) ? Url.Content("~/") : returnUrl;
         ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         if (ModelState.IsValid)
         {

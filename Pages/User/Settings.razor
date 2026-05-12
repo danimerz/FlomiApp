@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAppointmentService AppointmentService
 
 <PageTitle>Settings</PageTitle>
 
@@ -54,6 +55,73 @@
 
             <button type="submit" class="btn btn-primary">Update Email</button>
         </EditForm>
+
+        <div class="mt-5">
+            <h4>Familienmitglieder</h4>
+            <EditForm Model="newFamilyMember" OnValidSubmit="AddFamilyMember">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group">
+                    <label for="familyFirstName">Vorname</label>
+                    <InputText id="familyFirstName" @bind-Value="newFamilyMember.FirstName" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="familyLastName">Nachname</label>
+                    <InputText id="familyLastName" @bind-Value="newFamilyMember.LastName" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="familyPfadiname">Pfadiname</label>
+                    <InputText id="familyPfadiname" @bind-Value="newFamilyMember.Pfadiname" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="familyStufe">Stufe</label>
+                    <InputSelect id="familyStufe" @bind-Value="newFamilyMember.Stufe" class="form-control">
+                        <option value="">Select stage</option>
+                        <option value="Biber">Biber</option>
+                        <option value="Wolf">Wolf</option>
+                        <option value="Pfadi">Pfadi</option>
+                        <option value="Pio">Pio</option>
+                        <option value="Leiter">Leiter</option>
+                        <option value="Sonstiges">Sonstiges</option>
+                    </InputSelect>
+                </div>
+                <div class="form-group">
+                    <label for="familyBirthday">Geburtstag</label>
+                    <InputDate id="familyBirthday" @bind-Value="newFamilyMember.Birthday" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-secondary">Familienmitglied hinzufügen</button>
+            </EditForm>
+
+            @if (familyMembers.Any())
+            {
+                <table class="table mt-4">
+                    <thead>
+                        <tr>
+                            <th>Vorname</th>
+                            <th>Nachname</th>
+                            <th>Pfadiname</th>
+                            <th>Stufe</th>
+                            <th>Geburtstag</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var member in familyMembers)
+                        {
+                            <tr>
+                                <td>@member.FirstName</td>
+                                <td>@member.LastName</td>
+                                <td>@member.Pfadiname</td>
+                                <td>@member.Stufe</td>
+                                <td>@member.Birthday.ToShortDateString()</td>
+                                <td><button class="btn btn-danger btn-sm" @onclick="() => RemoveFamilyMember(member.Id)">Löschen</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
     </div>
 
     <div class="col-md-6">
@@ -95,6 +163,8 @@
 @code {
     private ApplicationUser user = new();
     private PasswordChangeModel passwordModel = new();
+    private FamilyMember newFamilyMember = new();
+    private List<FamilyMember> familyMembers = new();
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
 
@@ -108,8 +178,36 @@
             if (foundUser is not null)
             {
                 user = foundUser;
+                familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
             }
         }
+    }
+
+    private async Task AddFamilyMember()
+    {
+        if (user.Id == null)
+        {
+            errorMessage = "User not found.";
+            return;
+        }
+
+        await AppointmentService.AddFamilyMemberAsync(user.Id, newFamilyMember);
+        familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
+        newFamilyMember = new FamilyMember();
+        successMessage = "Familienmitglied hinzugefügt.";
+        errorMessage = string.Empty;
+    }
+
+    private async Task RemoveFamilyMember(int familyMemberId)
+    {
+        if (user.Id == null)
+        {
+            errorMessage = "User not found.";
+            return;
+        }
+
+        await AppointmentService.DeleteFamilyMemberAsync(familyMemberId, user.Id);
+        familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
     }
 
     private async Task UpdateUser()
