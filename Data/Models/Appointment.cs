@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace FlomiApp.Data.Models;
 
@@ -10,7 +9,7 @@ public class Appointment
     [Required]
     public string UserId { get; set; } = string.Empty;
 
-    public IdentityUser User { get; set; } = null!;
+    public ApplicationUser User { get; set; } = null!;
 
     public int AreaId { get; set; }
 

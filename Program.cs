@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using FlomiApp.Areas.Identity;
 using FlomiApp.Data;
+using FlomiApp.Data.Models;
 using FlomiApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,12 +16,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
@@ -63,7 +64,7 @@ app.Run();
 async Task SeedAdminUserAsync(IServiceProvider services)
 {
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
     // Create Admin role if it doesn't exist
     if (!await roleManager.RoleExistsAsync("Admin"))
@@ -76,7 +77,7 @@ async Task SeedAdminUserAsync(IServiceProvider services)
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
-        adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+        adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
         var result = await userManager.CreateAsync(adminUser, "Admin123!"); // Change password
         if (result.Succeeded)
         {
