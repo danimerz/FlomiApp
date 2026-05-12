@@ -15,7 +15,7 @@ public class AreaService : IAreaService
 
     public async Task<List<Area>> GetAllAreasAsync()
     {
-        return await _context.Areas.Include(a => a.Appointments).Include(a => a.Event).ToListAsync();
+        return await _context.Areas.Include(a => a.Appointments).Include(a => a.Event).AsNoTracking().ToListAsync();
     }
 
     public async Task<List<Area>> GetAreasByEventAsync(int eventId)
@@ -24,6 +24,7 @@ public class AreaService : IAreaService
             .Include(a => a.Appointments)
             .Include(a => a.Event)
             .Where(a => a.EventId == eventId)
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -32,6 +33,7 @@ public class AreaService : IAreaService
         return await _context.Areas
             .Include(a => a.Appointments)
             .Include(a => a.Event)
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id)
             ?? throw new InvalidOperationException($"Area with id {id} not found.");
     }
@@ -44,7 +46,21 @@ public class AreaService : IAreaService
 
     public async Task UpdateAreaAsync(Area area)
     {
-        _context.Areas.Update(area);
+        var existingArea = await _context.Areas.FindAsync(area.Id);
+        if (existingArea != null)
+        {
+            existingArea.Name = area.Name;
+            existingArea.MaxCapacity = area.MaxCapacity;
+            existingArea.Date = area.Date;
+            existingArea.TimeSlot = area.TimeSlot;
+            existingArea.Category = area.Category;
+            existingArea.EventId = area.EventId;
+        }
+        else
+        {
+            _context.Areas.Update(area);
+        }
+
         await _context.SaveChangesAsync();
     }
 
