@@ -1,6 +1,8 @@
-﻿<div class="navmenu-shell">
+﻿@using System.Security.Claims
+
+<div class="navmenu-shell">
     <div class="navmenu-mobile-header">
-        <span class="navmenu-mobile-title">Navigation</span>
+        <span class="navmenu-mobile-title">Menü</span>
         <button title="Navigation menu" class="navmenu-toggler" @onclick="ToggleNavMenu">
             <span class="navmenu-toggler__icon"></span>
         </button>
@@ -19,7 +21,7 @@
                 </div>
             </div>
 
-            <AuthorizeView>
+            <AuthorizeView Context="authState">
                 <Authorized>
                     <div class="navmenu-section">
                         <div class="navmenu-section__label">Benutzer</div>
@@ -46,8 +48,33 @@
                         </div>
                     </div>
 
+                    <div class="navmenu-mobile-user">
+                        <div class="navmenu-mobile-user__label">Konto</div>
+
+                        <div class="navmenu-mobile-user__card">
+                            <div class="navmenu-mobile-user__identity">
+                                <div class="navmenu-mobile-user__avatar">
+                                    @GetUserInitial(authState.User)
+                                </div>
+
+                                <div class="navmenu-mobile-user__meta">
+                                    <span class="navmenu-mobile-user__status">Angemeldet</span>
+                                    <span class="navmenu-mobile-user__name">@GetDisplayName(authState.User)</span>
+                                </div>
+                            </div>
+
+                            <form method="post" action="Identity/Account/Logout" class="navmenu-mobile-user__logout" @onclick:stopPropagation="true">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="/" />
+                                <button type="submit" class="navmenu-mobile-user__logout-button">
+                                    Abmelden
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                     <AuthorizeView Roles="Admin">
-                        <Authorized Context="adminContext">
+                        <Authorized>
                             <div class="navmenu-section">
                                 <div class="navmenu-section__label">Administration</div>
 
@@ -89,5 +116,23 @@
         {
             collapseNavMenu = true;
         }
+    }
+
+    private string GetDisplayName(ClaimsPrincipal user)
+    {
+        return user.FindFirst(ClaimTypes.GivenName)?.Value
+            ?? user.FindFirst("FirstName")?.Value
+            ?? user.Identity?.Name
+            ?? "Benutzer";
+    }
+
+    private string GetUserInitial(ClaimsPrincipal user)
+    {
+        var displayName = GetDisplayName(user);
+
+        if (string.IsNullOrWhiteSpace(displayName))
+            return "B";
+
+        return displayName.Substring(0, 1).ToUpperInvariant();
     }
 }
