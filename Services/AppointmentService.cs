@@ -40,6 +40,25 @@ public class AppointmentService : IAppointmentService
         await _context.SaveChangesAsync();
     }
 
+    public async Task UpdateFamilyMemberAsync(int familyMemberId, string userId, FamilyMember familyMember)
+    {
+        var existingMember = await _context.FamilyMembers
+            .FirstOrDefaultAsync(f => f.Id == familyMemberId && f.UserId == userId);
+
+        if (existingMember == null)
+        {
+            throw new InvalidOperationException("Family member not found.");
+        }
+
+        existingMember.FirstName = familyMember.FirstName;
+        existingMember.LastName = familyMember.LastName;
+        existingMember.Pfadiname = familyMember.Pfadiname;
+        existingMember.Stufe = familyMember.Stufe;
+        existingMember.Birthday = familyMember.Birthday;
+
+        await _context.SaveChangesAsync();
+    }
+
     public async Task DeleteFamilyMemberAsync(int familyMemberId, string userId)
     {
         var familyMember = await _context.FamilyMembers

@@ -116,29 +116,29 @@
                 </div>
 
                 <div class="settings-card__body">
-                    <EditForm Model="newFamilyMember" OnValidSubmit="AddFamilyMember">
+                    <EditForm Model="familyMemberForm" OnValidSubmit="SaveFamilyMember">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="validation-summary" />
 
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="familyFirstName">Vorname</label>
-                                <InputText id="familyFirstName" @bind-Value="newFamilyMember.FirstName" class="form-control-modern" />
+                                <InputText id="familyFirstName" @bind-Value="familyMemberForm.FirstName" class="form-control-modern" />
                             </div>
 
                             <div class="form-group">
                                 <label for="familyLastName">Nachname</label>
-                                <InputText id="familyLastName" @bind-Value="newFamilyMember.LastName" class="form-control-modern" />
+                                <InputText id="familyLastName" @bind-Value="familyMemberForm.LastName" class="form-control-modern" />
                             </div>
 
                             <div class="form-group">
                                 <label for="familyPfadiname">Pfadiname</label>
-                                <InputText id="familyPfadiname" @bind-Value="newFamilyMember.Pfadiname" class="form-control-modern" />
+                                <InputText id="familyPfadiname" @bind-Value="familyMemberForm.Pfadiname" class="form-control-modern" />
                             </div>
 
                             <div class="form-group">
                                 <label for="familyStufe">Stufe</label>
-                                <InputSelect id="familyStufe" @bind-Value="newFamilyMember.Stufe" class="form-control-modern">
+                                <InputSelect id="familyStufe" @bind-Value="familyMemberForm.Stufe" class="form-control-modern">
                                     <option value="">Select stage</option>
                                     <option value="Biber">Biber</option>
                                     <option value="Wolf">Wolf</option>
@@ -151,12 +151,18 @@
 
                             <div class="form-group">
                                 <label for="familyBirthday">Geburtstag</label>
-                                <InputDate id="familyBirthday" @bind-Value="newFamilyMember.Birthday" class="form-control-modern" />
+                                <InputDate id="familyBirthday" @bind-Value="familyMemberForm.Birthday" class="form-control-modern" />
                             </div>
                         </div>
 
                         <div class="form-actions">
-                            <button type="submit" class="secondary-btn">Familienmitglied hinzufügen</button>
+                            <button type="submit" class="secondary-btn">
+                                @(isEditingFamilyMember ? "Familienmitglied speichern" : "Familienmitglied hinzufügen")
+                            </button>
+                            @if (isEditingFamilyMember)
+                            {
+                                <button type="button" class="secondary-btn" @onclick="CancelFamilyEdit">Abbrechen</button>
+                            }
                         </div>
                     </EditForm>
 
@@ -185,6 +191,7 @@
                                     </div>
 
                                     <div class="member-card__actions">
+                                        <button class="secondary-btn" @onclick="() => EditFamilyMember(member)">Bearbeiten</button>
                                         <button class="danger-btn" @onclick="() => RemoveFamilyMember(member.Id)">Löschen</button>
                                     </div>
                                 </article>
@@ -245,7 +252,8 @@
 @code {
     private ApplicationUser user = new();
     private PasswordChangeModel passwordModel = new();
-    private FamilyMember newFamilyMember = new();
+    private FamilyMember familyMemberForm = new();
+    private bool isEditingFamilyMember = false;
     private List<FamilyMember> familyMembers = new();
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
@@ -265,7 +273,7 @@
         }
     }
 
-    private async Task AddFamilyMember()
+    private async Task SaveFamilyMember()
     {
         if (user.Id == null)
         {
@@ -273,11 +281,46 @@
             return;
         }
 
-        await AppointmentService.AddFamilyMemberAsync(user.Id, newFamilyMember);
+        if (isEditingFamilyMember && familyMemberForm.Id != 0)
+        {
+            await AppointmentService.UpdateFamilyMemberAsync(familyMemberForm.Id, user.Id, familyMemberForm);
+            successMessage = "Familienmitglied aktualisiert.";
+        }
+        else
+        {
+            await AppointmentService.AddFamilyMemberAsync(user.Id, familyMemberForm);
+            successMessage = "Familienmitglied hinzugefügt.";
+        }
+
         familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
-        newFamilyMember = new FamilyMember();
-        successMessage = "Familienmitglied hinzugefügt.";
+        familyMemberForm = new FamilyMember();
+        isEditingFamilyMember = false;
         errorMessage = string.Empty;
+    }
+
+    private void EditFamilyMember(FamilyMember member)
+    {
+        familyMemberForm = new FamilyMember
+        {
+            Id = member.Id,
+            UserId = member.UserId,
+            FirstName = member.FirstName,
+            LastName = member.LastName,
+            Pfadiname = member.Pfadiname,
+            Stufe = member.Stufe,
+            Birthday = member.Birthday
+        };
+        isEditingFamilyMember = true;
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelFamilyEdit()
+    {
+        familyMemberForm = new FamilyMember();
+        isEditingFamilyMember = false;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
     }
 
     private async Task RemoveFamilyMember(int familyMemberId)
