@@ -12,20 +12,30 @@
                     <img src="img/pfadi_logo.png" alt="Pfadi Flomi Logo" class="sidebar__logo-image" />
                 </div>
                 <div class="sidebar__brand-text">
-                    <span class="sidebar__eyebrow"> </span>
+                    <span class="sidebar__eyebrow"></span>
                     <strong>FlomiApp</strong>
                 </div>
             </div>
 
-            <div class="sidebar__theme-toggle">
-                <button class="theme-toggle-button" @onclick="ToggleTheme">
-                    <span class="theme-toggle-button__icon">@(ThemeState.CurrentTheme == "dark" ? "☀" : "☾")</span>
-                    <span class="theme-toggle-button__text">@(ThemeState.CurrentTheme == "dark" ? "Light Mode" : "Dark Mode")</span>
-                </button>
-            </div>
-
             <div class="sidebar__nav">
                 <NavMenu />
+            </div>
+
+            <div class="sidebar__theme-toggle sidebar__theme-toggle--desktop">
+                <button class="theme-switch @(ThemeState.CurrentTheme == "dark" ? "is-dark" : "is-light")"
+                        type="button"
+                        @onclick="ToggleTheme"
+                        aria-label="Theme umschalten">
+                    <span class="theme-switch__track">
+                        <span class="theme-switch__icon theme-switch__icon--sun">☀</span>
+                        <span class="theme-switch__icon theme-switch__icon--moon">☾</span>
+                        <span class="theme-switch__thumb"></span>
+                    </span>
+                </button>
+
+                <span class="theme-switch__label">
+                    @(ThemeState.CurrentTheme == "dark" ? "Dark Mode" : "Light Mode")
+                </span>
             </div>
 
             <div class="sidebar-login-desktop">

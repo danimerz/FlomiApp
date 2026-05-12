@@ -1,4 +1,5 @@
 ﻿@using System.Security.Claims
+@inject FlomiApp.Services.ThemeState ThemeState
 
 <div class="navmenu-shell">
     <div class="navmenu-mobile-header">
@@ -48,6 +49,50 @@
                         </div>
                     </div>
 
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
+                            <div class="navmenu-section">
+                                <div class="navmenu-section__label">Administration</div>
+
+                                <div class="navmenu-item">
+                                    <NavLink class="navmenu-link" href="admin/events">
+                                        <span class="navmenu-icon">🗓</span>
+                                        <span>Veranstaltungen verwalten</span>
+                                    </NavLink>
+                                </div>
+
+                                <div class="navmenu-item">
+                                    <NavLink class="navmenu-link" href="admin/areas">
+                                        <span class="navmenu-icon">🛠</span>
+                                        <span>Bereiche verwalten</span>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <div class="navmenu-mobile-theme">
+                        <div class="navmenu-mobile-theme__label">Darstellung</div>
+
+                        <div class="navmenu-mobile-theme__switch-row">
+                            <button class="theme-switch @(ThemeState.CurrentTheme == "dark" ? "is-dark" : "is-light")"
+                                    type="button"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="ToggleTheme"
+                                    aria-label="Theme umschalten">
+                                <span class="theme-switch__track">
+                                    <span class="theme-switch__icon theme-switch__icon--sun">☀</span>
+                                    <span class="theme-switch__icon theme-switch__icon--moon">☾</span>
+                                    <span class="theme-switch__thumb"></span>
+                                </span>
+                            </button>
+
+                            <span class="theme-switch__label">
+                                @(ThemeState.CurrentTheme == "dark" ? "Dark Mode" : "Light Mode")
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="navmenu-mobile-user">
                         <div class="navmenu-mobile-user__label">Konto</div>
 
@@ -72,28 +117,6 @@
                             </form>
                         </div>
                     </div>
-
-                    <AuthorizeView Roles="Admin">
-                        <Authorized>
-                            <div class="navmenu-section">
-                                <div class="navmenu-section__label">Administration</div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/events">
-                                        <span class="navmenu-icon">🗓</span>
-                                        <span>Veranstaltungen verwalten</span>
-                                    </NavLink>
-                                </div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/areas">
-                                        <span class="navmenu-icon">🛠</span>
-                                        <span>Bereiche verwalten</span>
-                                    </NavLink>
-                                </div>
-                            </div>
-                        </Authorized>
-                    </AuthorizeView>
                 </Authorized>
             </AuthorizeView>
         </nav>
@@ -104,6 +127,11 @@
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "navmenu-collapsed" : "navmenu-expanded";
+
+    private async Task ToggleTheme()
+    {
+        await ThemeState.ToggleAsync();
+    }
 
     private void ToggleNavMenu()
     {
