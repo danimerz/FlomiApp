@@ -31,6 +31,7 @@ builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, Applica
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
+builder.Services.AddScoped<ThemeState>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 

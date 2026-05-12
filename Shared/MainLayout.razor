@@ -1,8 +1,10 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject FlomiApp.Services.ThemeState ThemeState
 
 <PageTitle>FlomiApp</PageTitle>
 
-<div class="app-shell">
+<div class="app-shell" data-theme="@ThemeState.CurrentTheme">
     <aside class="sidebar">
         <div class="sidebar__inner">
             <div class="sidebar__brand">
@@ -13,6 +15,13 @@
                     <span class="sidebar__eyebrow"> </span>
                     <strong>FlomiApp</strong>
                 </div>
+            </div>
+
+            <div class="sidebar__theme-toggle">
+                <button class="theme-toggle-button" @onclick="ToggleTheme">
+                    <span class="theme-toggle-button__icon">@(ThemeState.CurrentTheme == "dark" ? "☀" : "☾")</span>
+                    <span class="theme-toggle-button__text">@(ThemeState.CurrentTheme == "dark" ? "Light Mode" : "Dark Mode")</span>
+                </button>
             </div>
 
             <div class="sidebar__nav">
@@ -31,3 +40,36 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool _themeInitialized;
+
+    protected override void OnInitialized()
+    {
+        ThemeState.OnChange += HandleThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_themeInitialized)
+        {
+            _themeInitialized = true;
+            await ThemeState.InitializeAsync();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeState.ToggleAsync();
+    }
+
+    private void HandleThemeChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ThemeState.OnChange -= HandleThemeChanged;
+    }
+}
