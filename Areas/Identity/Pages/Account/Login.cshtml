@@ -2,80 +2,117 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Anmelden";
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Willkommen zurück</span>
+            <h1>Anmelden</h1>
+            <p>
+                Melde dich mit deinem Konto bei der FlomiApp an, um auf Einsätze und Veranstaltungen zuzugreifen.
+            </p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__header">
+            <div class="register-card__topline">Benutzerzugang</div>
+            <h2>Kontoanmeldung</h2>
+            <p>Gib deine E-Mail-Adresse und dein Passwort ein, um dich anzumelden.</p>
+        </div>
+
+        <div class="register-card__body">
+            <form id="account" method="post" class="register-form">
+                <div asp-validation-summary="ModelOnly" class="register-validation"></div>
+
+                <div class="register-grid register-grid--full">
+                    <div class="register-field">
+                        <label asp-for="Input.Email" class="register-label"></label>
+                        <input asp-for="Input.Email"
+                               class="register-input"
+                               autocomplete="username"
+                               aria-required="true"
+                               placeholder="name@example.com" />
+                        <span asp-validation-for="Input.Email" class="register-error"></span>
+                    </div>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+
+                <div class="register-grid register-grid--full">
+                    <div class="register-field">
+                        <label asp-for="Input.Password" class="register-label"></label>
+                        <input asp-for="Input.Password"
+                               type="password"
+                               class="register-input"
+                               autocomplete="current-password"
+                               aria-required="true"
+                               placeholder="Passwort" />
+                        <span asp-validation-for="Input.Password" class="register-error"></span>
+                    </div>
                 </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
+
+                <div class="register-grid register-grid--full">
+                    <div class="register-field">
+                        <label asp-for="Input.RememberMe" class="register-label"></label>
+                        <div class="register-checkbox">
+                            <input asp-for="Input.RememberMe" />
+                            <span>Angemeldet bleiben</span>
+                        </div>
+                        <span asp-validation-for="Input.RememberMe" class="register-error"></span>
+                    </div>
                 </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+
+                <div class="register-actions">
+                    <button id="login-submit" type="submit" class="register-button">Anmelden</button>
                 </div>
-                <div>
+
+                <div class="register-links">
                     <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                        <a id="forgot-password" asp-page="./ForgotPassword">Passwort vergessen?</a>
                     </p>
                     <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Neuen Account erstellen</a>
                     </p>
                     <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Bestätigungs-E-Mail erneut senden</a>
                     </p>
                 </div>
             </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
+
+            @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+            {
+                <div style="margin-top: 2rem;">
+                    <div class="register-card__topline">Externe Anmeldung</div>
+                    <h2 style="margin-top: 0;">Alternative Anmeldung</h2>
+                    <p style="margin-bottom: 1rem; color: #475569;">
+                        Du kannst dich auch mit einem externen Dienst anmelden.
+                    </p>
+
+                    <form id="external-account"
+                          asp-page="./ExternalLogin"
+                          asp-route-returnUrl="@Model.ReturnUrl"
+                          method="post"
+                          class="register-form">
+                        <div class="register-actions">
+                            @foreach (var provider in Model.ExternalLogins!)
+                            {
+                                <button type="submit"
+                                        class="register-button"
+                                        name="provider"
+                                        value="@provider.Name"
+                                        title="Log in using your @provider.DisplayName account">
+                                    @provider.DisplayName
+                                </button>
+                            }
                         </div>
                     </form>
-                }
+                </div>
             }
-        </section>
-    </div>
+        </div>
+    </section>
 </div>
 
 @section Scripts {

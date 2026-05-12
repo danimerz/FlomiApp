@@ -73,6 +73,31 @@
     padding: 1.5rem 1.5rem 0.75rem;
 }
 
+.register-links p {
+    margin: 0 0 0.75rem 0;
+}
+
+.register-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.35rem;
+}
+
+.register-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.register-links a {
+    color: #315efb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register-links a:hover {
+    text-decoration: underline;
+}
 .register-card__topline {
     margin-bottom: 0.35rem;
     color: #2563eb;
@@ -206,6 +231,29 @@
 
 .register-button:active {
     transform: translateY(0);
+}
+
+.register-actions .register-button {
+    width: 100%;
+}
+
+.register-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.35rem;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.register-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-height: auto;
+    padding: 0;
+    margin: 0;
+    accent-color: #2563eb;
+    box-shadow: none;
 }
 
 @media (max-width: 768px) {

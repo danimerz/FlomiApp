@@ -1,4 +1,7 @@
 ﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Willkommen</PageTitle>
 
@@ -6,15 +9,23 @@
     <section class="home-hero">
         <div class="home-hero__content">
             <span class="home-hero__badge">Willkommen</span>
-            <h1>Willkommen bei der Flomi-Anmeldung</h1>
+            <h1>@welcomeText</h1>
             <p class="home-hero__lead">
                 Schön, dass du uns als Helfer/in, Sortierer/in oder Verkäufer/in unterstützen möchtest.
-                Mit diesem Formular kannst du dich einfach und Schritt für Schritt für deinen Einsatz anmelden.
+                Mit dieser App kannst du dich einfach für einen oder mehrere Einsätze anmelden.
             </p>
 
             <div class="home-hero__actions">
-                <a class="home-primary-btn" href="/user/register">Jetzt anmelden</a>
-                <a class="home-secondary-btn" href="/user/dashboard">Zum Dashboard</a>
+                @if (isAuthenticated)
+                {
+                    <a class="home-primary-btn" href="/user/dashboard">Zum Dashboard</a>
+                    <a class="home-secondary-btn" href="/user/settings">Meine Daten</a>
+                }
+                else
+                {
+                    <a class="home-primary-btn" href="/user/register">Jetzt anmelden</a>
+                    <a class="home-secondary-btn" href="/Identity/Account/Login">Login</a>
+                }
             </div>
         </div>
     </section>
@@ -97,8 +108,45 @@
             </p>
 
             <div class="home-bottom-action">
-                <a class="home-primary-btn" href="/user/register">Los geht's</a>
+                @if (isAuthenticated)
+                {
+                    <a class="home-primary-btn" href="/user/dashboard">Zum Dashboard</a>
+                }
+                else
+                {
+                    <a class="home-primary-btn" href="/user/register">Los geht's</a>
+                }
             </div>
         </div>
     </section>
 </div>
+
+@code {
+    private string welcomeText = "Willkommen bei der Flomi-Anmeldung";
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            isAuthenticated = true;
+
+            var firstName =
+                user.FindFirst(ClaimTypes.GivenName)?.Value ??
+                user.FindFirst("FirstName")?.Value ??
+                user.Identity?.Name;
+
+            if (!string.IsNullOrWhiteSpace(firstName))
+            {
+                welcomeText = $"Hallo {firstName}, willkommen bei der Flomi App";
+            }
+            else
+            {
+                welcomeText = "Willkommen bei der Flomi App";
+            }
+        }
+    }
+}
