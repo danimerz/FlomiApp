@@ -140,7 +140,7 @@
                         @foreach (var dateGroup in group.OrderBy(a => a.Date).GroupBy(a => a.Date.ToShortDateString()))
                         {
                             <div class="date-subgroup">
-                                <h4>📅 @dateGroup.Key</h4>
+                                <h4>📅 @GetGermanDayName(dateGroup.Key), @dateGroup.Key</h4>
                                 <div class="area-grid">
                                     @foreach (var area in dateGroup)
                                     {
@@ -368,5 +368,15 @@
         }
 
         return age;
+    }
+
+    private string GetGermanDayName(string dateString)
+    {
+        if (DateTime.TryParse(dateString, out var date))
+        {
+            var culture = new System.Globalization.CultureInfo("de-DE");
+            return culture.DateTimeFormat.GetDayName(date.DayOfWeek);
+        }
+        return string.Empty;
     }
 }
