@@ -98,6 +98,11 @@
                                 </div>
 
                                 <div class="appointment-info-item">
+                                    <span class="label">Ort</span>
+                                    <span class="value">@appointment.Area.Location</span>
+                                </div>
+
+                                <div class="appointment-info-item">
                                     <span class="label">Status</span>
                                     <span class="value">
                                         <span class="status-pill">@appointment.Status</span>
@@ -205,6 +210,7 @@
         sb.AppendLine($"DTEND:{dtEnd}");
         sb.AppendLine($"SUMMARY:{appointment.Area.Event?.Name} – {appointment.Area.Name}");
         sb.AppendLine($"DESCRIPTION:Bereich: {appointment.Area.Name}\\nPerson: {personName}");
+        sb.AppendLine($"LOCATION:{appointment.Area.Location}");
         sb.AppendLine("STATUS:CONFIRMED");
         sb.AppendLine("END:VEVENT");
         sb.AppendLine("END:VCALENDAR");

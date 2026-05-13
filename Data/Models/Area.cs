@@ -19,6 +19,7 @@ public class Area
     public int MaxCapacity { get; set; }
 
     public DateTime Date { get; set; }
+    public string Location { get; set; } = string.Empty;
 
     public string TimeSlot { get; set; } = string.Empty; // e.g., "9:00-11:00"
 
