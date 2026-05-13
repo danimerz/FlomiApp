@@ -296,7 +296,6 @@
     z-index: 1;
 }
 
-
 .dashboard-hero__content[b-x6hkyvm1le] {
     position: relative;
     padding: 2rem;
@@ -378,6 +377,12 @@
     margin-bottom: 1rem;
     padding-left: 0.85rem;
     border-left: 5px solid #2563eb;
+}
+
+.appointments-section__controls[b-x6hkyvm1le] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .appointments-section__header h2[b-x6hkyvm1le] {
@@ -534,9 +539,81 @@
     transform: translateY(0);
 }
 
+/* --- Toggle Switch Styling --- */
+.toggle-switch[b-x6hkyvm1le] {
+    position: relative;
+    display: inline-block;
+    width: 60px; /* Breite des Switches */
+    height: 34px; /* Höhe des Switches */
+    /* margin-left: 10px; Dieser Margin wird nur für Desktop benötigt, auf Mobile entfernen wir ihn */
+}
+
+.toggle-switch input[b-x6hkyvm1le] {
+    opacity: 0; /* Checkbox verstecken */
+    width: 0;
+    height: 0;
+}
+
+.slider[b-x6hkyvm1le] {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc; /* Hintergrundfarbe, wenn ausgeschaltet */
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider[b-x6hkyvm1le]:before {
+    position: absolute;
+    content: "";
+    height: 26px; /* Größe des "Knopfes" */
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider[b-x6hkyvm1le] {
+    background-color: #2196F3; /* Hintergrundfarbe, wenn eingeschaltet */
+}
+
+input:focus + .slider[b-x6hkyvm1le] {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider[b-x6hkyvm1le]:before {
+    -webkit-transform: translateX(26px); /* Knopf nach rechts bewegen */
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Abgerundeter Slider */
+.slider.round[b-x6hkyvm1le] {
+    border-radius: 34px;
+}
+
+.slider.round[b-x6hkyvm1le]:before {
+    border-radius: 50%;
+}
+
+.toggle-label[b-x6hkyvm1le] {
+    margin-left: 10px; /* Standardmäßig neben dem Switch */
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 600;
+    white-space: nowrap; /* Verhindert Zeilenumbruch des Labels */
+    order: 1; /* Standardmäßig nach dem Switch */
+}
+
+/* Media Queries */
 @media (max-width: 992px) {
     .appointments-grid[b-x6hkyvm1le] {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr)); /* Auf Tablets 2 Spalten */
     }
 }
 
@@ -558,8 +635,32 @@
         flex-direction: column;
     }
 
+    .appointments-section__controls[b-x6hkyvm1le] {
+        flex-direction: row; /* Wichtig: Hier wieder auf Reihe setzen, damit Label neben Switch ist */
+        align-items: center; /* Vertikal zentrieren */
+        justify-content: flex-end; /* Rechts ausrichten */
+        width: 100%; /* Nimmt die volle Breite ein */
+        margin-top: 0.5rem; /* Etwas Abstand zum "Übersicht" Titel */
+    }
+
+    .appointments-section__count[b-x6hkyvm1le] {
+        order: 0; /* Zähler zuerst */
+        margin-right: auto; /* Schiebt den Zähler ganz nach links */
+    }
+
+    .toggle-switch[b-x6hkyvm1le] {
+        margin-left: 0; /* Kein linker Margin auf kleinen Bildschirmen */
+        order: 1; /* Switch nach dem Zähler */
+    }
+
+    .toggle-label[b-x6hkyvm1le] {
+        margin-left: 0.5rem; /* Kleiner Abstand zwischen Switch und Label */
+        order: 2; /* Label nach dem Switch */
+    }
+
     .appointments-grid[b-x6hkyvm1le] {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Wichtig: Nur EINE Spalte auf kleinen Bildschirmen */
+        padding: 0 0.8rem; /* Seitlicher Abstand für das Grid selbst, passend zum Dashboard-Page Padding */
     }
 }
 /* _content/FlomiApp/Pages/User/Register.razor.rz.scp.css */

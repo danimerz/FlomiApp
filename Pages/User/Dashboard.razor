@@ -41,11 +41,19 @@
         <section class="appointments-section">
             <div class="appointments-section__header">
                 <h2>Übersicht</h2>
-                <span class="appointments-section__count">@appointments.Count Anmeldungen</span>
+                <div class="appointments-section__controls"> @* Neuer Container für Zähler und Switch *@
+                    <span class="appointments-section__count">@FilteredAppointments.Count Anmeldungen</span>
+
+                    @* Hier kommt der neue Switch *@
+                    <label class="toggle-switch">
+                        <input type="checkbox" @bind="showCancelledAppointments" /> @* @onchange entfernt! *@
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="appointments-grid">
-                @foreach (var appointment in appointments)
+                @foreach (var appointment in FilteredAppointments) @* Hier verwenden wir die gefilterte Liste *@
                 {
                     <article class="appointment-card">
                         <div class="appointment-card__body">
@@ -109,6 +117,13 @@
 @code {
     private List<Appointment> appointments = new();
     private string userId = string.Empty;
+    private bool showCancelledAppointments = false; // Standardmäßig ausgeblendet
+
+    // Eine gefilterte Liste, die wir im Markup verwenden
+    private List<Appointment> FilteredAppointments =>
+        showCancelledAppointments
+        ? appointments
+        : appointments.Where(a => a.Status != AppointmentStatus.Cancelled).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,14 +132,19 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
+            await LoadAppointments(); // Initiales Laden der Termine
         }
+    }
+
+    private async Task LoadAppointments()
+    {
+        appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
+        StateHasChanged(); // Sicherstellen, dass die UI aktualisiert wird
     }
 
     private async Task CancelAppointment(int appointmentId)
     {
         await AppointmentService.CancelAppointmentAsync(appointmentId, userId);
-        appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
-        StateHasChanged();
+        await LoadAppointments(); // Termine neu laden, um den Status zu aktualisieren
     }
 }
