@@ -18,7 +18,7 @@
             <div class="home-hero__actions">
                 @if (isAuthenticated)
                 {
-                    <a class="home-primary-btn" href="/user/dashboard">Zum Dashboard</a>
+                    <a class="home-secondary-btn" href="/user/dashboard">Zum Dashboard</a>
                     <a class="home-secondary-btn" href="/user/settings">Meine Daten</a>
                 }
                 else
@@ -29,12 +29,28 @@
             </div>
         </div>
     </section>
+    <section class="home-card">
+        <div class="home-card__header">
+            <div>
+                <div class="home-card__topline">News</div>
+                <h2>News</h2>
+            </div>
+        </div>
 
+        <div class="home-card__body">
+            <div class="notice-box">
+                <p>
+                    Der Flomi im 2027 findet nächstes Jahr <strong>früher</strong> statt als gewohnt, nämlich am 10. und 17. April 2027.
+                    Daher empfehlen wir allen Helferinnen und Helfern, sich bereits jetzt für die Einsätze anzumelden, damit wir besser planen können.
+                </p>
+            </div>
+        </div>
+    </section>
     <section class="home-card">
         <div class="home-card__header">
             <div>
                 <div class="home-card__topline">Informationen</div>
-                <h2>So funktioniert die Anmeldung</h2>
+                <h2>So funktioniert die Flomi App</h2>
             </div>
         </div>
 
@@ -52,25 +68,30 @@
             <div class="info-grid">
                 <article class="info-box">
                     <div class="info-box__icon">🧭</div>
-                    <h3>Geführter Ablauf</h3>
+                    <h3>Eine Anmeldung</h3>
                     <p>
-                        Die Anmeldung führt dich Schritt für Schritt durch den Prozess und umfasst maximal sieben Seiten.
+                        Mit der Flomi App kannst du dich mit einer einzigen Anmeldung für alle Einsätze registrieren, die dich interessieren.
+                        So musst du nicht jedes Mal deine Daten neu eingeben, sondern kannst einfach die Bereiche auswählen. Ausserdem besteht
+                        die Möglichkeit deine ganze <strong>Familie</strong> mit einem Login anzumelden.
                     </p>
                 </article>
 
                 <article class="info-box">
-                    <div class="info-box__icon">✳</div>
-                    <h3>Pflichtfelder</h3>
+                    <div class="info-box__icon">📺</div>
+                    <h3>Dashboard</h3>
                     <p>
-                        Felder mit einem roten Stern sind Pflichtfelder und müssen ausgefüllt werden, damit du fortfahren kannst.
+                        Mit dem neuen <strong>Dashboard</strong> hast du jederzeit den Überblick über deine Anmeldungen, kannst diese verwalten und
+                        siehst auf einen Blick, wie viele Plätze in den einzelnen Bereichen noch frei sind.
                     </p>
                 </article>
 
                 <article class="info-box">
-                    <div class="info-box__icon">🔄</div>
-                    <h3>Dynamische Inhalte</h3>
+                    <div class="info-box__icon">📰</div>
+                    <h3>News</h3>
                     <p>
-                        Pflichtfelder und Seiten können sich je nach deiner Auswahl automatisch verändern.
+                        Mit der Flomi App bist du immer auf dem neuesten Stand, was die Planung und Organisation des Flohmarkts betrifft.
+                        Alle wichtigen Informationen, wie zum Beispiel die Termine, die verfügbaren Bereiche und die Anzahl der freien Plätze,
+                        findest du jederzeit in der App.
                     </p>
                 </article>
 
@@ -106,23 +127,12 @@
             <p class="home-closing">
                 Nun wünsche ich dir viel Freude beim Ausfüllen und bedanke mich bereits jetzt herzlich für deine Unterstützung.
             </p>
-
-            <div class="home-bottom-action">
-                @if (isAuthenticated)
-                {
-                    <a class="home-primary-btn" href="/user/dashboard">Zum Dashboard</a>
-                }
-                else
-                {
-                    <a class="home-primary-btn" href="/user/register">Los geht's</a>
-                }
-            </div>
         </div>
     </section>
 </div>
 
 @code {
-    private string welcomeText = "Willkommen bei der Flomi-Anmeldung";
+    private string welcomeText = "Willkommen bei der Flomi App";
     private bool isAuthenticated = false;
 
     protected override async Task OnInitializedAsync()

@@ -12,6 +12,7 @@
     border-radius: 24px;
     background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
     box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    isolation: isolate;
 }
 
 .settings-hero::before {
@@ -19,9 +20,21 @@
     position: absolute;
     inset: 0;
     background:
+        linear-gradient(135deg, rgba(15, 98, 254, 0.80) 0%, rgba(36, 87, 214, 0.82) 45%, rgba(22, 62, 168, 0.86) 100%),
+        url('/img/home-hero-bg.jpg') center center / cover no-repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.settings-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
         radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 30%),
         radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.10), transparent 25%);
     pointer-events: none;
+    z-index: 1;
 }
 
 .settings-hero__content {
@@ -429,6 +442,7 @@
 
 .member-card__actions {
     flex-shrink: 0;
+    padding: 5px;
 }
 
 .inline-empty-state {

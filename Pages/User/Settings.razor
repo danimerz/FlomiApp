@@ -342,7 +342,7 @@
             var result = await UserManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                successMessage = "Email updated successfully.";
+                successMessage = "Data updated successfully.";
                 errorMessage = string.Empty;
             }
             else
@@ -352,7 +352,7 @@
         }
         catch
         {
-            errorMessage = "Failed to update email.";
+            errorMessage = "Failed to update data.";
             successMessage = string.Empty;
         }
     }
