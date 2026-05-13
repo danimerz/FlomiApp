@@ -130,10 +130,14 @@
                         <span class="category-block__count">@group.Count() Bereiche</span>
                     </div>
 
-                    <div class="area-grid">
-                        @foreach (var area in group)
-                        {
-                            <article class="area-card">
+                    @foreach (var dateGroup in group.OrderBy(a => a.Date).GroupBy(a => a.Date.ToShortDateString()))
+                    {
+                        <div class="date-subgroup">
+                            <h4>📅 @dateGroup.Key</h4>
+                            <div class="area-grid">
+                                @foreach (var area in dateGroup)
+                                {
+                                    <article class="area-card">
                                 <div class="area-card__body">
                                     <div class="area-card__header">
                                         <h4>@area.Name</h4>
@@ -150,7 +154,7 @@
                                             <span class="value">@area.TimeSlot</span>
                                         </div>
                                         <div class="area-info-item">
-                                            <span class="label">Kapazität</span>
+                                            <span class="label">Belegt</span>
                                             <span class="value">
                                                 <span class="capacity-chip">
                                                     @currentRegistrations[area.Id] / @area.MaxCapacity
@@ -173,6 +177,8 @@
                             </article>
                         }
                     </div>
+                        </div>
+                    }
                 </section>
             }
         }

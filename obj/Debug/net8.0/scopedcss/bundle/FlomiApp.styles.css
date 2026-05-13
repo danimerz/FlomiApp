@@ -874,6 +874,12 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     color: #b91c1c;
 }
 
+.state-card--success[b-a3sakhx0ve] {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
 .category-block[b-a3sakhx0ve] {
     margin-bottom: 2.25rem;
 }
@@ -885,7 +891,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     gap: 1rem;
     margin-bottom: 1rem;
     padding-left: 0.85rem;
-    border-left: 5px solid #2563eb;
+    /*border-left: 5px solid #2563eb;*/
 }
 
 .category-block__header h3[b-a3sakhx0ve] {
@@ -907,10 +913,38 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     white-space: nowrap;
 }
 
+/* --- Date Subgroup --- */
+.date-subgroup[b-a3sakhx0ve] {
+    padding-top: 0.5rem; /* Etwas Luft nach oben für jede Datumsgruppe */
+}
+
+.date-subgroup:not(:last-child)[b-a3sakhx0ve] {
+    margin-bottom: 2.5rem;         /* Abstand zwischen den Datumsgruppen */
+    padding-bottom: 2rem;          /* Innerer Abstand am Ende der Gruppe */
+    border-bottom: 1px solid #e5e7eb; /* Dezente Trennlinie zwischen Gruppen */
+}
+
+.date-subgroup h4[b-a3sakhx0ve] {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 1.25rem 0;        /* Abstand nach unten zu den Karten */
+    padding: 0.6rem 1rem;          /* Innenabstand für das Datums-Label */
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #eff6ff;           /* Heller blauer Hintergrund */
+    border-radius: 12px;           /* Abgerundete Ecken */
+    /*border-left: 4px solid #2563eb; /* Blauer Akzentstreifen links */
+    width: fit-content;            /* Nur so breit wie der Inhalt */
+}
+
+/* --- Area Grid --- */
 .area-grid[b-a3sakhx0ve] {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.2rem;
+    margin-bottom: 0; /* Kein doppelter Abstand – wird von date-subgroup gesteuert */
 }
 
 .area-card[b-a3sakhx0ve] {
@@ -1044,12 +1078,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     line-height: 1.5;
 }
 
-.state-card--success[b-a3sakhx0ve] {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-    color: #047857;
-}
-
+/* --- Media Queries --- */
 @media (max-width: 992px) {
     .area-grid[b-a3sakhx0ve] {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1084,6 +1113,16 @@ input:checked + .slider[b-x6hkyvm1le]:before {
 
     .event-summary[b-a3sakhx0ve] {
         padding: 1.15rem;
+    }
+
+    .date-subgroup h4[b-a3sakhx0ve] {
+        font-size: 0.95rem;   /* Etwas kleiner auf Mobile */
+        padding: 0.5rem 0.85rem;
+    }
+
+    .date-subgroup:not(:last-child)[b-a3sakhx0ve] {
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.5rem;
     }
 }
 /* _content/FlomiApp/Pages/User/Settings.razor.rz.scp.css */

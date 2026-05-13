@@ -208,6 +208,12 @@
     color: #b91c1c;
 }
 
+.state-card--success {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
 .category-block {
     margin-bottom: 2.25rem;
 }
@@ -219,7 +225,7 @@
     gap: 1rem;
     margin-bottom: 1rem;
     padding-left: 0.85rem;
-    border-left: 5px solid #2563eb;
+    /*border-left: 5px solid #2563eb;*/
 }
 
 .category-block__header h3 {
@@ -241,10 +247,38 @@
     white-space: nowrap;
 }
 
+/* --- Date Subgroup --- */
+.date-subgroup {
+    padding-top: 0.5rem; /* Etwas Luft nach oben für jede Datumsgruppe */
+}
+
+.date-subgroup:not(:last-child) {
+    margin-bottom: 2.5rem;         /* Abstand zwischen den Datumsgruppen */
+    padding-bottom: 2rem;          /* Innerer Abstand am Ende der Gruppe */
+    border-bottom: 1px solid #e5e7eb; /* Dezente Trennlinie zwischen Gruppen */
+}
+
+.date-subgroup h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 1.25rem 0;        /* Abstand nach unten zu den Karten */
+    padding: 0.6rem 1rem;          /* Innenabstand für das Datums-Label */
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #eff6ff;           /* Heller blauer Hintergrund */
+    border-radius: 12px;           /* Abgerundete Ecken */
+    /*border-left: 4px solid #2563eb; /* Blauer Akzentstreifen links */
+    width: fit-content;            /* Nur so breit wie der Inhalt */
+}
+
+/* --- Area Grid --- */
 .area-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.2rem;
+    margin-bottom: 0; /* Kein doppelter Abstand – wird von date-subgroup gesteuert */
 }
 
 .area-card {
@@ -378,12 +412,7 @@
     line-height: 1.5;
 }
 
-.state-card--success {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-    color: #047857;
-}
-
+/* --- Media Queries --- */
 @media (max-width: 992px) {
     .area-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -418,5 +447,15 @@
 
     .event-summary {
         padding: 1.15rem;
+    }
+
+    .date-subgroup h4 {
+        font-size: 0.95rem;   /* Etwas kleiner auf Mobile */
+        padding: 0.5rem 0.85rem;
+    }
+
+    .date-subgroup:not(:last-child) {
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.5rem;
     }
 }
