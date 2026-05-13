@@ -458,6 +458,14 @@
     line-height: 1.35;
 }
 
+.appointment-card__header-right[b-x6hkyvm1le] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
 .status-badge[b-x6hkyvm1le] {
     display: inline-flex;
     align-items: center;
@@ -511,12 +519,16 @@
     font-size: 0.84rem;
 }
 
+/* ── Action-Zeile: Absagen + ICS nebeneinander ── */
 .appointment-actions[b-x6hkyvm1le] {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     margin-top: auto;
 }
 
 .cancel-btn[b-x6hkyvm1le] {
-    width: 100%;
+    flex: 1;                /* nimmt den verfügbaren Platz */
     padding: 0.9rem 1rem;
     border: none;
     border-radius: 14px;
@@ -539,17 +551,46 @@
     transform: translateY(0);
 }
 
+/* ── ICS Icon-Button neben Absagen ── */
+.ics-icon-btn[b-x6hkyvm1le] {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid #2563eb;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease,
+                transform 0.18s ease, box-shadow 0.18s ease;
+    line-height: 1;
+}
+
+.ics-icon-btn:hover[b-x6hkyvm1le] {
+    background: #2563eb;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+}
+
+.ics-icon-btn:active[b-x6hkyvm1le] {
+    transform: translateY(0);
+}
+
 /* --- Toggle Switch Styling --- */
 .toggle-switch[b-x6hkyvm1le] {
     position: relative;
     display: inline-block;
-    width: 60px; /* Breite des Switches */
-    height: 34px; /* Höhe des Switches */
-    /* margin-left: 10px; Dieser Margin wird nur für Desktop benötigt, auf Mobile entfernen wir ihn */
+    width: 60px;
+    height: 34px;
 }
 
 .toggle-switch input[b-x6hkyvm1le] {
-    opacity: 0; /* Checkbox verstecken */
+    opacity: 0;
     width: 0;
     height: 0;
 }
@@ -561,7 +602,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc; /* Hintergrundfarbe, wenn ausgeschaltet */
+    background-color: #ccc;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -569,7 +610,7 @@
 .slider[b-x6hkyvm1le]:before {
     position: absolute;
     content: "";
-    height: 26px; /* Größe des "Knopfes" */
+    height: 26px;
     width: 26px;
     left: 4px;
     bottom: 4px;
@@ -579,7 +620,7 @@
 }
 
 input:checked + .slider[b-x6hkyvm1le] {
-    background-color: #2196F3; /* Hintergrundfarbe, wenn eingeschaltet */
+    background-color: #2196F3;
 }
 
 input:focus + .slider[b-x6hkyvm1le] {
@@ -587,12 +628,11 @@ input:focus + .slider[b-x6hkyvm1le] {
 }
 
 input:checked + .slider[b-x6hkyvm1le]:before {
-    -webkit-transform: translateX(26px); /* Knopf nach rechts bewegen */
+    -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
 }
 
-/* Abgerundeter Slider */
 .slider.round[b-x6hkyvm1le] {
     border-radius: 34px;
 }
@@ -602,18 +642,18 @@ input:checked + .slider[b-x6hkyvm1le]:before {
 }
 
 .toggle-label[b-x6hkyvm1le] {
-    margin-left: 10px; /* Standardmäßig neben dem Switch */
+    margin-left: 10px;
     font-size: 0.9rem;
     color: #475569;
     font-weight: 600;
-    white-space: nowrap; /* Verhindert Zeilenumbruch des Labels */
-    order: 1; /* Standardmäßig nach dem Switch */
+    white-space: nowrap;
+    order: 1;
 }
 
 /* Media Queries */
 @media (max-width: 992px) {
     .appointments-grid[b-x6hkyvm1le] {
-        grid-template-columns: repeat(2, minmax(0, 1fr)); /* Auf Tablets 2 Spalten */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -636,31 +676,31 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     }
 
     .appointments-section__controls[b-x6hkyvm1le] {
-        flex-direction: row; /* Wichtig: Hier wieder auf Reihe setzen, damit Label neben Switch ist */
-        align-items: center; /* Vertikal zentrieren */
-        justify-content: flex-end; /* Rechts ausrichten */
-        width: 100%; /* Nimmt die volle Breite ein */
-        margin-top: 0.5rem; /* Etwas Abstand zum "Übersicht" Titel */
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        margin-top: 0.5rem;
     }
 
     .appointments-section__count[b-x6hkyvm1le] {
-        order: 0; /* Zähler zuerst */
-        margin-right: auto; /* Schiebt den Zähler ganz nach links */
+        order: 0;
+        margin-right: auto;
     }
 
     .toggle-switch[b-x6hkyvm1le] {
-        margin-left: 0; /* Kein linker Margin auf kleinen Bildschirmen */
-        order: 1; /* Switch nach dem Zähler */
+        margin-left: 0;
+        order: 1;
     }
 
     .toggle-label[b-x6hkyvm1le] {
-        margin-left: 0.5rem; /* Kleiner Abstand zwischen Switch und Label */
-        order: 2; /* Label nach dem Switch */
+        margin-left: 0.5rem;
+        order: 2;
     }
 
     .appointments-grid[b-x6hkyvm1le] {
-        grid-template-columns: 1fr; /* Wichtig: Nur EINE Spalte auf kleinen Bildschirmen */
-        padding: 0 0.8rem; /* Seitlicher Abstand für das Grid selbst, passend zum Dashboard-Page Padding */
+        grid-template-columns: 1fr;
+        padding: 0 0.8rem;
     }
 }
 /* _content/FlomiApp/Pages/User/Register.razor.rz.scp.css */

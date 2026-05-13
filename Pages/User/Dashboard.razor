@@ -1,7 +1,9 @@
 @page "/user/dashboard"
 @using FlomiApp.Data.Models
+@using System.Text
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAppointmentService AppointmentService
+@inject IJSRuntime JS
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -41,30 +43,35 @@
         <section class="appointments-section">
             <div class="appointments-section__header">
                 <h2>Übersicht</h2>
-                <div class="appointments-section__controls"> @* Neuer Container für Zähler und Switch *@
-                    <span class="appointments-section__count">@FilteredAppointments.Count Anmeldungen</span>
-
-                    @* Hier kommt der neue Switch *@
+                <div class="appointments-section__controls">
+                    <span class="appointments-section__count">
+                        @FilteredAppointments.Count Anmeldungen
+                    </span>
                     <label class="toggle-switch">
-                        <input type="checkbox" @bind="showCancelledAppointments" /> @* @onchange entfernt! *@
+                        <input type="checkbox" @bind="showCancelledAppointments" />
                         <span class="slider round"></span>
                     </label>
                 </div>
             </div>
 
             <div class="appointments-grid">
-                @foreach (var appointment in FilteredAppointments) @* Hier verwenden wir die gefilterte Liste *@
+                @foreach (var appointment in FilteredAppointments)
                 {
                     <article class="appointment-card">
                         <div class="appointment-card__body">
+
+                            <!-- Header: Topline + Titel | Status-Badge -->
                             <div class="appointment-card__header">
                                 <div>
                                     <div class="appointment-card__topline">Anmeldung</div>
                                     <h3>@appointment.Area.Name</h3>
                                 </div>
-                                <span class="status-badge">@appointment.Status</span>
+                                <div class="appointment-card__header-right">
+                                    <span class="status-badge">@appointment.Status</span>
+                                </div>
                             </div>
 
+                            <!-- Info-Liste -->
                             <div class="appointment-info-list">
                                 <div class="appointment-info-item">
                                     <span class="label">Person</span>
@@ -98,14 +105,22 @@
                                 </div>
                             </div>
 
+                            <!-- Actions: Absagen + ICS nebeneinander -->
                             <div class="appointment-actions">
                                 @if (appointment.Status == AppointmentStatus.Registered)
                                 {
-                                    <button class="cancel-btn" @onclick="() => CancelAppointment(appointment.Id)">
+                                    <button class="cancel-btn"
+                                            @onclick="() => CancelAppointment(appointment.Id)">
                                         Absagen
+                                    </button>
+                                    <button class="ics-icon-btn"
+                                            title="Zum Kalender hinzufügen"
+                                            @onclick="() => DownloadIcs(appointment)">
+                                        📅
                                     </button>
                                 }
                             </div>
+
                         </div>
                     </article>
                 }
@@ -117,34 +132,119 @@
 @code {
     private List<Appointment> appointments = new();
     private string userId = string.Empty;
-    private bool showCancelledAppointments = false; // Standardmäßig ausgeblendet
+    private bool showCancelledAppointments = false;
 
-    // Eine gefilterte Liste, die wir im Markup verwenden
     private List<Appointment> FilteredAppointments =>
         showCancelledAppointments
-        ? appointments
-        : appointments.Where(a => a.Status != AppointmentStatus.Cancelled).ToList();
+            ? appointments
+            : appointments.Where(a => a.Status != AppointmentStatus.Cancelled).ToList();
+
+    // ─── Initialisierung ──────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
+
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            await LoadAppointments(); // Initiales Laden der Termine
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                     ?? string.Empty;
+            await LoadAppointments();
         }
     }
 
     private async Task LoadAppointments()
     {
         appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
-        StateHasChanged(); // Sicherstellen, dass die UI aktualisiert wird
+        StateHasChanged();
     }
+
+    // ─── Absagen ──────────────────────────────────────────────────────────────
 
     private async Task CancelAppointment(int appointmentId)
     {
         await AppointmentService.CancelAppointmentAsync(appointmentId, userId);
-        await LoadAppointments(); // Termine neu laden, um den Status zu aktualisieren
+        await LoadAppointments();
+    }
+
+    // ─── ICS Download ─────────────────────────────────────────────────────────
+
+    private async Task DownloadIcs(Appointment appointment)
+    {
+        var icsContent = BuildIcsContent(appointment);
+        var bytes      = Encoding.UTF8.GetBytes(icsContent);
+        var base64     = Convert.ToBase64String(bytes);
+        var fileName   = $"Termin_{appointment.Area.Name}_{appointment.Area.Date:yyyyMMdd}.ics";
+
+        await JS.InvokeVoidAsync("downloadFile", fileName, "text/calendar", base64);
+    }
+
+    private string BuildIcsContent(Appointment appointment)
+    {
+        var (startTime, endTime) = ParseTimeSlot(appointment.Area.TimeSlot, appointment.Area.Date);
+
+        var now     = DateTime.UtcNow.ToString("yyyyMMddTHHmmssZ");
+        var dtStart = startTime.ToString("yyyyMMddTHHmmssZ");
+        var dtEnd   = endTime.ToString("yyyyMMddTHHmmssZ");
+
+        var personName = appointment.FamilyMember != null
+            ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}"
+            : $"{appointment.User.FirstName} {appointment.User.LastName}";
+
+        var sb = new StringBuilder();
+        sb.AppendLine("BEGIN:VCALENDAR");
+        sb.AppendLine("VERSION:2.0");
+        sb.AppendLine("PRODID:-//FlomiApp//Terminbuchung//DE");
+        sb.AppendLine("CALSCALE:GREGORIAN");
+        sb.AppendLine("METHOD:PUBLISH");
+        sb.AppendLine("BEGIN:VEVENT");
+        sb.AppendLine($"UID:{appointment.Id}-{appointment.Area.Id}@flomiapp");
+        sb.AppendLine($"DTSTAMP:{now}");
+        sb.AppendLine($"DTSTART:{dtStart}");
+        sb.AppendLine($"DTEND:{dtEnd}");
+        sb.AppendLine($"SUMMARY:{appointment.Area.Event?.Name} – {appointment.Area.Name}");
+        sb.AppendLine($"DESCRIPTION:Bereich: {appointment.Area.Name}\\nPerson: {personName}");
+        sb.AppendLine("STATUS:CONFIRMED");
+        sb.AppendLine("END:VEVENT");
+        sb.AppendLine("END:VCALENDAR");
+
+        return sb.ToString();
+    }
+
+    private (DateTime start, DateTime end) ParseTimeSlot(string timeSlot, DateTime date)
+    {
+        // Unterstützt "0900-1700" und "09:00-17:00"
+        try
+        {
+            var normalized = timeSlot.Replace(":", "").Trim();
+            var parts      = normalized.Split('-');
+
+            if (parts.Length == 2
+                && int.TryParse(parts[0], out var startRaw)
+                && int.TryParse(parts[1], out var endRaw))
+            {
+                var startHour = startRaw / 100;
+                var startMin  = startRaw % 100;
+                var endHour   = endRaw  / 100;
+                var endMin    = endRaw  % 100;
+
+                var start = new DateTime(date.Year, date.Month, date.Day,
+                                startHour, startMin, 0, DateTimeKind.Local)
+                            .ToUniversalTime();
+
+                var end = new DateTime(date.Year, date.Month, date.Day,
+                                endHour, endMin, 0, DateTimeKind.Local)
+                          .ToUniversalTime();
+
+                return (start, end);
+            }
+        }
+        catch { /* Fallback unten */ }
+
+        // Fallback: ganzer Tag
+        var fallbackStart = date.Date.ToUniversalTime();
+        var fallbackEnd   = date.Date.AddHours(8).ToUniversalTime();
+        return (fallbackStart, fallbackEnd);
     }
 }
