@@ -6,7 +6,8 @@ public enum AreaCategory
 {
     Sammeln = 1,
     Sortieren = 2,
-    Verkauf = 3
+    Verkauf = 3,
+    Sonstiges = 4
 }
 
 public class Area
