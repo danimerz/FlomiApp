@@ -54,6 +54,7 @@ public class AreaService : IAreaService
             existingArea.Date = area.Date;
             existingArea.TimeSlot = area.TimeSlot;
             existingArea.Category = area.Category;
+            existingArea.MinAge = area.MinAge;
             existingArea.EventId = area.EventId;
         }
         else

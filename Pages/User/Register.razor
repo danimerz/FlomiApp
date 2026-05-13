@@ -1,8 +1,10 @@
 ﻿@page "/user/register"
 @using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Identity
 @inject IAreaService AreaService
 @inject IAppointmentService AppointmentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager Navigation
 
 <PageTitle>Terminbuchung</PageTitle>
@@ -175,6 +177,8 @@
     private Dictionary<int, int> currentRegistrations = new();
     private Dictionary<int, bool> canRegister = new();
     private string userId = string.Empty;
+    private ApplicationUser? currentUser;
+    private int? selectedPersonAge;
     private string errorMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -184,7 +188,9 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            currentUser = await UserManager.GetUserAsync(user);
             familyMembers = await AppointmentService.GetFamilyMembersAsync(userId);
+            UpdateSelectedPersonAge();
             events = (await AreaService.GetAllEventsAsync()).Where(e => e.IsActive).OrderBy(e => e.Date).ToList();
             if (events.Any())
             {
@@ -204,6 +210,22 @@
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
+    }
+
+    private void UpdateSelectedPersonAge()
+    {
+        if (selectedMemberId == 0)
+        {
+            selectedPersonAge = currentUser?.Birthday.HasValue == true
+                ? CalculateAge(currentUser!.Birthday.Value, DateTime.Today)
+                : null;
+            return;
+        }
+
+        var selectedMember = familyMembers.FirstOrDefault(m => m.Id == selectedMemberId);
+        selectedPersonAge = selectedMember != null
+            ? CalculateAge(selectedMember.Birthday, DateTime.Today)
+            : null;
     }
 
     private async Task LoadAreasForSelectedEvent()
@@ -226,6 +248,7 @@
         if (int.TryParse(e.Value?.ToString(), out var memberId))
         {
             selectedMemberId = memberId;
+            UpdateSelectedPersonAge();
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
@@ -251,6 +274,11 @@
             return string.Empty;
         }
 
+        if (area.MinAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < area.MinAge)
+        {
+            return $"Mindestalter {area.MinAge} Jahre erforderlich.";
+        }
+
         if (area.Category == AreaCategory.Verkauf)
         {
             return "Nur eine Verkauf-Registrierung ist möglich.";
@@ -262,5 +290,16 @@
         }
 
         return "Registrierung aktuell nicht möglich.";
+    }
+
+    private int CalculateAge(DateTime birthDate, DateTime referenceDate)
+    {
+        var age = referenceDate.Year - birthDate.Year;
+        if (referenceDate < birthDate.AddYears(age))
+        {
+            age--;
+        }
+
+        return age;
     }
 }

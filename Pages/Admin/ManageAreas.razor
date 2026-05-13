@@ -45,6 +45,10 @@
             </InputSelect>
         </div>
         <div class="form-group">
+            <label>Mindestalter</label>
+            <InputNumber @bind-Value="currentArea.MinAge" class="form-control" />
+        </div>
+        <div class="form-group">
             <label>Event</label>
             <InputSelect @bind-Value="currentArea.EventId" class="form-control">
                 @foreach (var evt in events)
@@ -74,6 +78,7 @@ else
             <tr>
                 <th>Name</th>
                 <th>Category</th>
+                <th>Min Age</th>
                 <th>Max Capacity</th>
                 <th>Date</th>
                 <th>Time</th>
@@ -87,6 +92,7 @@ else
                 <tr>
                     <td>@area.Name</td>
                     <td>@area.Category</td>
+                    <td>@area.MinAge</td>
                     <td>@area.MaxCapacity</td>
                     <td>@area.Date.ToShortDateString()</td>
                     <td>@area.TimeSlot</td>
@@ -162,6 +168,7 @@ else
             Date = area.Date,
             TimeSlot = area.TimeSlot,
             Category = area.Category,
+            MinAge = area.MinAge,
             EventId = area.EventId
         };
     }

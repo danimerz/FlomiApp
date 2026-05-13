@@ -24,6 +24,8 @@ public class Area
 
     public AreaCategory Category { get; set; } = AreaCategory.Sammeln;
 
+    public int MinAge { get; set; }
+
     public int EventId { get; set; }
     public Event Event { get; set; } = null!;
 

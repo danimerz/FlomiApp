@@ -78,6 +78,11 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException("Area not found.");
         }
 
+        if (area.MinAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, area.MinAge))
+        {
+            throw new InvalidOperationException($"Person erfüllt das Mindestalter von {area.MinAge} Jahren nicht.");
+        }
+
         if (!await CanRegisterAsync(userId, areaId, familyMemberId))
         {
             var message = area.Category == AreaCategory.Verkauf
@@ -112,6 +117,11 @@ public class AppointmentService : IAppointmentService
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null)
+        {
+            return false;
+        }
+
+        if (area.MinAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, area.MinAge))
         {
             return false;
         }
@@ -156,6 +166,48 @@ public class AppointmentService : IAppointmentService
         }
 
         return false;
+    }
+
+    private async Task<bool> IsPersonBelowMinAgeAsync(string userId, int? familyMemberId, int minAge)
+    {
+        int? age = await GetPersonAgeAsync(userId, familyMemberId);
+        return age.HasValue && age.Value < minAge;
+    }
+
+    private async Task<int?> GetPersonAgeAsync(string userId, int? familyMemberId)
+    {
+        if (familyMemberId.HasValue)
+        {
+            var familyMember = await _context.FamilyMembers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == familyMemberId.Value && f.UserId == userId);
+
+            if (familyMember != null)
+            {
+                return CalculateAge(familyMember.Birthday, DateTime.UtcNow.Date);
+            }
+
+            return null;
+        }
+
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user != null && user.Birthday.HasValue)
+        {
+            return CalculateAge(user.Birthday.Value, DateTime.UtcNow.Date);
+        }
+
+        return null;
+    }
+
+    private int CalculateAge(DateTime birthDate, DateTime referenceDate)
+    {
+        var age = referenceDate.Year - birthDate.Year;
+        if (referenceDate < birthDate.AddYears(age))
+        {
+            age--;
+        }
+
+        return age;
     }
 
     private async Task<bool> PersonHasRegisteredSaleAreaAsync(string userId, int? familyMemberId, int eventId)
