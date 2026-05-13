@@ -741,7 +741,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    margin-bottom: 1.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .selection-card[b-a3sakhx0ve] {
@@ -780,7 +780,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
 }
 
 .event-summary[b-a3sakhx0ve] {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     padding: 1.4rem 1.5rem;
     border-radius: 22px;
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
@@ -880,18 +880,33 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     color: #047857;
 }
 
+/* --- Category Block als Card --- */
 .category-block[b-a3sakhx0ve] {
-    margin-bottom: 2.25rem;
+    margin-bottom: 1.0rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    padding: 1rem 1.5rem;
 }
 
+/* Header klickbar */
 .category-block__header[b-a3sakhx0ve] {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1rem;
-    padding-left: 0.85rem;
-    /*border-left: 5px solid #2563eb;*/
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    padding-left: 0;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease;
+}
+
+.category-block__header:hover[b-a3sakhx0ve] {
+    opacity: 0.75;
 }
 
 .category-block__header h3[b-a3sakhx0ve] {
@@ -899,6 +914,12 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     font-size: 1.3rem;
     font-weight: 800;
     color: #0f172a;
+}
+
+.category-block__header-right[b-a3sakhx0ve] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .category-block__count[b-a3sakhx0ve] {
@@ -913,30 +934,70 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     white-space: nowrap;
 }
 
+/* Toggle-Pfeil */
+.category-block__toggle-icon[b-a3sakhx0ve] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* Eingeklappt: Pfeil drehen */
+.category-block.is-collapsed .category-block__toggle-icon[b-a3sakhx0ve] {
+    transform: rotate(-90deg);
+}
+
+/* Eingeklappt: Header-Trennlinie und Abstand entfernen */
+.category-block.is-collapsed .category-block__header[b-a3sakhx0ve] {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Body smooth ein-/ausklappen */
+.category-block__body[b-a3sakhx0ve] {
+    overflow: hidden;
+    max-height: 5000px;
+    opacity: 1;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.category-block.is-collapsed .category-block__body[b-a3sakhx0ve] {
+    max-height: 0;
+    opacity: 0;
+}
+
 /* --- Date Subgroup --- */
 .date-subgroup[b-a3sakhx0ve] {
-    padding-top: 0.5rem; /* Etwas Luft nach oben für jede Datumsgruppe */
+    padding-top: 0.5rem;
 }
 
 .date-subgroup:not(:last-child)[b-a3sakhx0ve] {
-    margin-bottom: 2.5rem;         /* Abstand zwischen den Datumsgruppen */
-    padding-bottom: 2rem;          /* Innerer Abstand am Ende der Gruppe */
-    border-bottom: 1px solid #e5e7eb; /* Dezente Trennlinie zwischen Gruppen */
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .date-subgroup h4[b-a3sakhx0ve] {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin: 0 0 1.25rem 0;        /* Abstand nach unten zu den Karten */
-    padding: 0.6rem 1rem;          /* Innenabstand für das Datums-Label */
+    margin: 0 0 1.25rem 0;
+    padding: 0.6rem 1rem;
     font-size: 1.05rem;
     font-weight: 700;
     color: #1d4ed8;
-    background: #eff6ff;           /* Heller blauer Hintergrund */
-    border-radius: 12px;           /* Abgerundete Ecken */
-    /*border-left: 4px solid #2563eb; /* Blauer Akzentstreifen links */
-    width: fit-content;            /* Nur so breit wie der Inhalt */
+    background: #eff6ff;
+    border-radius: 12px;
+    width: 100%;
 }
 
 /* --- Area Grid --- */
@@ -944,7 +1005,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.2rem;
-    margin-bottom: 0; /* Kein doppelter Abstand – wird von date-subgroup gesteuert */
+    margin-bottom: 0;
 }
 
 .area-card[b-a3sakhx0ve] {
@@ -1116,7 +1177,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     }
 
     .date-subgroup h4[b-a3sakhx0ve] {
-        font-size: 0.95rem;   /* Etwas kleiner auf Mobile */
+        font-size: 0.95rem;
         padding: 0.5rem 0.85rem;
     }
 

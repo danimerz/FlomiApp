@@ -66,18 +66,18 @@
             </div>
         </section>
 
-@if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="state-card state-card--success">
-            <div class="state-card__icon">✅</div>
-            <div class="state-card__content">
-                <h3>Registrierung erfolgreich</h3>
-                <p>@successMessage</p>
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="state-card state-card--success">
+                <div class="state-card__icon">✅</div>
+                <div class="state-card__content">
+                    <h3>Registrierung erfolgreich</h3>
+                    <p>@successMessage</p>
+                </div>
             </div>
-        </div>
-    }
+        }
 
-    @if (selectedEvent != null)
+        @if (selectedEvent != null)
         {
             <section class="event-summary">
                 <div class="event-summary__topline">Ausgewähltes Event</div>
@@ -124,61 +124,69 @@
 
             @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
             {
-                <section class="category-block">
-                    <div class="category-block__header">
+                var categoryKey = group.Key.ToString();
+                var isCollapsed = collapsedCategories.Contains(categoryKey);
+
+                <section class="category-block @(isCollapsed ? "is-collapsed" : "")">
+                    <div class="category-block__header" @onclick="() => ToggleCategory(categoryKey)">
                         <h3>@group.Key</h3>
-                        <span class="category-block__count">@group.Count() Bereiche</span>
+                        <div class="category-block__header-right">
+                            <span class="category-block__count">@group.Count() Bereiche</span>
+                            <span class="category-block__toggle-icon">▾</span>
+                        </div>
                     </div>
 
-                    @foreach (var dateGroup in group.OrderBy(a => a.Date).GroupBy(a => a.Date.ToShortDateString()))
-                    {
-                        <div class="date-subgroup">
-                            <h4>📅 @dateGroup.Key</h4>
-                            <div class="area-grid">
-                                @foreach (var area in dateGroup)
-                                {
-                                    <article class="area-card">
-                                <div class="area-card__body">
-                                    <div class="area-card__header">
-                                        <h4>@area.Name</h4>
-                                        <span class="area-category">@area.Category</span>
-                                    </div>
-
-                                    <div class="area-info-list">
-                                        <div class="area-info-item">
-                                            <span class="label">Datum</span>
-                                            <span class="value">@area.Date.ToShortDateString()</span>
-                                        </div>
-                                        <div class="area-info-item">
-                                            <span class="label">Zeit</span>
-                                            <span class="value">@area.TimeSlot</span>
-                                        </div>
-                                        <div class="area-info-item">
-                                            <span class="label">Belegt</span>
-                                            <span class="value">
-                                                <span class="capacity-chip">
-                                                    @currentRegistrations[area.Id] / @area.MaxCapacity
-                                                </span>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <button class="register-btn"
-                                            @onclick="() => RegisterAppointment(area.Id)"
-                                            disabled="@(!canRegister[area.Id])">
-                                        Jetzt registrieren
-                                    </button>
-
-                                    @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                    <div class="category-block__body">
+                        @foreach (var dateGroup in group.OrderBy(a => a.Date).GroupBy(a => a.Date.ToShortDateString()))
+                        {
+                            <div class="date-subgroup">
+                                <h4>📅 @dateGroup.Key</h4>
+                                <div class="area-grid">
+                                    @foreach (var area in dateGroup)
                                     {
-                                        <p class="registration-note">@GetRegistrationNote(area)</p>
+                                        <article class="area-card">
+                                            <div class="area-card__body">
+                                                <div class="area-card__header">
+                                                    <h4>@area.Name</h4>
+                                                    <span class="area-category">@area.Category</span>
+                                                </div>
+
+                                                <div class="area-info-list">
+                                                    <div class="area-info-item">
+                                                        <span class="label">Datum</span>
+                                                        <span class="value">@area.Date.ToShortDateString()</span>
+                                                    </div>
+                                                    <div class="area-info-item">
+                                                        <span class="label">Zeit</span>
+                                                        <span class="value">@area.TimeSlot</span>
+                                                    </div>
+                                                    <div class="area-info-item">
+                                                        <span class="label">Belegt</span>
+                                                        <span class="value">
+                                                            <span class="capacity-chip">
+                                                                @currentRegistrations[area.Id] / @area.MaxCapacity
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <button class="register-btn"
+                                                        @onclick="() => RegisterAppointment(area.Id)"
+                                                        disabled="@(!canRegister[area.Id])">
+                                                    Jetzt registrieren
+                                                </button>
+
+                                                @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                                                {
+                                                    <p class="registration-note">@GetRegistrationNote(area)</p>
+                                                }
+                                            </div>
+                                        </article>
                                     }
                                 </div>
-                            </article>
+                            </div>
                         }
                     </div>
-                        </div>
-                    }
                 </section>
             }
         }
@@ -200,6 +208,17 @@
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
     private CancellationTokenSource? successMessageCts;
+
+    // Speichert welche Kategorien eingeklappt sind
+    private HashSet<string> collapsedCategories = new();
+
+    private void ToggleCategory(string categoryKey)
+    {
+        if (collapsedCategories.Contains(categoryKey))
+            collapsedCategories.Remove(categoryKey);
+        else
+            collapsedCategories.Add(categoryKey);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -228,6 +247,7 @@
             selectedEventId = eventId;
             selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
             successMessage = string.Empty;
+            collapsedCategories.Clear();
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
