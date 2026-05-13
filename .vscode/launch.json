@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "C#: FlomiApp [http]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\FlomiApp.csproj",
+            "launchConfigurationId": "TargetFramework=;http"
+        }
+    ]
+}

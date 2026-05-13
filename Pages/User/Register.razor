@@ -4,6 +4,7 @@
 @inject IAreaService AreaService
 @inject IAppointmentService AppointmentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager Navigation
 
@@ -65,7 +66,18 @@
             </div>
         </section>
 
-        @if (selectedEvent != null)
+@if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="state-card state-card--success">
+            <div class="state-card__icon">✅</div>
+            <div class="state-card__content">
+                <h3>Registrierung erfolgreich</h3>
+                <p>@successMessage</p>
+            </div>
+        </div>
+    }
+
+    @if (selectedEvent != null)
         {
             <section class="event-summary">
                 <div class="event-summary__topline">Ausgewähltes Event</div>
@@ -180,6 +192,8 @@
     private ApplicationUser? currentUser;
     private int? selectedPersonAge;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private CancellationTokenSource? successMessageCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -207,6 +221,7 @@
         {
             selectedEventId = eventId;
             selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
+            successMessage = string.Empty;
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
@@ -249,6 +264,7 @@
         {
             selectedMemberId = memberId;
             UpdateSelectedPersonAge();
+            successMessage = string.Empty;
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
@@ -259,11 +275,36 @@
         try
         {
             await AppointmentService.RegisterForAppointmentAsync(userId, areaId, selectedMemberId == 0 ? null : selectedMemberId);
-            Navigation.NavigateTo("/user/dashboard");
+            errorMessage = string.Empty;
+            await LoadAreasForSelectedEvent();
+            await JS.InvokeVoidAsync("scrollToTop");
+            await ShowTemporarySuccessMessageAsync("Du wurdest erfolgreich für den Bereich registriert.");
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            successMessage = string.Empty;
+            successMessageCts?.Cancel();
+        }
+    }
+
+    private async Task ShowTemporarySuccessMessageAsync(string message)
+    {
+        successMessageCts?.Cancel();
+        successMessageCts = new CancellationTokenSource();
+
+        successMessage = message;
+        StateHasChanged();
+
+        try
+        {
+            await Task.Delay(3000, successMessageCts.Token);
+            successMessage = string.Empty;
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore cancellation when a new message arrives or an error occurs.
         }
     }
 
