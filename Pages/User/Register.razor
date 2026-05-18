@@ -129,7 +129,7 @@
 
                 <section class="category-block @(isCollapsed ? "is-collapsed" : "")">
                     <div class="category-block__header" @onclick="() => ToggleCategory(categoryKey)">
-                        <h3>@group.Key</h3>
+                        <h3>🎪 @group.Key</h3>
                         <div class="category-block__header-right">
                             <span class="category-block__count">@group.Count() Bereiche</span>
                             <span class="category-block__toggle-icon">▾</span>
@@ -247,7 +247,6 @@
             selectedEventId = eventId;
             selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
             successMessage = string.Empty;
-            collapsedCategories.Clear();
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
@@ -282,6 +281,11 @@
             currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
             canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, selectedMemberId == 0 ? null : selectedMemberId);
         }
+
+        // Alle Kategorien standardmässig eingeklappt
+        collapsedCategories = areas
+            .Select(a => a.Category.ToString())
+            .ToHashSet();
     }
 
     private async Task OnPersonChanged(ChangeEventArgs e)

@@ -41,95 +41,139 @@
     else
     {
         <section class="appointments-section">
+
+            <!-- Haupt-Header mit Toggle -->
             <div class="appointments-section__header">
                 <h2>Übersicht</h2>
                 <div class="appointments-section__controls">
                     <span class="appointments-section__count">
                         @FilteredAppointments.Count Anmeldungen
                     </span>
-                    <label class="toggle-switch">
+                    <label class="toggle-switch" title="Abgesagte anzeigen">
                         <input type="checkbox" @bind="showCancelledAppointments" />
                         <span class="slider round"></span>
                     </label>
                 </div>
             </div>
 
-            <div class="appointments-grid">
-                @foreach (var appointment in FilteredAppointments)
-                {
-                    <article class="appointment-card">
-                        <div class="appointment-card__body">
+            <!-- Gruppierung: Event → Datum -->
+            @foreach (var eventGroup in GroupedAppointments)
+            {
+                var eventKey   = eventGroup.Key;
+                var eventOpen  = IsEventOpen(eventKey);
 
-                            <!-- Header: Topline + Titel | Status-Badge -->
-                            <div class="appointment-card__header">
-                                <div>
-                                    <div class="appointment-card__topline">Anmeldung</div>
-                                    <h3>@appointment.Area.Name</h3>
-                                </div>
-                                <div class="appointment-card__header-right">
-                                    <span class="status-badge">@appointment.Status</span>
-                                </div>
-                            </div>
+                <!-- Event-Sektion (Ebene 1) -->
+                <div class="group-event">
+                    <button class="group-event__toggle"
+                            @onclick="() => ToggleEvent(eventKey)">
+                        <span class="group-event__icon">🎪</span>
+                        <span class="group-event__name">@eventKey</span>
+                        <span class="group-event__count">
+                            @eventGroup.Value.Sum(d => d.Value.Count) Anmeldungen
+                        </span>
+                        <span class="group-chevron @(eventOpen ? "group-chevron--open" : "")">
+                            ▾
+                        </span>
+                    </button>
 
-                            <!-- Info-Liste -->
-                            <div class="appointment-info-list">
-                                <div class="appointment-info-item">
-                                    <span class="label">Person</span>
-                                    <span class="value">
-                                        @(appointment.FamilyMember != null
-                                            ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}"
-                                            : $"{appointment.User.FirstName} {appointment.User.LastName}")
-                                    </span>
-                                </div>
+                    @if (eventOpen)
+                    {
+                        <div class="group-event__body">
+                            @foreach (var dateGroup in eventGroup.Value)
+                            {
+                                var dateKey  = dateGroup.Key;
+                                var dateOpen = IsDateOpen(eventKey, dateKey);
 
-                                <div class="appointment-info-item">
-                                    <span class="label">Event</span>
-                                    <span class="value">@appointment.Area.Event?.Name</span>
-                                </div>
-
-                                <div class="appointment-info-item">
-                                    <span class="label">Datum</span>
-                                    <span class="value">@appointment.Area.Date.ToShortDateString()</span>
-                                </div>
-
-                                <div class="appointment-info-item">
-                                    <span class="label">Zeit</span>
-                                    <span class="value">@appointment.Area.TimeSlot</span>
-                                </div>
-
-                                <div class="appointment-info-item">
-                                    <span class="label">Ort</span>
-                                    <span class="value">@appointment.Area.Location</span>
-                                </div>
-
-                                <div class="appointment-info-item">
-                                    <span class="label">Status</span>
-                                    <span class="value">
-                                        <span class="status-pill">@appointment.Status</span>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Actions: Absagen + ICS nebeneinander -->
-                            <div class="appointment-actions">
-                                @if (appointment.Status == AppointmentStatus.Registered)
-                                {
-                                    <button class="cancel-btn"
-                                            @onclick="() => CancelAppointment(appointment.Id)">
-                                        Absagen
+                                <!-- Datum-Sektion (Ebene 2) -->
+                                <div class="group-date">
+                                    <button class="group-date__toggle"
+                                            @onclick="() => ToggleDate(eventKey, dateKey)">
+                                        <span class="group-date__icon">📅</span>
+                                        <span class="group-date__name">
+                                            @dateKey.ToString("dddd, dd. MMMM yyyy",
+                                                new System.Globalization.CultureInfo("de-CH"))
+                                        </span>
+                                        <span class="group-date__count">
+                                            @dateGroup.Value.Count Einträge
+                                        </span>
+                                        <span class="group-chevron @(dateOpen ? "group-chevron--open" : "")">
+                                            ▾
+                                        </span>
                                     </button>
-                                    <button class="ics-icon-btn"
-                                            title="Zum Kalender hinzufügen"
-                                            @onclick="() => DownloadIcs(appointment)">
-                                        📅
-                                    </button>
-                                }
-                            </div>
 
+                                    @if (dateOpen)
+                                    {
+                                        <div class="appointments-grid">
+                                            @foreach (var appointment in dateGroup.Value)
+                                            {
+                                                <article class="appointment-card">
+                                                    <div class="appointment-card__body">
+
+                                                        <!-- Header -->
+                                                        <div class="appointment-card__header">
+                                                            <div>
+                                                                <div class="appointment-card__topline">Anmeldung</div>
+                                                                <h3>@appointment.Area.Name</h3>
+                                                            </div>
+                                                            <div class="appointment-card__header-right">
+                                                                <span class="status-badge">@appointment.Status</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Info-Liste -->
+                                                        <div class="appointment-info-list">
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Person</span>
+                                                                <span class="value">
+                                                                    @(appointment.FamilyMember != null
+                                                                        ? $"{appointment.FamilyMember.FirstName} {appointment.FamilyMember.LastName}"
+                                                                        : $"{appointment.User.FirstName} {appointment.User.LastName}")
+                                                                </span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Zeit</span>
+                                                                <span class="value">@appointment.Area.TimeSlot</span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Ort</span>
+                                                                <span class="value">@appointment.Area.Location</span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Status</span>
+                                                                <span class="value">
+                                                                    <span class="status-pill">@appointment.Status</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Actions -->
+                                                        <div class="appointment-actions">
+                                                            @if (appointment.Status == AppointmentStatus.Registered)
+                                                            {
+                                                                <button class="cancel-btn"
+                                                                        @onclick="() => CancelAppointment(appointment.Id)">
+                                                                    Absagen
+                                                                </button>
+                                                                <button class="ics-icon-btn"
+                                                                        title="Zum Kalender hinzufügen"
+                                                                        @onclick="() => DownloadIcs(appointment)">
+                                                                    📅
+                                                                </button>
+                                                            }
+                                                        </div>
+
+                                                    </div>
+                                                </article>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
-                    </article>
-                }
-            </div>
+                    }
+                </div>
+            }
+
         </section>
     }
 </div>
@@ -139,10 +183,57 @@
     private string userId = string.Empty;
     private bool showCancelledAppointments = false;
 
+    // Speichert welche Event-Sektionen offen sind
+    private HashSet<string> openEvents = new();
+    // Speichert welche Datum-Sektionen offen sind: "EventName|Datum"
+    private HashSet<string> openDates = new();
+
+    // ─── Gefilterte & gruppierte Appointments ────────────────────────────────
+
     private List<Appointment> FilteredAppointments =>
         showCancelledAppointments
             ? appointments
             : appointments.Where(a => a.Status != AppointmentStatus.Cancelled).ToList();
+
+    // Event → (Datum → Appointments)
+    private Dictionary<string, Dictionary<DateTime, List<Appointment>>> GroupedAppointments =>
+        FilteredAppointments
+            .GroupBy(a => a.Area.Event?.Name ?? "Unbekanntes Event")
+            .OrderBy(g => g.Key)
+            .ToDictionary(
+                g => g.Key,
+                g => g
+                    .GroupBy(a => a.Area.Date.Date)
+                    .OrderBy(d => d.Key)
+                    .ToDictionary(
+                        d => d.Key,
+                        d => d.ToList()
+                    )
+            );
+
+    // ─── Collapse-Logik ───────────────────────────────────────────────────────
+
+    private bool IsEventOpen(string eventName) =>
+        openEvents.Contains(eventName);
+
+    private void ToggleEvent(string eventName)
+    {
+        if (!openEvents.Remove(eventName))
+            openEvents.Add(eventName);
+    }
+
+    private string DateKey(string eventName, DateTime date) =>
+        $"{eventName}|{date:yyyyMMdd}";
+
+    private bool IsDateOpen(string eventName, DateTime date) =>
+        openDates.Contains(DateKey(eventName, date));
+
+    private void ToggleDate(string eventName, DateTime date)
+    {
+        var key = DateKey(eventName, date);
+        if (!openDates.Remove(key))
+            openDates.Add(key);
+    }
 
     // ─── Initialisierung ──────────────────────────────────────────────────────
 
@@ -160,11 +251,10 @@
     }
 
     private async Task LoadAppointments()
-    {
-        appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
-        StateHasChanged();
-    }
-
+        {
+            appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
+            StateHasChanged();
+        }
     // ─── Absagen ──────────────────────────────────────────────────────────────
 
     private async Task CancelAppointment(int appointmentId)
@@ -220,7 +310,6 @@
 
     private (DateTime start, DateTime end) ParseTimeSlot(string timeSlot, DateTime date)
     {
-        // Unterstützt "0900-1700" und "09:00-17:00"
         try
         {
             var normalized = timeSlot.Replace(":", "").Trim();
@@ -246,9 +335,8 @@
                 return (start, end);
             }
         }
-        catch { /* Fallback unten */ }
+        catch { }
 
-        // Fallback: ganzer Tag
         var fallbackStart = date.Date.ToUniversalTime();
         var fallbackEnd   = date.Date.AddHours(8).ToUniversalTime();
         return (fallbackStart, fallbackEnd);

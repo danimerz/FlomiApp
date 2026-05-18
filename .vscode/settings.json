@@ -1,0 +1,5 @@
+{
+    "appService.preDeployTask": "publish-release",
+    "appService.deploySubpath": "bin\\Release\\net8.0\\publish",
+    "appService.defaultWebAppToDeploy": "/subscriptions/2b100ee3-3043-409b-8546-d1413cdf79dd/resourceGroups/FlomiApp/providers/Microsoft.Web/sites/FlomiApp"
+}
