@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj": {}
+    "c:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj": {
+    "c:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
+        "projectUniqueName": "c:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
         "projectName": "FlomiApp",
-        "projectPath": "C:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
+        "projectPath": "c:\\Users\\merzd\\source\\repos\\FlomiApp\\FlomiApp.csproj",
         "packagesPath": "C:\\Users\\merzd\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\merzd\\source\\repos\\FlomiApp\\obj\\",
+        "outputPath": "c:\\Users\\merzd\\source\\repos\\FlomiApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -2,14 +2,7 @@
 @inject FlomiApp.Services.ThemeState ThemeState
 
 <div class="navmenu-shell">
-    <div class="navmenu-mobile-header">
-        <span class="navmenu-mobile-title">Menü</span>
-        <button title="Navigation menu" class="navmenu-toggler" @onclick="ToggleNavMenu">
-            <span class="navmenu-toggler__icon"></span>
-        </button>
-    </div>
-
-    <div class="@NavMenuCssClass navmenu-links" @onclick="HandleNavClick">
+    <div class="navmenu-links" @onclick="HandleNavClick">
         <nav class="navmenu-list">
             <div class="navmenu-section">
                 <div class="navmenu-section__label">Allgemein</div>
@@ -108,7 +101,9 @@
                                 </div>
                             </div>
 
-                            <form method="post" action="Identity/Account/Logout" class="navmenu-mobile-user__logout" @onclick:stopPropagation="true">
+                            <form method="post" action="Identity/Account/Logout"
+                                  class="navmenu-mobile-user__logout"
+                                  @onclick:stopPropagation="true">
                                 <AntiforgeryToken />
                                 <input type="hidden" name="ReturnUrl" value="/" />
                                 <button type="submit" class="navmenu-mobile-user__logout-button">
@@ -124,26 +119,17 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
+    [Parameter]
+    public EventCallback OnNavLinkClicked { get; set; }
 
-    private string NavMenuCssClass => collapseNavMenu ? "navmenu-collapsed" : "navmenu-expanded";
+    private async Task HandleNavClick()
+    {
+        await OnNavLinkClicked.InvokeAsync();
+    }
 
     private async Task ToggleTheme()
     {
         await ThemeState.ToggleAsync();
-    }
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-
-    private void HandleNavClick()
-    {
-        if (!collapseNavMenu)
-        {
-            collapseNavMenu = true;
-        }
     }
 
     private string GetDisplayName(ClaimsPrincipal user)
