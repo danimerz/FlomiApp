@@ -11,7 +11,7 @@ public class ApplicationUser : IdentityUser
     [Required]
     public string LastName { get; set; } = string.Empty;
 
-    public string Pfadiname { get; set; } = string.Empty;
+    public string? Pfadiname { get; set; }
 
     public string Stufe { get; set; } = string.Empty;
 
