@@ -22,7 +22,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-    options.SignIn.RequireConfirmedAccount = true)
+        {
+        options.SignIn.RequireConfirmedAccount = false; // ← true zu false
+        options.SignIn.RequireConfirmedEmail = false;   // ← neu hinzufügen
+        })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
