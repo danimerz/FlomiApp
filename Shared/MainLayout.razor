@@ -5,22 +5,42 @@
 <PageTitle>FlomiApp</PageTitle>
 
 <div class="app-shell" data-theme="@ThemeState.CurrentTheme">
-    <aside class="sidebar">
+    <aside class="sidebar @(mobileNavOpen ? "mobile-nav--open" : "")">
         <div class="sidebar__inner">
-            <div class="sidebar__brand">
-                <div class="sidebar__logo">
-                    <img src="img/pfadi_logo.png" alt="Pfadi Flomi Logo" class="sidebar__logo-image" />
+
+            <!-- Brand + Hamburger in einer Zeile -->
+            <div class="sidebar__topbar">
+                <div class="sidebar__brand">
+                    <div class="sidebar__logo">
+                        <img src="img/pfadi_logo.png" alt="Pfadi Flomi Logo" class="sidebar__logo-image" />
+                    </div>
+                    <div class="sidebar__brand-text">
+                        <span class="sidebar__eyebrow"></span>
+                        <strong>FlomiApp</strong>
+                    </div>
                 </div>
-                <div class="sidebar__brand-text">
-                    <span class="sidebar__eyebrow"></span>
-                    <strong>FlomiApp</strong>
-                </div>
+
+                <!-- Hamburger Button (nur Mobile) -->
+                <button class="sidebar__hamburger" type="button"
+                        @onclick="ToggleMobileNav"
+                        aria-label="Navigation öffnen">
+                    @if (mobileNavOpen)
+                    {
+                        <span>✕</span>
+                    }
+                    else
+                    {
+                        <span>☰</span>
+                    }
+                </button>
             </div>
 
+            <!-- Nav (Mobile: ein-/ausklappbar) -->
             <div class="sidebar__nav">
-                <NavMenu />
+                <NavMenu OnNavLinkClicked="CloseNav" />
             </div>
 
+            <!-- Theme Toggle (nur Desktop) -->
             <div class="sidebar__theme-toggle sidebar__theme-toggle--desktop">
                 <button class="theme-switch @(ThemeState.CurrentTheme == "dark" ? "is-dark" : "is-light")"
                         type="button"
@@ -32,15 +52,16 @@
                         <span class="theme-switch__thumb"></span>
                     </span>
                 </button>
-
                 <span class="theme-switch__label">
                     @(ThemeState.CurrentTheme == "dark" ? "Dark Mode" : "Light Mode")
                 </span>
             </div>
 
+            <!-- Login (nur Desktop) -->
             <div class="sidebar-login-desktop">
                 <LoginDisplay />
             </div>
+
         </div>
     </aside>
 
@@ -53,6 +74,17 @@
 
 @code {
     private bool _themeInitialized;
+    private bool mobileNavOpen = false;
+
+    private void ToggleMobileNav()
+    {
+        mobileNavOpen = !mobileNavOpen;
+    }
+
+    private void CloseNav()
+    {
+        mobileNavOpen = false;
+    }
 
     protected override void OnInitialized()
     {
