@@ -2095,6 +2095,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     color: var(--color-text);
 }
 
+/* ── Dark Theme ───────────────────────────────────────────────────────────── */
 .app-shell[data-theme="dark"][b-bdwjw64er1] {
     --color-text: #e5eef8;
     --color-text-muted: #94a3b8;
@@ -2125,6 +2126,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     --shadow-switch: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
 .sidebar[b-bdwjw64er1] {
     width: 280px;
     flex-shrink: 0;
@@ -2149,13 +2151,24 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     min-height: 0;
 }
 
+/* ── Topbar (Brand + Hamburger nebeneinander) ─────────────────────────────── */
+.sidebar__topbar[b-bdwjw64er1] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.75rem 1.25rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+/* ── Brand ────────────────────────────────────────────────────────────────── */
 .sidebar__brand[b-bdwjw64er1] {
     display: flex;
     align-items: center;
     gap: 0.9rem;
-    padding: 0.65rem 0.75rem 1.25rem;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid var(--color-sidebar-border);
+    padding: 0;
+    margin-bottom: 0;
+    border-bottom: none;
 }
 
 .sidebar__logo[b-bdwjw64er1] {
@@ -2202,6 +2215,28 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     line-height: 1.2;
 }
 
+/* ── Hamburger Button ─────────────────────────────────────────────────────── */
+.sidebar__hamburger[b-bdwjw64er1] {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s ease;
+}
+
+.sidebar__hamburger:hover[b-bdwjw64er1] {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* ── Nav ──────────────────────────────────────────────────────────────────── */
 .sidebar__nav[b-bdwjw64er1] {
     flex: 1;
     min-height: 0;
@@ -2209,6 +2244,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     padding-right: 0.15rem;
 }
 
+/* ── Theme Toggle ─────────────────────────────────────────────────────────── */
 .sidebar__theme-toggle[b-bdwjw64er1] {
     display: flex;
     align-items: center;
@@ -2326,6 +2362,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     white-space: nowrap;
 }
 
+/* ── Login Desktop ────────────────────────────────────────────────────────── */
 .sidebar-login-desktop[b-bdwjw64er1] {
     margin-top: 0.85rem;
     padding-top: 0.9rem;
@@ -2338,6 +2375,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     border-top: 1px solid var(--color-sidebar-border);
 }
 
+/* ── Main Area ────────────────────────────────────────────────────────────── */
 .main-area[b-bdwjw64er1] {
     flex: 1;
     min-width: 0;
@@ -2349,6 +2387,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     min-width: 0;
 }
 
+/* ── Media Query 960px ────────────────────────────────────────────────────── */
 @media (max-width: 960px) {
     .app-shell[b-bdwjw64er1] {
         flex-direction: column;
@@ -2361,11 +2400,29 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     }
 
     .sidebar__inner[b-bdwjw64er1] {
-        padding-bottom: 0.75rem;
+        padding-bottom: 0;
     }
 
+    /* Hamburger im Mobile anzeigen */
+    .sidebar__hamburger[b-bdwjw64er1] {
+        display: inline-flex;
+    }
+
+    /* Nav standardmässig eingeklappt */
     .sidebar__nav[b-bdwjw64er1] {
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        padding-right: 0;
+        transition: max-height 0.35s ease, opacity 0.25s ease;
+    }
+
+    /* Nav ausgeklappt wenn open */
+    .sidebar.mobile-nav--open .sidebar__nav[b-bdwjw64er1] {
+        max-height: 800px;
+        opacity: 1;
         overflow: visible;
+        padding-bottom: 0.75rem;
     }
 
     .sidebar__theme-toggle--desktop[b-bdwjw64er1] {
@@ -2381,15 +2438,11 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     }
 }
 
+/* ── Media Query 640px ────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-    .sidebar__brand[b-bdwjw64er1] {
+    .sidebar__topbar[b-bdwjw64er1] {
         padding-left: 0.25rem;
         padding-right: 0.25rem;
-    }
-
-    .sidebar__theme-toggle[b-bdwjw64er1] {
-        padding-left: 0;
-        padding-right: 0;
     }
 
     .theme-switch__label[b-bdwjw64er1] {
