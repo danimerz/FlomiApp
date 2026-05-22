@@ -81,6 +81,7 @@
                         <th>Name</th>
                         <th>Adresse</th>
                         <th>Abholdatum</th>
+                        <th>Event</th>
                         <th>Status</th>
                         <th>Bilder</th>
                         <th>Aktionen</th>
@@ -97,6 +98,19 @@
                             </td>
                             <td>@req.Street, @req.PostalCode @req.City</td>
                             <td>@req.PickupDate.ToShortDateString()</td>
+                            <td>
+                                @if (req.EventId.HasValue)
+                                {
+                                    var ev = availableEvents?.FirstOrDefault(e => e.Id == req.EventId);
+                                    <span class="afp-event-pill">
+                                        🎪 @(ev?.Name ?? $"Event #{req.EventId}")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="afp-event-pill afp-event-pill--none">–</span>
+                                }
+                            </td>
                             <td>
                                 <span class="status-pill">@StatusLabel(req.Status)</span>
                             </td>
@@ -119,7 +133,7 @@
     ══════════════════════════════════════════════════ -->
     @if (activeTab == Tab.Settings)
     {
-        @if (settings == null)
+        @if (settingsList == null)
         {
             <div class="state-card state-card--info">
                 <div class="state-card__icon">⏳</div>
@@ -152,113 +166,155 @@
                 </div>
             }
 
-            <EditForm Model="settings" OnValidSubmit="SaveSettings">
-                <DataAnnotationsValidator />
+            <!-- ── Pro-Event Settings Liste ── -->
+            <div class="afp-settings-list">
+                @foreach (var s in settingsList)
+                {
+                    var ev = availableEvents?.FirstOrDefault(e => e.Id == s.EventId);
 
-                <!-- Service Status -->
-                <div class="afp-block">
-                    <div class="afp-block__header">
-                        <h3>⚙️ Service-Status</h3>
-                    </div>
-                    <div class="afp-block__body">
-
-                        <div class="afp-toggle-row">
-                            <div class="afp-toggle-info">
-                                <span class="afp-toggle-label">Abholservice aktiv</span>
-                                <span class="afp-toggle-desc">
-                                    Wenn deaktiviert, können Benutzer keine neuen Anfragen einreichen.
-                                </span>
-                            </div>
-                            <label class="afp-toggle">
-                                <input type="checkbox" @bind="settings.IsEnabled" />
-                                <span class="afp-toggle__track">
-                                    <span class="afp-toggle__thumb"></span>
-                                </span>
-                            </label>
+                    <div class="afp-block">
+                        <div class="afp-block__header">
+                            <h3>
+                                🎪 @(ev?.Name ?? "Kein Event zugewiesen")
+                                @if (ev != null)
+                                {
+                                    <span class="afp-block__header-date">
+                                        · @ev.Date.ToString("dd. MMMM yyyy",
+                                            new System.Globalization.CultureInfo("de-CH"))
+                                    </span>
+                                }
+                            </h3>
                         </div>
+                        <div class="afp-block__body">
 
-                        <div class="afp-status-badge @(settings.IsEnabled ? "afp-status-badge--on" : "afp-status-badge--off")">
-                            @if (settings.IsEnabled)
-                            {
-                                <span>🟢 Service ist aktiv – Benutzer können Anfragen einreichen</span>
-                            }
-                            else
-                            {
-                                <span>🔴 Service ist deaktiviert – keine neuen Anfragen möglich</span>
-                            }
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Datumsspanne -->
-                <div class="afp-block">
-                    <div class="afp-block__header">
-                        <h3>📅 Abhol-Zeitraum</h3>
-                    </div>
-                    <div class="afp-block__body">
-
-                        <p class="afp-hint">
-                            Lege fest, in welchem Zeitraum Benutzer ein Abholdatum wählen dürfen.
-                            Leer lassen = keine Einschränkung.
-                        </p>
-
-                        <div class="afp-date-grid">
-                            <div class="afp-field">
-                                <label>Frühestes Abholdatum</label>
-                                <InputDate @bind-Value="settings.PickupDateFrom"
-                                           class="afp-input" />
+                            <!-- Event Zuweisung -->
+                            <div class="afp-field" style="margin-bottom:1.25rem">
+                                <label>Verknüpfter Event</label>
+                                <select class="afp-input"
+                                        value="@s.EventId"
+                                        @onchange="e => OnEventChanged(s, e)">
+                                    <option value="">– Kein Event –</option>
+                                    @if (availableEvents != null)
+                                    {
+                                        @foreach (var evOpt in availableEvents)
+                                        {
+                                            <option value="@evOpt.Id"
+                                                    selected="@(s.EventId == evOpt.Id)">
+                                                @evOpt.Name (@evOpt.Date.ToShortDateString())
+                                            </option>
+                                        }
+                                    }
+                                </select>
                             </div>
 
-                            <div class="afp-date-arrow">→</div>
-
-                            <div class="afp-field">
-                                <label>Spätestes Abholdatum</label>
-                                <InputDate @bind-Value="settings.PickupDateTo"
-                                           class="afp-input" />
+                            <!-- Toggle -->
+                            <div class="afp-toggle-row">
+                                <div class="afp-toggle-info">
+                                    <span class="afp-toggle-label">Abholservice aktiv</span>
+                                    <span class="afp-toggle-desc">
+                                        Wenn deaktiviert, können Benutzer für diesen Event keine Anfragen einreichen.
+                                    </span>
+                                </div>
+                                <label class="afp-toggle">
+                                    <input type="checkbox"
+                                           checked="@s.IsEnabled"
+                                           @onchange="e => s.IsEnabled = (bool)(e.Value ?? false)" />
+                                    <span class="afp-toggle__track">
+                                        <span class="afp-toggle__thumb"></span>
+                                    </span>
+                                </label>
                             </div>
-                        </div>
 
-                        @if (settings.PickupDateFrom.HasValue && settings.PickupDateTo.HasValue)
-                        {
-                            @if (settings.PickupDateTo < settings.PickupDateFrom)
+                            <div class="afp-status-badge @(s.IsEnabled ? "afp-status-badge--on" : "afp-status-badge--off")"
+                                 style="margin-bottom:1.25rem">
+                                @if (s.IsEnabled)
+                                {
+                                    <span>🟢 Service ist aktiv</span>
+                                }
+                                else
+                                {
+                                    <span>🔴 Service ist deaktiviert</span>
+                                }
+                            </div>
+
+                            <!-- Datumsspanne -->
+                            <p class="afp-hint">
+                                Lege fest, in welchem Zeitraum Benutzer ein Abholdatum wählen dürfen.
+                                Leer lassen = keine Einschränkung.
+                            </p>
+
+                            <div class="afp-date-grid">
+                                <div class="afp-field">
+                                    <label>Frühestes Abholdatum</label>
+                                    <input type="date"
+                                           class="afp-input"
+                                           value="@(s.PickupDateFrom?.ToString("yyyy-MM-dd") ?? "")"
+                                           @onchange="e => OnDateFromChanged(s, e)" />
+                                </div>
+
+                                <div class="afp-date-arrow">→</div>
+
+                                <div class="afp-field">
+                                    <label>Spätestes Abholdatum</label>
+                                    <input type="date"
+                                           class="afp-input"
+                                           value="@(s.PickupDateTo?.ToString("yyyy-MM-dd") ?? "")"
+                                           @onchange="e => OnDateToChanged(s, e)" />
+                                </div>
+                            </div>
+
+                            @if (s.PickupDateFrom.HasValue && s.PickupDateTo.HasValue)
                             {
-                                <div class="state-card state-card--error" style="margin-top:1rem">
-                                    <div class="state-card__icon">⚠️</div>
-                                    <div class="state-card__content">
-                                        <p>Das Enddatum darf nicht vor dem Startdatum liegen.</p>
+                                @if (s.PickupDateTo < s.PickupDateFrom)
+                                {
+                                    <div class="state-card state-card--error" style="margin-top:1rem">
+                                        <div class="state-card__icon">⚠️</div>
+                                        <div class="state-card__content">
+                                            <p>Das Enddatum darf nicht vor dem Startdatum liegen.</p>
+                                        </div>
                                     </div>
-                                </div>
+                                }
+                                else
+                                {
+                                    <div class="afp-date-preview">
+                                        📦 Abholungen möglich vom
+                                        <strong>@s.PickupDateFrom.Value.ToShortDateString()</strong>
+                                        bis
+                                        <strong>@s.PickupDateTo.Value.ToShortDateString()</strong>
+                                    </div>
+                                }
                             }
-                            else
-                            {
-                                <div class="afp-date-preview">
-                                    📦 Abholungen möglich vom
-                                    <strong>@settings.PickupDateFrom.Value.ToShortDateString()</strong>
-                                    bis
-                                    <strong>@settings.PickupDateTo.Value.ToShortDateString()</strong>
-                                </div>
-                            }
-                        }
 
+                            <!-- Aktionen -->
+                            <div class="afp-settings-actions">
+                                <button class="afp-submit-btn"
+                                        disabled="@(isSaving || IsDateRangeInvalid(s))"
+                                        @onclick="() => SaveSingleSettings(s)">
+                                    @if (isSaving)
+                                    {
+                                        <span>⏳ Wird gespeichert...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>💾 Speichern</span>
+                                    }
+                                </button>
+
+                                <button class="afp-delete-btn"
+                                        @onclick="() => DeleteSettings(s)">
+                                    🗑️ Entfernen
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
-                </div>
+                }
+            </div>
 
-                <!-- Speichern -->
-                <button type="submit"
-                        class="afp-submit-btn"
-                        disabled="@(isSaving || IsDateRangeInvalid())">
-                    @if (isSaving)
-                    {
-                        <span>⏳ Wird gespeichert...</span>
-                    }
-                    else
-                    {
-                        <span>💾 Einstellungen speichern</span>
-                    }
-                </button>
-
-            </EditForm>
+            <!-- Neue Einstellung hinzufügen -->
+            <button class="afp-add-btn" @onclick="AddNewSettings">
+                ＋ Neuen Event-Pickup hinzufügen
+            </button>
         }
     }
 
@@ -303,6 +359,14 @@
                         <span class="label">Abholdatum</span>
                         <span class="value">@selectedRequest.PickupDate.ToShortDateString()</span>
                     </div>
+                    @if (selectedRequest.EventId.HasValue)
+                    {
+                        var ev = availableEvents?.FirstOrDefault(e => e.Id == selectedRequest.EventId);
+                        <div class="appointment-info-item">
+                            <span class="label">Event</span>
+                            <span class="value">🎪 @(ev?.Name ?? $"Event #{selectedRequest.EventId}")</span>
+                        </div>
+                    }
                     <div class="appointment-info-item">
                         <span class="label">Beschreibung</span>
                         <span class="value">@selectedRequest.Description</span>
@@ -378,7 +442,8 @@
             : requests!.Where(r => r.Status == filterStatus).ToList();
 
     // ── Einstellungen ────────────────────────────────────────────────────────
-    private FurniturePickupSettings? settings;
+    private List<FurniturePickupSettings>? settingsList;
+    private List<Event>?                   availableEvents;
     private bool    isSaving        = false;
     private string? settingsSuccess = null;
     private string? settingsError   = null;
@@ -386,8 +451,11 @@
     // ── Init ─────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        requests = await FurniturePickupService.GetAllRequestsAsync();
-        settings = await FurniturePickupService.GetSettingsAsync();
+        requests        = await FurniturePickupService.GetAllRequestsAsync();
+        availableEvents = await FurniturePickupService.GetAvailableEventsAsync();
+
+        // Alle bestehenden Settings laden
+        settingsList    = await FurniturePickupService.GetAllSettingsAsync();
     }
 
     // ── Filter ───────────────────────────────────────────────────────────────
@@ -421,24 +489,48 @@
     private void OpenImageModal(string src) => fullImageSrc = src;
     private void CloseImageModal()          => fullImageSrc = null;
 
-    // ── Einstellungen speichern ───────────────────────────────────────────────
-    private bool IsDateRangeInvalid() =>
-        settings?.PickupDateFrom.HasValue == true &&
-        settings?.PickupDateTo.HasValue   == true &&
-        settings.PickupDateTo < settings.PickupDateFrom;
-
-    private async Task SaveSettings()
+    // ── Settings – Event Dropdown ─────────────────────────────────────────────
+    private void OnEventChanged(FurniturePickupSettings s, ChangeEventArgs e)
     {
-        if (settings == null) return;
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            s.EventId = id;
+        else
+            s.EventId = null;
+    }
 
+    // ── Settings – Datum ──────────────────────────────────────────────────────
+    private void OnDateFromChanged(FurniturePickupSettings s, ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var d))
+            s.PickupDateFrom = d;
+        else
+            s.PickupDateFrom = null;
+    }
+
+    private void OnDateToChanged(FurniturePickupSettings s, ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var d))
+            s.PickupDateTo = d;
+        else
+            s.PickupDateTo = null;
+    }
+
+    // ── Settings – Speichern ──────────────────────────────────────────────────
+    private bool IsDateRangeInvalid(FurniturePickupSettings s) =>
+        s.PickupDateFrom.HasValue &&
+        s.PickupDateTo.HasValue   &&
+        s.PickupDateTo < s.PickupDateFrom;
+
+    private async Task SaveSingleSettings(FurniturePickupSettings s)
+    {
         isSaving        = true;
         settingsSuccess = null;
         settingsError   = null;
 
         try
         {
-            await FurniturePickupService.SaveSettingsAsync(settings);
-            settingsSuccess = "Die Einstellungen wurden erfolgreich gespeichert.";
+            await FurniturePickupService.SaveSettingsAsync(s);
+            settingsSuccess = $"Einstellungen erfolgreich gespeichert.";
         }
         catch (Exception ex)
         {
@@ -448,6 +540,30 @@
         {
             isSaving = false;
         }
+    }
+
+    // ── Settings – Neu hinzufügen ─────────────────────────────────────────────
+    private void AddNewSettings()
+    {
+        settingsList!.Add(new FurniturePickupSettings
+        {
+            IsEnabled      = false,
+            PickupDateFrom = null,
+            PickupDateTo   = null,
+            EventId        = null
+        });
+    }
+
+    // ── Settings – Entfernen ──────────────────────────────────────────────────
+   private async Task DeleteSettings(FurniturePickupSettings s)
+    {
+        if (s.Id > 0)
+        {
+            // 👇 neu – sauberes Löschen über Service
+            await FurniturePickupService.DeleteSettingsAsync(s.Id);
+        }
+
+        settingsList!.Remove(s);
     }
 
     // ── Status Label ─────────────────────────────────────────────────────────

@@ -177,7 +177,7 @@
     color: #9ca3af;
 }
 
-/* ── Input – der eigentliche Fix ─────────────────────────────────────────── */
+/* ── Input ────────────────────────────────────────────────────────────────── */
 .pickup-input[b-b67f4d8u8h] {
     width: 100%;
     padding: .75rem 1rem;
@@ -206,7 +206,6 @@
     box-shadow: 0 0 0 3px rgba(37,99,235,.15);
 }
 
-/* Readonly-Felder – klar als nicht editierbar erkennbar */
 .pickup-input--readonly[b-b67f4d8u8h],
 .pickup-input[readonly][b-b67f4d8u8h] {
     background: #f3f4f6;
@@ -227,7 +226,6 @@
     min-height: 110px;
 }
 
-/* InputDate nativer Kalender-Button angleichen */
 .pickup-input[type="date"][b-b67f4d8u8h]::-webkit-calendar-picker-indicator {
     opacity: .5;
     cursor: pointer;
@@ -358,6 +356,101 @@
     cursor: not-allowed;
 }
 
+/* ── Event Auswahl Liste ──────────────────────────────────────────────────── */
+.pickup-event-list[b-b67f4d8u8h] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pickup-event-card[b-b67f4d8u8h] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e0e7ff;
+    border-radius: 16px;
+    background: #f8faff;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.pickup-event-card:hover[b-b67f4d8u8h] {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-2px);
+}
+
+.pickup-event-card__icon[b-b67f4d8u8h] {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.pickup-event-card__name[b-b67f4d8u8h] {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.pickup-event-card__date[b-b67f4d8u8h] {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.pickup-event-card__arrow[b-b67f4d8u8h] {
+    font-size: 1.1rem;
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+/* ── Gewählter Event Banner ───────────────────────────────────────────────── */
+.pickup-selected-event[b-b67f4d8u8h] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.1rem;
+    border-radius: 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+}
+
+.pickup-selected-event__label[b-b67f4d8u8h] {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.pickup-selected-event__name[b-b67f4d8u8h] {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #1d4ed8;
+}
+
+.pickup-selected-event__change[b-b67f4d8u8h] {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+}
+
+.pickup-selected-event__change:hover[b-b67f4d8u8h] {
+    background: #dbeafe;
+}
+
 /* ── Media Queries ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .pickup-page[b-b67f4d8u8h] {
@@ -379,5 +472,25 @@
 
     .pickup-submit-btn[b-b67f4d8u8h] {
         max-width: 100%;
+    }
+
+    .pickup-event-card[b-b67f4d8u8h] {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pickup-event-card__date[b-b67f4d8u8h] {
+        width: 100%;
+        padding-left: 2.4rem;
+    }
+
+    .pickup-selected-event[b-b67f4d8u8h] {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pickup-selected-event__change[b-b67f4d8u8h] {
+        width: 100%;
+        text-align: left;
     }
 }

@@ -14,6 +14,10 @@ public class FurniturePickupService : IFurniturePickupService
         _context = context;
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // REQUESTS
+    // ════════════════════════════════════════════════════════════════════════
+
     public async Task<FurniturePickupRequest> CreateRequestAsync(
         FurniturePickupRequest request,
         List<(byte[] Data, string ContentType, string FileName)> images)
@@ -87,47 +91,161 @@ public class FurniturePickupService : IFurniturePickupService
             await _context.SaveChangesAsync();
         }
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // SETTINGS
+    // ════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Globale Fallback-Settings (Id = 1) – für Rückwärtskompatibilität.
+    /// </summary>
     public async Task<FurniturePickupSettings> GetSettingsAsync()
     {
         var settings = await _context.FurniturePickupSettings
             .FirstOrDefaultAsync(s => s.Id == 1);
 
-        // Falls noch gar kein Eintrag existiert → leeres Objekt zurückgeben
         return settings ?? new FurniturePickupSettings
         {
             Id             = 1,
             IsEnabled      = false,
             PickupDateFrom = null,
-            PickupDateTo   = null
+            PickupDateTo   = null,
+            EventId        = null
         };
     }
 
-   public async Task SaveSettingsAsync(FurniturePickupSettings settings)
+    /// <summary>
+    /// Alle Settings-Einträge – eine pro Event.
+    /// Gibt immer mindestens den globalen Fallback-Eintrag zurück.
+    /// </summary>
+    public async Task<List<FurniturePickupSettings>> GetAllSettingsAsync()
     {
-        var existing = await _context.FurniturePickupSettings
-            .FirstOrDefaultAsync(s => s.Id == 1);
+        var list = await _context.FurniturePickupSettings
+            .Include(s => s.Event)
+            .OrderBy(s => s.Id)
+            .ToListAsync();
 
-        if (existing == null)
+        // Sicherheitsnetz: Falls DB leer ist, Fallback zurückgeben
+        if (!list.Any())
         {
-            // Kein Eintrag vorhanden → neu anlegen
-            var newSettings = new FurniturePickupSettings
+            list.Add(new FurniturePickupSettings
             {
                 Id             = 1,
+                IsEnabled      = false,
+                PickupDateFrom = null,
+                PickupDateTo   = null,
+                EventId        = null
+            });
+        }
+
+        return list;
+    }
+
+    /// <summary>
+    /// Upsert-Logik:
+    /// – Id == 0  → neuer Eintrag wird angelegt
+    /// – Id  > 0  → bestehender Eintrag wird aktualisiert
+    /// </summary>
+    public async Task SaveSettingsAsync(FurniturePickupSettings settings)
+    {
+        if (settings.Id == 0)
+        {
+            // ── Neu anlegen ────────────────────────────────────────────────
+            var newEntry = new FurniturePickupSettings
+            {
                 IsEnabled      = settings.IsEnabled,
                 PickupDateFrom = settings.PickupDateFrom,
-                PickupDateTo   = settings.PickupDateTo
+                PickupDateTo   = settings.PickupDateTo,
+                EventId        = settings.EventId
             };
-            await _context.FurniturePickupSettings.AddAsync(newSettings);
+            await _context.FurniturePickupSettings.AddAsync(newEntry);
         }
         else
         {
-            // Eintrag vorhanden → updaten
-            existing.IsEnabled      = settings.IsEnabled;
-            existing.PickupDateFrom = settings.PickupDateFrom;
-            existing.PickupDateTo   = settings.PickupDateTo;
-            _context.FurniturePickupSettings.Update(existing);
+            // ── Bestehenden updaten ────────────────────────────────────────
+            var existing = await _context.FurniturePickupSettings
+                .FirstOrDefaultAsync(s => s.Id == settings.Id);
+
+            if (existing == null)
+            {
+                // Fallback: Falls Id nicht gefunden → neu anlegen
+                var newEntry = new FurniturePickupSettings
+                {
+                    IsEnabled      = settings.IsEnabled,
+                    PickupDateFrom = settings.PickupDateFrom,
+                    PickupDateTo   = settings.PickupDateTo,
+                    EventId        = settings.EventId
+                };
+                await _context.FurniturePickupSettings.AddAsync(newEntry);
+            }
+            else
+            {
+                existing.IsEnabled      = settings.IsEnabled;
+                existing.PickupDateFrom = settings.PickupDateFrom;
+                existing.PickupDateTo   = settings.PickupDateTo;
+                existing.EventId        = settings.EventId;
+
+                _context.FurniturePickupSettings.Update(existing);
+            }
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Löscht einen Settings-Eintrag anhand der Id.
+    /// Den globalen Fallback (Id = 1) schützen wir vor dem Löschen.
+    /// </summary>
+    public async Task DeleteSettingsAsync(int id)
+    {
+        // Globalen Fallback nicht löschen – nur deaktivieren
+        if (id == 1)
+        {
+            var fallback = await _context.FurniturePickupSettings
+                .FirstOrDefaultAsync(s => s.Id == 1);
+
+            if (fallback != null)
+            {
+                fallback.IsEnabled = false;
+                fallback.EventId   = null;
+                await _context.SaveChangesAsync();
+            }
+            return;
+        }
+
+        var entry = await _context.FurniturePickupSettings
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (entry != null)
+        {
+            _context.FurniturePickupSettings.Remove(entry);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // EVENTS
+    // ════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Alle aktiven Events – für Dropdowns und Auswahl.
+    /// </summary>
+    public async Task<List<Event>> GetAvailableEventsAsync()
+    {
+        return await _context.Events
+            .Where(e => e.IsActive)
+            .OrderBy(e => e.Date)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Gibt das aktive Settings-Objekt für einen bestimmten Event zurück.
+    /// Null wenn kein aktives Setting für diesen Event existiert.
+    /// </summary>
+    public async Task<FurniturePickupSettings?> GetSettingsByEventIdAsync(int eventId)
+    {
+        return await _context.FurniturePickupSettings
+            .Include(s => s.Event)
+            .FirstOrDefaultAsync(s => s.EventId == eventId && s.IsEnabled);
     }
 }

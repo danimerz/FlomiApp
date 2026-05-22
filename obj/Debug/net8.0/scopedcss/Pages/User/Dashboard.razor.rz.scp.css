@@ -272,6 +272,27 @@
     transform: rotate(0deg);
 }
 
+/* ── Pickup Collapse Button ───────────────────────────────────────────────── */
+.pickup-collapse-btn[b-x6hkyvm1le] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.pickup-collapse-btn .group-chevron[b-x6hkyvm1le] {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.pickup-collapse-btn:hover .group-chevron[b-x6hkyvm1le] {
+    background: #dbeafe;
+}
+
 /* ── Appointments Grid ────────────────────────────────────────────────────── */
 .appointments-grid[b-x6hkyvm1le] {
     display: grid;

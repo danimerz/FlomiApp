@@ -23,14 +23,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── FurniturePickupSettings Seed ────────────────────────────────────────
+        // ── FurniturePickupSettings → Event (optional) ──────────────────────
+        modelBuilder.Entity<FurniturePickupSettings>()
+            .HasOne(s => s.Event)
+            .WithMany()
+            .HasForeignKey(s => s.EventId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // ── Seed ────────────────────────────────────────────────────────────
         modelBuilder.Entity<FurniturePickupSettings>().HasData(
             new FurniturePickupSettings
             {
                 Id             = 1,
                 IsEnabled      = false,
                 PickupDateFrom = null,
-                PickupDateTo   = null
+                PickupDateTo   = null,
+                EventId        = null   // 👈 neu
             }
         );
     }

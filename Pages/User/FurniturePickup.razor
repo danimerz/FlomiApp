@@ -20,15 +20,68 @@
         </div>
     </section>
 
-    @if (!pickupEnabled)
+    @if (availableEvents == null)
     {
-        <!-- Service deaktiviert -->
+        <!-- Laden -->
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content">
+                <h3>Wird geladen...</h3>
+                <p>Bitte warte einen Moment.</p>
+            </div>
+        </div>
+    }
+    else if (!availableEvents.Any())
+    {
+        <!-- Kein Event verfügbar -->
         <div class="state-card state-card--error">
             <div class="state-card__icon">🔴</div>
             <div class="state-card__content">
                 <h3>Service momentan nicht verfügbar</h3>
-                <p>Der Möbel-Abholservice ist aktuell deaktiviert. Bitte versuche es später erneut.</p>
+                <p>Der Möbel-Abholservice ist aktuell für keinen Event aktiv.</p>
             </div>
+        </div>
+    }
+    else if (selectedEventId == null)
+    {
+        <!-- Event auswählen -->
+        <div class="pickup-block">
+            <div class="pickup-block__header">
+                <h3>🎪 Für welchen Event möchtest du Möbel anmelden?</h3>
+            </div>
+            <div class="pickup-block__body">
+                <div class="pickup-event-list">
+                    @foreach (var ev in availableEvents)
+                    {
+                        <button class="pickup-event-card"
+                                @onclick="() => SelectEvent(ev.Id)">
+                            <span class="pickup-event-card__icon">🎪</span>
+                            <span class="pickup-event-card__name">@ev.Name</span>
+                            <span class="pickup-event-card__date">
+                                @ev.Date.ToString("dd. MMMM yyyy",
+                                    new System.Globalization.CultureInfo("de-CH"))
+                            </span>
+                            <span class="pickup-event-card__arrow">→</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeSettings == null)
+    {
+        <!-- Event hat keinen aktiven Pickup-Service -->
+        <div class="state-card state-card--error">
+            <div class="state-card__icon">🔴</div>
+            <div class="state-card__content">
+                <h3>Für diesen Event nicht verfügbar</h3>
+                <p>Der Möbel-Abholservice ist für den gewählten Event nicht aktiv.</p>
+            </div>
+            <button class="pickup-submit-btn"
+                    style="max-width:220px; margin-top:.75rem"
+                    @onclick="ResetEventSelection">
+                ← Zurück
+            </button>
         </div>
     }
     else if (submitted)
@@ -43,13 +96,26 @@
             </div>
         </div>
 
-        <button class="pickup-submit-btn" style="max-width:260px"
+        <button class="pickup-submit-btn"
+                style="max-width:260px"
                 @onclick="ResetForm">
             ＋ Neue Anfrage stellen
         </button>
     }
     else
     {
+        <!-- Gewählter Event anzeigen -->
+        <div class="pickup-selected-event">
+            <span class="pickup-selected-event__label">Event:</span>
+            <span class="pickup-selected-event__name">
+                @availableEvents.First(e => e.Id == selectedEventId).Name
+            </span>
+            <button class="pickup-selected-event__change"
+                    @onclick="ResetEventSelection">
+                ✎ Ändern
+            </button>
+        </div>
+
         <!-- Formular -->
         <EditForm Model="model" OnValidSubmit="SubmitRequest">
             <DataAnnotationsValidator />
@@ -235,8 +301,12 @@
     private int     createdOrderNumber  = 0;
     private string? imageError;
 
+    // ── Event-Auswahl ─────────────────────────────────────────────────────────
+    private List<Event>?             availableEvents  = null;
+    private int?                     selectedEventId  = null;
+    private FurniturePickupSettings? activeSettings   = null;
+
     // ── Settings ──────────────────────────────────────────────────────────────
-    private bool    pickupEnabled = true;
     private string? pickupDateMin = null;
     private string? pickupDateMax = null;
 
@@ -254,15 +324,18 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        // 1. Settings laden
-        var pickupSettings = await FurniturePickupService.GetSettingsAsync();
-        pickupEnabled = pickupSettings.IsEnabled;
+        // 1. Alle Events laden für die ein Pickup-Setting existiert und aktiv ist
+        var allEvents    = await FurniturePickupService.GetAvailableEventsAsync();
+        var activeEvents = new List<Event>();
 
-        if (pickupSettings.PickupDateFrom.HasValue)
-            pickupDateMin = pickupSettings.PickupDateFrom.Value.ToString("yyyy-MM-dd");
+        foreach (var ev in allEvents)
+        {
+            var settings = await FurniturePickupService.GetSettingsByEventIdAsync(ev.Id);
+            if (settings != null)
+                activeEvents.Add(ev);
+        }
 
-        if (pickupSettings.PickupDateTo.HasValue)
-            pickupDateMax = pickupSettings.PickupDateTo.Value.ToString("yyyy-MM-dd");
+        availableEvents = activeEvents;
 
         // 2. User-Daten laden
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -284,17 +357,39 @@
                 model.Pfadiname   = appUser.Pfadiname;
             }
         }
+    }
 
-        // 3. Standard-Abholdatum setzen (innerhalb der erlaubten Spanne)
-        var defaultDate = DateTime.Today.AddDays(7);
+    // ── Event auswählen ───────────────────────────────────────────────────────
+    private async Task SelectEvent(int eventId)
+    {
+        selectedEventId = eventId;
+        activeSettings  = await FurniturePickupService.GetSettingsByEventIdAsync(eventId);
 
-        if (pickupSettings.PickupDateFrom.HasValue && defaultDate < pickupSettings.PickupDateFrom.Value)
-            defaultDate = pickupSettings.PickupDateFrom.Value;
+        if (activeSettings != null)
+        {
+            pickupDateMin = activeSettings.PickupDateFrom?.ToString("yyyy-MM-dd");
+            pickupDateMax = activeSettings.PickupDateTo?.ToString("yyyy-MM-dd");
 
-        if (pickupSettings.PickupDateTo.HasValue && defaultDate > pickupSettings.PickupDateTo.Value)
-            defaultDate = pickupSettings.PickupDateTo.Value;
+            // Standard-Abholdatum setzen
+            var defaultDate = DateTime.Today.AddDays(7);
 
-        model.PickupDate = defaultDate;
+            if (activeSettings.PickupDateFrom.HasValue && defaultDate < activeSettings.PickupDateFrom.Value)
+                defaultDate = activeSettings.PickupDateFrom.Value;
+
+            if (activeSettings.PickupDateTo.HasValue && defaultDate > activeSettings.PickupDateTo.Value)
+                defaultDate = activeSettings.PickupDateTo.Value;
+
+            model.PickupDate = defaultDate;
+            model.EventId    = eventId; // 👈 am Modell speichern
+        }
+    }
+
+    private void ResetEventSelection()
+    {
+        selectedEventId = null;
+        activeSettings  = null;
+        pickupDateMin   = null;
+        pickupDateMax   = null;
     }
 
     // ── Bild Upload ───────────────────────────────────────────────────────────
@@ -364,15 +459,7 @@
         model.City        = string.Empty;
         model.Description = string.Empty;
 
-        // Datum wieder korrekt zurücksetzen
-        var defaultDate = DateTime.Today.AddDays(7);
-
-        if (pickupDateMin != null && DateTime.TryParse(pickupDateMin, out var minDate) && defaultDate < minDate)
-            defaultDate = minDate;
-
-        if (pickupDateMax != null && DateTime.TryParse(pickupDateMax, out var maxDate) && defaultDate > maxDate)
-            defaultDate = maxDate;
-
-        model.PickupDate = defaultDate;
+        // Event-Auswahl zurücksetzen → User wählt neu
+        ResetEventSelection();
     }
 }
