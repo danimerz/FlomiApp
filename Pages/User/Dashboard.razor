@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAppointmentService AppointmentService
 @inject IJSRuntime JS
+@inject IFurniturePickupService FurniturePickupService
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -17,6 +18,56 @@
             </p>
         </div>
     </section>
+
+    @if (pickupRequests.Any())
+        {
+            <section class="appointments-section" style="margin-bottom:2rem">
+                <div class="appointments-section__header">
+                    <h2>🛋️ Möbel Abholungen</h2>
+                    <span class="appointments-section__count">
+                        @pickupRequests.Count Anfrage(n)
+                    </span>
+                </div>
+
+                <div class="appointments-grid">
+                    @foreach (var req in pickupRequests)
+                    {
+                        <article class="appointment-card">
+                            <div class="appointment-card__body">
+                                <div class="appointment-card__header">
+                                    <div>
+                                        <div class="appointment-card__topline">Abholung</div>
+                                        <h3>Auftrag #@req.OrderNumber</h3>
+                                    </div>
+                                    <span class="status-badge">@StatusLabel(req.Status)</span>
+                                </div>
+                                <div class="appointment-info-list">
+                                    <div class="appointment-info-item">
+                                        <span class="label">Adresse</span>
+                                        <span class="value">@req.Street, @req.PostalCode @req.City</span>
+                                    </div>
+                                    <div class="appointment-info-item">
+                                        <span class="label">Abholdatum</span>
+                                        <span class="value">@req.PickupDate.ToShortDateString()</span>
+                                    </div>
+                                    <div class="appointment-info-item">
+                                        <span class="label">Eingereicht</span>
+                                        <span class="value">@req.CreatedAt.ToShortDateString()</span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(req.AdminNote))
+                                    {
+                                        <div class="appointment-info-item">
+                                            <span class="label">Notiz</span>
+                                            <span class="value">@req.AdminNote</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
 
     @if (appointments == null)
     {
@@ -247,6 +298,7 @@
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                      ?? string.Empty;
             await LoadAppointments();
+            pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
         }
     }
 
@@ -341,4 +393,17 @@
         var fallbackEnd   = date.Date.AddHours(8).ToUniversalTime();
         return (fallbackStart, fallbackEnd);
     }
+
+    private List<FurniturePickupRequest> pickupRequests = new();
+
+
+
+    // Diese Hilfsmethode hinzufügen:
+    private string StatusLabel(PickupRequestStatus s) => s switch
+    {
+        PickupRequestStatus.Pending  => "⏳ Ausstehend",
+        PickupRequestStatus.Accepted => "✅ Akzeptiert",
+        PickupRequestStatus.Rejected => "❌ Abgelehnt",
+        _                            => s.ToString()
+    };
 }

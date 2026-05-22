@@ -15,4 +15,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Event> Events { get; set; }
     public DbSet<FamilyMember> FamilyMembers { get; set; }
+    public DbSet<FurniturePickupRequest> FurniturePickupRequests { get; set; }
+    public DbSet<FurniturePickupImage> FurniturePickupImages { get; set; }
 }

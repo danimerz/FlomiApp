@@ -1,0 +1,250 @@
+@page "/admin/furniture-pickup"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@inject IFurniturePickupService FurniturePickupService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Möbel Abholungen – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Möbel Abholungen</h1>
+            <p>Alle eingegangenen Abholungsanfragen im Überblick.</p>
+        </div>
+    </section>
+
+    @if (requests == null)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content">
+                <h3>Anfragen werden geladen...</h3>
+            </div>
+        </div>
+    }
+    else if (!requests.Any())
+    {
+        <div class="state-card state-card--empty">
+            <div class="state-card__icon">📭</div>
+            <div class="state-card__content">
+                <h3>Keine Anfragen vorhanden</h3>
+                <p>Es wurden noch keine Abholungsanfragen eingereicht.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Filter -->
+        <div style="margin-bottom:1rem; display:flex; gap:.5rem; flex-wrap:wrap">
+            @foreach (var status in Enum.GetValues<PickupRequestStatus>())
+            {
+                <button class="btn @(filterStatus == status ? "btn-primary" : "btn-secondary")"
+                        @onclick="() => SetFilter(status)">
+                    @StatusLabel(status) (@requests.Count(r => r.Status == status))
+                </button>
+            }
+            <button class="btn @(filterStatus == null ? "btn-primary" : "btn-secondary")"
+                    @onclick="() => SetFilter(null)">
+                Alle (@requests.Count)
+            </button>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Adresse</th>
+                    <th>Abholdatum</th>
+                    <th>Status</th>
+                    <th>Bilder</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var req in FilteredRequests)
+                {
+                    <tr>
+                        <td><strong>#@req.OrderNumber</strong></td>
+                        <td>
+                            @req.FirstName @req.LastName<br />
+                            <small>@req.Email</small>
+                        </td>
+                        <td>@req.Street, @req.PostalCode @req.City</td>
+                        <td>@req.PickupDate.ToShortDateString()</td>
+                        <td>
+                            <span class="status-pill">@StatusLabel(req.Status)</span>
+                        </td>
+                        <td>@req.Images.Count Bild(er)</td>
+                        <td>
+                            <button class="btn btn-warning"
+                                    @onclick="() => OpenDetail(req)">
+                                Details
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- Detail-Modal -->
+    @if (selectedRequest != null)
+    {
+        <div style="position:fixed; inset:0; background:rgba(0,0,0,.5);
+                    display:flex; align-items:center; justify-content:center;
+                    z-index:1000; padding:1rem">
+            <div style="background:var(--card-bg, white); border-radius:12px;
+                        padding:2rem; max-width:640px; width:100%;
+                        max-height:90vh; overflow-y:auto">
+
+                <h3>Anfrage #@selectedRequest.OrderNumber</h3>
+
+                <div class="appointment-info-list">
+                    <div class="appointment-info-item">
+                        <span class="label">Name</span>
+                        <span class="value">@selectedRequest.FirstName @selectedRequest.LastName</span>
+                    </div>
+                    <div class="appointment-info-item">
+                        <span class="label">E-Mail</span>
+                        <span class="value">@selectedRequest.Email</span>
+                    </div>
+                    <div class="appointment-info-item">
+                        <span class="label">Telefon</span>
+                        <span class="value">@(selectedRequest.PhoneNumber ?? "–")</span>
+                    </div>
+                    <div class="appointment-info-item">
+                        <span class="label">Adresse</span>
+                        <span class="value">
+                            @selectedRequest.Street,
+                            @selectedRequest.PostalCode @selectedRequest.City
+                        </span>
+                    </div>
+                    <div class="appointment-info-item">
+                        <span class="label">Abholdatum</span>
+                        <span class="value">@selectedRequest.PickupDate.ToShortDateString()</span>
+                    </div>
+                    <div class="appointment-info-item">
+                        <span class="label">Beschreibung</span>
+                        <span class="value">@selectedRequest.Description</span>
+                    </div>
+                </div>
+
+                <!-- Bilder -->
+                @if (selectedRequest.Images.Any())
+                {
+                    <h4 style="margin-top:1rem">Fotos</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:.5rem">
+                        @foreach (var img in selectedRequest.Images)
+                        {
+                            var src = $"data:{img.ContentType};base64,{Convert.ToBase64String(img.ImageData)}";
+                            <img src="@src" alt="@img.FileName"
+                                 style="width:120px; height:120px; object-fit:cover;
+                                        border-radius:8px; cursor:pointer"
+                                 @onclick="() => OpenImageModal(src)" />
+                        }
+                    </div>
+                }
+
+                <!-- Admin-Notiz -->
+                <div class="form-group" style="margin-top:1rem">
+                    <label>Admin-Notiz (optional)</label>
+                    <textarea class="form-control" rows="3"
+                              @bind="adminNote"
+                              placeholder="z.B. Termin bestätigt für..."></textarea>
+                </div>
+
+                <!-- Aktionen -->
+                <div style="display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap">
+                    <button class="btn btn-success"
+                            @onclick="() => UpdateStatus(PickupRequestStatus.Accepted)">
+                        ✅ Akzeptieren
+                    </button>
+                    <button class="btn btn-danger"
+                            @onclick="() => UpdateStatus(PickupRequestStatus.Rejected)">
+                        ❌ Ablehnen
+                    </button>
+                    <button class="btn btn-secondary"
+                            @onclick="CloseDetail">
+                        Schliessen
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    <!-- Bild-Vollansicht -->
+    @if (fullImageSrc != null)
+    {
+        <div style="position:fixed; inset:0; background:rgba(0,0,0,.85);
+                    display:flex; align-items:center; justify-content:center;
+                    z-index:2000; cursor:pointer"
+             @onclick="CloseImageModal">
+            <img src="@fullImageSrc"
+                 style="max-width:90vw; max-height:90vh;
+                        border-radius:8px; object-fit:contain" />
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<FurniturePickupRequest>? requests;
+    private FurniturePickupRequest?       selectedRequest;
+    private PickupRequestStatus?          filterStatus = null;
+    private string?                       adminNote;
+    private string?                       fullImageSrc;
+
+    private List<FurniturePickupRequest> FilteredRequests =>
+        filterStatus == null
+            ? requests!
+            : requests!.Where(r => r.Status == filterStatus).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        requests = await FurniturePickupService.GetAllRequestsAsync();
+    }
+
+    private void SetFilter(PickupRequestStatus? status)
+    {
+        filterStatus = status;
+    }
+
+    private void OpenDetail(FurniturePickupRequest req)
+    {
+        selectedRequest = req;
+        adminNote       = req.AdminNote;
+    }
+
+    private void CloseDetail()
+    {
+        selectedRequest = null;
+        adminNote       = null;
+    }
+
+    private async Task UpdateStatus(PickupRequestStatus status)
+    {
+        if (selectedRequest == null) return;
+
+        await FurniturePickupService.UpdateStatusAsync(
+            selectedRequest.Id, status, adminNote);
+
+        requests = await FurniturePickupService.GetAllRequestsAsync();
+        CloseDetail();
+    }
+
+    private void OpenImageModal(string src)  => fullImageSrc = src;
+    private void CloseImageModal()           => fullImageSrc = null;
+
+    private string StatusLabel(PickupRequestStatus s) => s switch
+    {
+        PickupRequestStatus.Pending  => "⏳ Ausstehend",
+        PickupRequestStatus.Accepted => "✅ Akzeptiert",
+        PickupRequestStatus.Rejected => "❌ Abgelehnt",
+        _                            => s.ToString()
+    };
+}

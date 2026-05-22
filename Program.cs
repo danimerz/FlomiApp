@@ -37,6 +37,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuth
 builder.Services.AddScoped<ThemeState>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IFurniturePickupService, FurniturePickupService>();
 
 var app = builder.Build();
 

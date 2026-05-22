@@ -1,0 +1,302 @@
+@page "/user/furniture-pickup"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IFurniturePickupService FurniturePickupService
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+@attribute [Authorize]
+
+<PageTitle>Möbel Abholservice</PageTitle>
+
+<div class="dashboard-page">
+
+    <!-- Hero -->
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Service</span>
+            <h1>Möbel Abholservice</h1>
+            <p>Melde deine Möbel zur Abholung an. Wir kommen zu dir!</p>
+        </div>
+    </section>
+
+    @if (submitted)
+    {
+        <!-- Erfolgs-Bestätigung -->
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">✅</div>
+            <div class="state-card__content">
+                <h3>Anfrage erfolgreich eingereicht!</h3>
+                <p>Deine Auftragsnummer: <strong>#@createdOrderNumber</strong></p>
+                <p>Wir melden uns sobald deine Anfrage bearbeitet wurde.</p>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:1rem"
+                @onclick="ResetForm">
+            Neue Anfrage stellen
+        </button>
+    }
+    else
+    {
+        <EditForm Model="model" OnValidSubmit="SubmitRequest">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Persönliche Daten -->
+            <div class="appointment-card" style="margin-bottom:1.5rem">
+                <div class="appointment-card__body">
+                    <div class="appointment-card__header">
+                        <h3>👤 Persönliche Daten</h3>
+                    </div>
+                    <div class="appointment-info-list">
+
+                        <div class="form-group">
+                            <label>Vorname</label>
+                            <InputText @bind-Value="model.FirstName" class="form-control" readonly />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nachname</label>
+                            <InputText @bind-Value="model.LastName" class="form-control" readonly />
+                        </div>
+
+                        <div class="form-group">
+                            <label>E-Mail</label>
+                            <InputText @bind-Value="model.Email" class="form-control" readonly />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Telefon</label>
+                            <InputText @bind-Value="model.PhoneNumber" class="form-control"
+                                       placeholder="z.B. +41 79 123 45 67" />
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abholadresse -->
+            <div class="appointment-card" style="margin-bottom:1.5rem">
+                <div class="appointment-card__body">
+                    <div class="appointment-card__header">
+                        <h3>📍 Abholadresse</h3>
+                    </div>
+                    <div class="appointment-info-list">
+
+                        <div class="form-group">
+                            <label>Strasse & Hausnummer</label>
+                            <InputText @bind-Value="model.Street" class="form-control"
+                                       placeholder="z.B. Musterstrasse 12" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>PLZ</label>
+                            <InputText @bind-Value="model.PostalCode" class="form-control"
+                                       placeholder="z.B. 8000" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ort</label>
+                            <InputText @bind-Value="model.City" class="form-control"
+                                       placeholder="z.B. Zürich" />
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Möbel-Details -->
+            <div class="appointment-card" style="margin-bottom:1.5rem">
+                <div class="appointment-card__body">
+                    <div class="appointment-card__header">
+                        <h3>🛋️ Möbel-Details</h3>
+                    </div>
+                    <div class="appointment-info-list">
+
+                        <div class="form-group">
+                            <label>Beschreibung der Möbel</label>
+                            <InputTextArea @bind-Value="model.Description" class="form-control"
+                                           rows="4"
+                                           placeholder="z.B. 1 Sofa (braun, 2-Sitzer), 1 Holztisch..." />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gewünschtes Abholdatum</label>
+                            <InputDate @bind-Value="model.PickupDate" class="form-control" />
+                        </div>
+
+                        <!-- Bilder Upload -->
+                        <div class="form-group">
+                            <label>Fotos der Möbel (max. 5 Bilder, je max. 5 MB)</label>
+                            <InputFile OnChange="HandleImageUpload"
+                                       multiple
+                                       accept="image/*"
+                                       class="form-control" />
+
+                            @if (imageError != null)
+                            {
+                                <p style="color:red; margin-top:.5rem">@imageError</p>
+                            }
+
+                            @if (uploadedImages.Count > 0)
+                            {
+                                <div style="display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.75rem">
+                                    @foreach (var img in uploadedImages)
+                                    {
+                                        <div style="position:relative">
+                                            <img src="@img.PreviewUrl"
+                                                 alt="@img.FileName"
+                                                 style="width:100px; height:100px;
+                                                        object-fit:cover; border-radius:8px;
+                                                        border:2px solid var(--border-color, #ccc)" />
+                                            <button type="button"
+                                                    style="position:absolute; top:-6px; right:-6px;
+                                                           background:red; color:white; border:none;
+                                                           border-radius:50%; width:20px; height:20px;
+                                                           cursor:pointer; font-size:12px"
+                                                    @onclick="() => RemoveImage(img)">
+                                                ✕
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span>⏳ Wird eingereicht...</span>
+                }
+                else
+                {
+                    <span>📦 Abholung anmelden</span>
+                }
+            </button>
+
+        </EditForm>
+    }
+</div>
+
+@code {
+    private FurniturePickupRequest model = new();
+    private bool submitted    = false;
+    private bool isSubmitting = false;
+    private int  createdOrderNumber = 0;
+    private string? imageError;
+
+    // Bild-Vorschau-Hilfsklasse
+    private class ImagePreview
+    {
+        public string FileName    { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public byte[] Data        { get; set; } = Array.Empty<byte>();
+        public string PreviewUrl  { get; set; } = string.Empty;
+    }
+
+    private List<ImagePreview> uploadedImages = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user      = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userId  = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            var appUser = await UserManager.FindByIdAsync(userId);
+
+            if (appUser != null)
+            {
+                model.UserId      = userId;
+                model.FirstName   = appUser.FirstName;
+                model.LastName    = appUser.LastName;
+                model.Email       = appUser.Email ?? string.Empty;
+                model.PhoneNumber = appUser.PhoneNumber;
+                model.Pfadiname   = appUser.Pfadiname;
+            }
+        }
+
+        model.PickupDate = DateTime.Today.AddDays(7);
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        imageError = null;
+        const int maxImages   = 5;
+        const long maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+        var newFiles = e.GetMultipleFiles(maxImages);
+
+        if (uploadedImages.Count + newFiles.Count > maxImages)
+        {
+            imageError = $"Maximal {maxImages} Bilder erlaubt.";
+            return;
+        }
+
+        foreach (var file in newFiles)
+        {
+            if (file.Size > maxSizeBytes)
+            {
+                imageError = $"'{file.Name}' ist zu gross (max. 5 MB).";
+                continue;
+            }
+
+            using var stream = file.OpenReadStream(maxSizeBytes);
+            using var ms     = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            var base64     = Convert.ToBase64String(bytes);
+            var previewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            uploadedImages.Add(new ImagePreview
+            {
+                FileName    = file.Name,
+                ContentType = file.ContentType,
+                Data        = bytes,
+                PreviewUrl  = previewUrl
+            });
+        }
+    }
+
+    private void RemoveImage(ImagePreview img)
+    {
+        uploadedImages.Remove(img);
+    }
+
+    private async Task SubmitRequest()
+    {
+        isSubmitting = true;
+
+        var images = uploadedImages
+            .Select(i => (i.Data, i.ContentType, i.FileName))
+            .ToList();
+
+        var created = await FurniturePickupService.CreateRequestAsync(model, images);
+        createdOrderNumber = created.OrderNumber;
+
+        submitted    = true;
+        isSubmitting = false;
+    }
+
+    private void ResetForm()
+    {
+        submitted      = false;
+        uploadedImages = new();
+        imageError     = null;
+
+        // Profildaten behalten, Rest zurücksetzen
+        model.Street      = string.Empty;
+        model.PostalCode  = string.Empty;
+        model.City        = string.Empty;
+        model.Description = string.Empty;
+        model.PickupDate  = DateTime.Today.AddDays(7);
+    }
+}

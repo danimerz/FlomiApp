@@ -40,6 +40,15 @@
                                 <span>Einstellungen</span>
                             </NavLink>
                         </div>
+
+                        <!-- ✅ NEU: Möbel Abholservice -->
+                        <div class="navmenu-item">
+                            <NavLink class="navmenu-link" href="user/furniture-pickup">
+                                <span class="navmenu-icon">🛋</span>
+                                <span>Möbel Abholservice</span>
+                            </NavLink>
+                        </div>
+
                     </div>
 
                     <AuthorizeView Roles="Admin">
@@ -60,6 +69,15 @@
                                         <span>Bereiche verwalten</span>
                                     </NavLink>
                                 </div>
+
+                                <!-- ✅ NEU: Möbel Abholungen Admin -->
+                                <div class="navmenu-item">
+                                    <NavLink class="navmenu-link" href="admin/furniture-pickup">
+                                        <span class="navmenu-icon">📦</span>
+                                        <span>Möbel Abholungen</span>
+                                    </NavLink>
+                                </div>
+
                             </div>
                         </Authorized>
                     </AuthorizeView>
