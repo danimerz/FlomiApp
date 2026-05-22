@@ -22,7 +22,6 @@
 
     @if (availableEvents == null)
     {
-        <!-- Laden -->
         <div class="state-card state-card--info">
             <div class="state-card__icon">⏳</div>
             <div class="state-card__content">
@@ -33,7 +32,6 @@
     }
     else if (!availableEvents.Any())
     {
-        <!-- Kein Event verfügbar -->
         <div class="state-card state-card--error">
             <div class="state-card__icon">🔴</div>
             <div class="state-card__content">
@@ -44,7 +42,6 @@
     }
     else if (selectedEventId == null)
     {
-        <!-- Event auswählen -->
         <div class="pickup-block">
             <div class="pickup-block__header">
                 <h3>🎪 Für welchen Event möchtest du Möbel anmelden?</h3>
@@ -70,7 +67,6 @@
     }
     else if (activeSettings == null)
     {
-        <!-- Event hat keinen aktiven Pickup-Service -->
         <div class="state-card state-card--error">
             <div class="state-card__icon">🔴</div>
             <div class="state-card__content">
@@ -86,7 +82,6 @@
     }
     else if (submitted)
     {
-        <!-- Erfolg -->
         <div class="state-card state-card--success">
             <div class="state-card__icon">✅</div>
             <div class="state-card__content">
@@ -104,7 +99,7 @@
     }
     else
     {
-        <!-- Gewählter Event anzeigen -->
+        <!-- Gewählter Event Banner -->
         <div class="pickup-selected-event">
             <span class="pickup-selected-event__label">Event:</span>
             <span class="pickup-selected-event__name">
@@ -121,7 +116,7 @@
             <DataAnnotationsValidator />
             <ValidationSummary />
 
-            <!-- Persönliche Daten -->
+            <!-- ── Persönliche Daten ── -->
             <div class="pickup-block">
                 <div class="pickup-block__header">
                     <h3>👤 Persönliche Daten</h3>
@@ -161,7 +156,7 @@
                 </div>
             </div>
 
-            <!-- Abholadresse -->
+            <!-- ── Abholadresse ── -->
             <div class="pickup-block">
                 <div class="pickup-block__header">
                     <h3>📍 Abholadresse</h3>
@@ -194,7 +189,7 @@
                 </div>
             </div>
 
-            <!-- Möbel-Details -->
+            <!-- ── Möbel-Details ── -->
             <div class="pickup-block">
                 <div class="pickup-block__header">
                     <h3>🛋️ Möbel-Details</h3>
@@ -229,7 +224,8 @@
 
                         <!-- Bilder Upload -->
                         <div class="pickup-field pickup-field--full">
-                            <label>Fotos der Möbel
+                            <label>
+                                Fotos der Möbel
                                 <span class="pickup-label-hint">(max. 5 Bilder, je max. 5 MB)</span>
                             </label>
 
@@ -274,7 +270,32 @@
                 </div>
             </div>
 
-            <!-- Submit -->
+            <!-- ── ✅ NEU: Einverständnis Entsorgungsgebühren ── -->
+            <div class="pickup-block pickup-block--consent">
+                <div class="pickup-block__body">
+                    <label class="pickup-consent">
+                        <input type="checkbox"
+                               class="pickup-consent__checkbox"
+                               @bind="model.AcceptsDisposalFee" />
+                        <span class="pickup-consent__text">
+                            Ich bestätige, dass ich im Falle eines <strong>Nicht-Verkaufs</strong>
+                            meiner Möbel die anfallenden
+                            <strong>Entsorgungsgebühren selbst trage</strong>.
+                            Der Abholservice übernimmt keine Kosten für die Entsorgung
+                            nicht verkaufter Gegenstände.
+                        </span>
+                    </label>
+
+                    @if (showConsentError)
+                    {
+                        <div class="pickup-consent__error">
+                            ⚠️ Bitte bestätige die Bedingungen, um fortzufahren.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ── Submit ── -->
             <button type="submit"
                     class="pickup-submit-btn"
                     disabled="@isSubmitting">
@@ -295,16 +316,17 @@
 
 @code {
     // ── Formular ──────────────────────────────────────────────────────────────
-    private FurniturePickupRequest model = new();
-    private bool    submitted           = false;
-    private bool    isSubmitting        = false;
-    private int     createdOrderNumber  = 0;
+    private FurniturePickupRequest model       = new();
+    private bool    submitted                  = false;
+    private bool    isSubmitting               = false;
+    private bool    showConsentError           = false;
+    private int     createdOrderNumber         = 0;
     private string? imageError;
 
     // ── Event-Auswahl ─────────────────────────────────────────────────────────
-    private List<Event>?             availableEvents  = null;
-    private int?                     selectedEventId  = null;
-    private FurniturePickupSettings? activeSettings   = null;
+    private List<Event>?             availableEvents = null;
+    private int?                     selectedEventId = null;
+    private FurniturePickupSettings? activeSettings  = null;
 
     // ── Settings ──────────────────────────────────────────────────────────────
     private string? pickupDateMin = null;
@@ -324,7 +346,6 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        // 1. Alle Events laden für die ein Pickup-Setting existiert und aktiv ist
         var allEvents    = await FurniturePickupService.GetAvailableEventsAsync();
         var activeEvents = new List<Event>();
 
@@ -337,7 +358,6 @@
 
         availableEvents = activeEvents;
 
-        // 2. User-Daten laden
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user      = authState.User;
 
@@ -370,7 +390,6 @@
             pickupDateMin = activeSettings.PickupDateFrom?.ToString("yyyy-MM-dd");
             pickupDateMax = activeSettings.PickupDateTo?.ToString("yyyy-MM-dd");
 
-            // Standard-Abholdatum setzen
             var defaultDate = DateTime.Today.AddDays(7);
 
             if (activeSettings.PickupDateFrom.HasValue && defaultDate < activeSettings.PickupDateFrom.Value)
@@ -380,7 +399,7 @@
                 defaultDate = activeSettings.PickupDateTo.Value;
 
             model.PickupDate = defaultDate;
-            model.EventId    = eventId; // 👈 am Modell speichern
+            model.EventId    = eventId;
         }
     }
 
@@ -435,7 +454,15 @@
     // ── Submit ────────────────────────────────────────────────────────────────
     private async Task SubmitRequest()
     {
-        isSubmitting = true;
+        // ✅ Einverständnis prüfen
+        if (!model.AcceptsDisposalFee)
+        {
+            showConsentError = true;
+            return;
+        }
+
+        showConsentError = false;
+        isSubmitting     = true;
 
         var images = uploadedImages
             .Select(i => (i.Data, i.ContentType, i.FileName))
@@ -450,16 +477,17 @@
     // ── Reset ─────────────────────────────────────────────────────────────────
     private void ResetForm()
     {
-        submitted      = false;
-        uploadedImages = new();
-        imageError     = null;
+        submitted                = false;
+        uploadedImages           = new();
+        imageError               = null;
+        showConsentError         = false;
 
-        model.Street      = string.Empty;
-        model.PostalCode  = string.Empty;
-        model.City        = string.Empty;
-        model.Description = string.Empty;
+        model.Street             = string.Empty;
+        model.PostalCode         = string.Empty;
+        model.City               = string.Empty;
+        model.Description        = string.Empty;
+        model.AcceptsDisposalFee = false;
 
-        // Event-Auswahl zurücksetzen → User wählt neu
         ResetEventSelection();
     }
 }

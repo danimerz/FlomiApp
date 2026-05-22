@@ -1,3 +1,558 @@
+/* _content/FlomiApp/Pages/Admin/FurniturePickupAdmin.razor.rz.scp.css */
+/* ── Filter Row ───────────────────────────────────────────────────────────── */
+.afp-filter-row[b-y82fwkjo9h] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.afp-tabs[b-y82fwkjo9h] {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+}
+
+.afp-tab[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.25rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: #6b7280;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: -2px;
+    border-radius: 8px 8px 0 0;
+    transition: color .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.afp-tab:hover[b-y82fwkjo9h] {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.afp-tab--active[b-y82fwkjo9h] {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background: #eff6ff;
+}
+
+.afp-tab__badge[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: .75rem;
+    font-weight: 800;
+}
+
+.afp-tab--active .afp-tab__badge[b-y82fwkjo9h] {
+    background: #1d4ed8;
+}
+
+/* ── Settings Block ───────────────────────────────────────────────────────── */
+.afp-settings-list[b-y82fwkjo9h] {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.afp-block[b-y82fwkjo9h] {
+    margin-bottom: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 4px 16px rgba(15,23,42,.05);
+    overflow: hidden;
+}
+
+.afp-block__header[b-y82fwkjo9h] {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+}
+
+.afp-block__header h3[b-y82fwkjo9h] {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: .01em;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.afp-block__header-date[b-y82fwkjo9h] {
+    font-size: .85rem;
+    font-weight: 500;
+    opacity: .85;
+}
+
+.afp-block__body[b-y82fwkjo9h] {
+    padding: 1.5rem;
+}
+
+/* ── Toggle Switch ────────────────────────────────────────────────────────── */
+.afp-toggle-row[b-y82fwkjo9h] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.afp-toggle-info[b-y82fwkjo9h] {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.afp-toggle-label[b-y82fwkjo9h] {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.afp-toggle-desc[b-y82fwkjo9h] {
+    font-size: .88rem;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.afp-toggle[b-y82fwkjo9h] {
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.afp-toggle input[type="checkbox"][b-y82fwkjo9h] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.afp-toggle__track[b-y82fwkjo9h] {
+    display: block;
+    width: 56px;
+    height: 30px;
+    border-radius: 999px;
+    background: #d1d5db;
+    transition: background .25s ease;
+    position: relative;
+}
+
+.afp-toggle input:checked + .afp-toggle__track[b-y82fwkjo9h] {
+    background: #2563eb;
+}
+
+.afp-toggle__thumb[b-y82fwkjo9h] {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    transition: transform .25s ease;
+}
+
+.afp-toggle input:checked + .afp-toggle__track .afp-toggle__thumb[b-y82fwkjo9h] {
+    transform: translateX(26px);
+}
+
+/* ── Status Badge ─────────────────────────────────────────────────────────── */
+.afp-status-badge[b-y82fwkjo9h] {
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    font-size: .92rem;
+    font-weight: 600;
+}
+
+.afp-status-badge--on[b-y82fwkjo9h] {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.afp-status-badge--off[b-y82fwkjo9h] {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+/* ── Hint ─────────────────────────────────────────────────────────────────── */
+.afp-hint[b-y82fwkjo9h] {
+    margin: 0 0 1.25rem;
+    color: #6b7280;
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+/* ── Date Grid ────────────────────────────────────────────────────────────── */
+.afp-date-grid[b-y82fwkjo9h] {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 1rem;
+}
+
+.afp-date-arrow[b-y82fwkjo9h] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: .75rem;
+    font-size: 1.4rem;
+    color: #9ca3af;
+    font-weight: 700;
+}
+
+.afp-field[b-y82fwkjo9h] {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.afp-field label[b-y82fwkjo9h] {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #374151;
+}
+
+.afp-input[b-y82fwkjo9h] {
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #111827;
+    font-size: .95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.afp-input:focus[b-y82fwkjo9h] {
+    outline: none;
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+.afp-date-preview[b-y82fwkjo9h] {
+    margin-top: 1rem;
+    padding: .85rem 1rem;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+/* ── Settings Aktionen ────────────────────────────────────────────────────── */
+.afp-settings-actions[b-y82fwkjo9h] {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* ── Submit Button ────────────────────────────────────────────────────────── */
+.afp-submit-btn[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .85rem 1.5rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-size: .95rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(37,99,235,.22);
+    transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+
+.afp-submit-btn:hover:not(:disabled)[b-y82fwkjo9h] {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 12px 24px rgba(37,99,235,.30);
+}
+
+.afp-submit-btn:active:not(:disabled)[b-y82fwkjo9h] {
+    transform: translateY(0);
+}
+
+.afp-submit-btn:disabled[b-y82fwkjo9h] {
+    background: #cbd5e1;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* ── Delete Button ────────────────────────────────────────────────────────── */
+.afp-delete-btn[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .85rem 1.25rem;
+    border: 2px solid #fecaca;
+    border-radius: 14px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.afp-delete-btn:hover[b-y82fwkjo9h] {
+    background: #fee2e2;
+    border-color: #f87171;
+    transform: translateY(-1px);
+}
+
+.afp-delete-btn:active[b-y82fwkjo9h] {
+    transform: translateY(0);
+}
+
+/* ── Neu hinzufügen Button ────────────────────────────────────────────────── */
+.afp-add-btn[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: 2px dashed #93c5fd;
+    border-radius: 16px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .18s ease;
+    margin-bottom: 1.5rem;
+}
+
+.afp-add-btn:hover[b-y82fwkjo9h] {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+}
+
+.afp-add-btn:active[b-y82fwkjo9h] {
+    transform: translateY(0);
+}
+
+/* ── Event Pill (Tabelle) ─────────────────────────────────────────────────── */
+.afp-event-pill[b-y82fwkjo9h] {
+    display: inline-flex;
+    align-items: center;
+    padding: .25rem .65rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid #bfdbfe;
+}
+
+.afp-event-pill--none[b-y82fwkjo9h] {
+    background: #f3f4f6;
+    color: #9ca3af;
+    border-color: #e5e7eb;
+}
+
+/* ── Detail Modal ─────────────────────────────────────────────────────────── */
+.afp-modal-backdrop[b-y82fwkjo9h] {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(3px);
+}
+
+.afp-modal[b-y82fwkjo9h] {
+    background: #ffffff;
+    border-radius: 20px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0,0,0,.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.afp-modal__header[b-y82fwkjo9h] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.afp-modal__header h3[b-y82fwkjo9h] {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.afp-modal__close[b-y82fwkjo9h] {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease;
+}
+
+.afp-modal__close:hover[b-y82fwkjo9h] {
+    background: #e5e7eb;
+}
+
+.afp-modal__body[b-y82fwkjo9h] {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+.afp-modal__images[b-y82fwkjo9h] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.afp-modal__images img[b-y82fwkjo9h] {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid #e5e7eb;
+    transition: border-color .2s ease, transform .2s ease;
+}
+
+.afp-modal__images img:hover[b-y82fwkjo9h] {
+    border-color: #2563eb;
+    transform: scale(1.04);
+}
+
+.afp-modal__footer[b-y82fwkjo9h] {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 20px 20px;
+}
+
+/* ── Bild Vollansicht ─────────────────────────────────────────────────────── */
+.afp-image-backdrop[b-y82fwkjo9h] {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+}
+
+.afp-image-backdrop img[b-y82fwkjo9h] {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 30px 80px rgba(0,0,0,.4);
+}
+
+/* ── Media Queries ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .afp-tabs[b-y82fwkjo9h] {
+        gap: .25rem;
+    }
+
+    .afp-tab[b-y82fwkjo9h] {
+        padding: .55rem .9rem;
+        font-size: .88rem;
+    }
+
+    .afp-block__body[b-y82fwkjo9h] {
+        padding: 1rem;
+    }
+
+    .afp-date-grid[b-y82fwkjo9h] {
+        grid-template-columns: 1fr;
+    }
+
+    .afp-date-arrow[b-y82fwkjo9h] {
+        display: none;
+    }
+
+    .afp-toggle-row[b-y82fwkjo9h] {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .afp-settings-actions[b-y82fwkjo9h] {
+        flex-direction: column;
+    }
+
+    .afp-submit-btn[b-y82fwkjo9h],
+    .afp-delete-btn[b-y82fwkjo9h],
+    .afp-add-btn[b-y82fwkjo9h] {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .afp-modal__footer[b-y82fwkjo9h] {
+        flex-direction: column;
+    }
+
+    .afp-modal__footer .btn[b-y82fwkjo9h] {
+        width: 100%;
+        text-align: center;
+    }
+}
 /* _content/FlomiApp/Pages/index.razor.rz.scp.css */
 .home-page[b-mh7w8zyaj1] {
     max-width: 1240px;
@@ -489,6 +1044,21 @@
     background: #e0e7ff;
 }
 
+/* ── Pickup-Gruppe (Ebene 2 – Variante) ───────────────────────────────────── */
+.group-date--pickup[b-x6hkyvm1le] {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.group-date__toggle--pickup[b-x6hkyvm1le] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.group-date__toggle--pickup:hover[b-x6hkyvm1le] {
+    background: #fde68a;
+}
+
 .group-date__icon[b-x6hkyvm1le] {
     font-size: 1rem;
     flex-shrink: 0;
@@ -510,6 +1080,10 @@
     white-space: nowrap;
 }
 
+.group-date--pickup .group-date__count[b-x6hkyvm1le] {
+    background: rgba(146, 64, 14, 0.12);
+}
+
 /* ── Chevron ──────────────────────────────────────────────────────────────── */
 .group-chevron[b-x6hkyvm1le] {
     flex-shrink: 0;
@@ -529,6 +1103,33 @@
 
 .group-chevron--open[b-x6hkyvm1le] {
     transform: rotate(0deg);
+}
+
+/* Dunkle Variante für Pickup-Gruppe und unassigned */
+.group-chevron--dark[b-x6hkyvm1le] {
+    background: rgba(146, 64, 14, 0.15);
+    color: #92400e;
+}
+
+/* ── Pickup Collapse Button ───────────────────────────────────────────────── */
+.pickup-collapse-btn[b-x6hkyvm1le] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.pickup-collapse-btn .group-chevron[b-x6hkyvm1le] {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.pickup-collapse-btn:hover .group-chevron[b-x6hkyvm1le] {
+    background: #dbeafe;
 }
 
 /* ── Appointments Grid ────────────────────────────────────────────────────── */
@@ -556,6 +1157,16 @@
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
 }
 
+/* ── Pickup Card Variante ─────────────────────────────────────────────────── */
+.appointment-card--pickup[b-x6hkyvm1le] {
+    border-color: #fde68a;
+}
+
+.appointment-card--pickup:hover[b-x6hkyvm1le] {
+    border-color: #f59e0b;
+    box-shadow: 0 14px 28px rgba(245, 158, 11, 0.12);
+}
+
 .appointment-card__body[b-x6hkyvm1le] {
     display: flex;
     flex-direction: column;
@@ -578,6 +1189,11 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+}
+
+/* Pickup Topline – Amber-Farbe */
+.appointment-card__topline--pickup[b-x6hkyvm1le] {
+    color: #d97706;
 }
 
 .appointment-card__header h3[b-x6hkyvm1le] {
@@ -606,6 +1222,12 @@
     font-size: 0.78rem;
     font-weight: 700;
     white-space: nowrap;
+}
+
+/* Pickup Status Badge – Amber */
+.status-badge--pickup[b-x6hkyvm1le] {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 /* ── Info Liste ───────────────────────────────────────────────────────────── */
@@ -828,6 +1450,11 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     .group-event__toggle[b-x6hkyvm1le] {
         padding: 0.85rem 1rem;
     }
+
+    .group-date--pickup .group-date__toggle--pickup[b-x6hkyvm1le] {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
 }
 /* _content/FlomiApp/Pages/User/FurniturePickup.razor.rz.scp.css */
 /* ── Page ─────────────────────────────────────────────────────────────────── */
@@ -1009,7 +1636,7 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     color: #9ca3af;
 }
 
-/* ── Input – der eigentliche Fix ─────────────────────────────────────────── */
+/* ── Input ────────────────────────────────────────────────────────────────── */
 .pickup-input[b-b67f4d8u8h] {
     width: 100%;
     padding: .75rem 1rem;
@@ -1038,7 +1665,6 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     box-shadow: 0 0 0 3px rgba(37,99,235,.15);
 }
 
-/* Readonly-Felder – klar als nicht editierbar erkennbar */
 .pickup-input--readonly[b-b67f4d8u8h],
 .pickup-input[readonly][b-b67f4d8u8h] {
     background: #f3f4f6;
@@ -1059,7 +1685,6 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     min-height: 110px;
 }
 
-/* InputDate nativer Kalender-Button angleichen */
 .pickup-input[type="date"][b-b67f4d8u8h]::-webkit-calendar-picker-indicator {
     opacity: .5;
     cursor: pointer;
@@ -1190,6 +1815,101 @@ input:checked + .slider[b-x6hkyvm1le]:before {
     cursor: not-allowed;
 }
 
+/* ── Event Auswahl Liste ──────────────────────────────────────────────────── */
+.pickup-event-list[b-b67f4d8u8h] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pickup-event-card[b-b67f4d8u8h] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e0e7ff;
+    border-radius: 16px;
+    background: #f8faff;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.pickup-event-card:hover[b-b67f4d8u8h] {
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateY(-2px);
+}
+
+.pickup-event-card__icon[b-b67f4d8u8h] {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.pickup-event-card__name[b-b67f4d8u8h] {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.pickup-event-card__date[b-b67f4d8u8h] {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.pickup-event-card__arrow[b-b67f4d8u8h] {
+    font-size: 1.1rem;
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+/* ── Gewählter Event Banner ───────────────────────────────────────────────── */
+.pickup-selected-event[b-b67f4d8u8h] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.1rem;
+    border-radius: 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+}
+
+.pickup-selected-event__label[b-b67f4d8u8h] {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.pickup-selected-event__name[b-b67f4d8u8h] {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #1d4ed8;
+}
+
+.pickup-selected-event__change[b-b67f4d8u8h] {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+}
+
+.pickup-selected-event__change:hover[b-b67f4d8u8h] {
+    background: #dbeafe;
+}
+
 /* ── Media Queries ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .pickup-page[b-b67f4d8u8h] {
@@ -1211,6 +1931,26 @@ input:checked + .slider[b-x6hkyvm1le]:before {
 
     .pickup-submit-btn[b-b67f4d8u8h] {
         max-width: 100%;
+    }
+
+    .pickup-event-card[b-b67f4d8u8h] {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pickup-event-card__date[b-b67f4d8u8h] {
+        width: 100%;
+        padding-left: 2.4rem;
+    }
+
+    .pickup-selected-event[b-b67f4d8u8h] {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .pickup-selected-event__change[b-b67f4d8u8h] {
+        width: 100%;
+        text-align: left;
     }
 }
 /* _content/FlomiApp/Pages/User/Register.razor.rz.scp.css */

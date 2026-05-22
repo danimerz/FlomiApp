@@ -222,6 +222,12 @@
                                                                 </span>
                                                             </div>
                                                             <div class="appointment-info-item">
+                                                                <span class="label">Was</span>
+                                                                <span class="value" title="@req.Description">
+                                                                    @Truncate(req.Description)
+                                                                </span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
                                                                 <span class="label">Abholdatum</span>
                                                                 <span class="value">
                                                                     @req.PickupDate.ToShortDateString()
@@ -240,7 +246,18 @@
                                                                     <span class="value">@req.AdminNote</span>
                                                                 </div>
                                                             }
+                                                            <!-- ✅ NEU: Löschen-Button -->
                                                         </div>
+                                                        <!-- ✅ NEU: Löschen-Button -->
+                                                        @if (req.Status == PickupRequestStatus.Pending)
+                                                        {
+                                                            <div class="appointment-actions">
+                                                                <button class="cancel-btn"
+                                                                        @onclick="() => DeletePickupRequest(req.Id)">
+                                                                    🗑️ Löschen
+                                                                </button>
+                                                            </div>
+                                                        }
                                                     </div>
                                                 </article>
                                             }
@@ -318,6 +335,15 @@
                                                 </div>
                                             }
                                         </div>
+                                        @if (req.Status == PickupRequestStatus.Pending)
+                                        {
+                                            <div class="appointment-actions">
+                                                <button class="cancel-btn"
+                                                        @onclick="() => DeletePickupRequest(req.Id)">
+                                                    🗑️ Löschen
+                                                </button>
+                                            </div>
+                                        }
                                     </div>
                                 </article>
                             }
@@ -426,14 +452,17 @@
     {
         foreach (var eventGroup in GroupedAppointments)
         {
+            // ✅ Events aufklappen
             openEvents.Add(eventGroup.Key);
-            foreach (var dateGroup in eventGroup.Value)
-                openDates.Add(DateKey(eventGroup.Key, dateGroup.Key));
+
+            // ❌ Datum-Gruppen NICHT aufklappen (eingeklappt lassen)
+            // foreach (var dateGroup in eventGroup.Value)
+            //     openDates.Add(DateKey(eventGroup.Key, dateGroup.Key));
         }
 
-        // Pickup-Gruppen ebenfalls aufklappen
-        foreach (var key in PickupsByEvent.Keys)
-            openPickupGroups.Add(key);
+        // ❌ Pickup-Gruppen ebenfalls NICHT aufklappen
+        // foreach (var key in PickupsByEvent.Keys)
+        //     openPickupGroups.Add(key);
     }
 
     // ── Initialisierung ───────────────────────────────────────────────────────
@@ -552,6 +581,23 @@
         PickupRequestStatus.Pending  => "⏳ Ausstehend",
         PickupRequestStatus.Accepted => "✅ Akzeptiert",
         PickupRequestStatus.Rejected => "❌ Abgelehnt",
+        PickupRequestStatus.Deleted => "🗑️ Gelöscht",
         _                            => s.ToString()
     };
+
+    // Helper für lange Texte in der Karte (z.B. Beschreibung) – damit die Karten nicht zu groß werden
+    private string Truncate(string? text, int maxLength = 20)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        return text.Length <= maxLength ? text : text[..maxLength] + "...";
+    }
+
+    // ── Pickup löschen (User) ─────────────────────────────────────────────────
+    private async Task DeletePickupRequest(int id)
+    {
+        await FurniturePickupService.DeleteRequestAsync(id);
+        pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
+        ExpandAll();
+        StateHasChanged();
+    }
 }

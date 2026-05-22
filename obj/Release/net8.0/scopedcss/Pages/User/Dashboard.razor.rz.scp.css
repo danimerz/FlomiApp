@@ -230,6 +230,21 @@
     background: #e0e7ff;
 }
 
+/* ── Pickup-Gruppe (Ebene 2 – Variante) ───────────────────────────────────── */
+.group-date--pickup[b-x6hkyvm1le] {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+
+.group-date__toggle--pickup[b-x6hkyvm1le] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.group-date__toggle--pickup:hover[b-x6hkyvm1le] {
+    background: #fde68a;
+}
+
 .group-date__icon[b-x6hkyvm1le] {
     font-size: 1rem;
     flex-shrink: 0;
@@ -251,6 +266,10 @@
     white-space: nowrap;
 }
 
+.group-date--pickup .group-date__count[b-x6hkyvm1le] {
+    background: rgba(146, 64, 14, 0.12);
+}
+
 /* ── Chevron ──────────────────────────────────────────────────────────────── */
 .group-chevron[b-x6hkyvm1le] {
     flex-shrink: 0;
@@ -270,6 +289,33 @@
 
 .group-chevron--open[b-x6hkyvm1le] {
     transform: rotate(0deg);
+}
+
+/* Dunkle Variante für Pickup-Gruppe und unassigned */
+.group-chevron--dark[b-x6hkyvm1le] {
+    background: rgba(146, 64, 14, 0.15);
+    color: #92400e;
+}
+
+/* ── Pickup Collapse Button ───────────────────────────────────────────────── */
+.pickup-collapse-btn[b-x6hkyvm1le] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.pickup-collapse-btn .group-chevron[b-x6hkyvm1le] {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.pickup-collapse-btn:hover .group-chevron[b-x6hkyvm1le] {
+    background: #dbeafe;
 }
 
 /* ── Appointments Grid ────────────────────────────────────────────────────── */
@@ -297,6 +343,16 @@
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
 }
 
+/* ── Pickup Card Variante ─────────────────────────────────────────────────── */
+.appointment-card--pickup[b-x6hkyvm1le] {
+    border-color: #fde68a;
+}
+
+.appointment-card--pickup:hover[b-x6hkyvm1le] {
+    border-color: #f59e0b;
+    box-shadow: 0 14px 28px rgba(245, 158, 11, 0.12);
+}
+
 .appointment-card__body[b-x6hkyvm1le] {
     display: flex;
     flex-direction: column;
@@ -319,6 +375,11 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+}
+
+/* Pickup Topline – Amber-Farbe */
+.appointment-card__topline--pickup[b-x6hkyvm1le] {
+    color: #d97706;
 }
 
 .appointment-card__header h3[b-x6hkyvm1le] {
@@ -347,6 +408,12 @@
     font-size: 0.78rem;
     font-weight: 700;
     white-space: nowrap;
+}
+
+/* Pickup Status Badge – Amber */
+.status-badge--pickup[b-x6hkyvm1le] {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 /* ── Info Liste ───────────────────────────────────────────────────────────── */
@@ -568,5 +635,10 @@ input:checked + .slider[b-x6hkyvm1le]:before {
 
     .group-event__toggle[b-x6hkyvm1le] {
         padding: 0.85rem 1rem;
+    }
+
+    .group-date--pickup .group-date__toggle--pickup[b-x6hkyvm1le] {
+        flex-wrap: wrap;
+        gap: 0.4rem;
     }
 }

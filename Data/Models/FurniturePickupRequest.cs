@@ -59,6 +59,8 @@ public class FurniturePickupRequest
     public int? EventId { get; set; }
 
     public Event? Event { get; set; }
+    // Einverständnis Entsorgungsgebühren
+    public bool AcceptsDisposalFee { get; set; } = false;
 
 }
 
@@ -66,5 +68,6 @@ public enum PickupRequestStatus
 {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
+    Deleted
 }

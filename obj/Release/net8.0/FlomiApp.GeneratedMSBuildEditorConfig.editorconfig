@@ -32,10 +32,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/merzd/source/repos/FlomiApp/Pages/Admin/FurniturePickupAdmin.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cRnVybml0dXJlUGlja3VwQWRtaW4ucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/merzd/source/repos/FlomiApp/Pages/Admin/ManageAreas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlQXJlYXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -47,6 +43,10 @@ build_metadata.AdditionalFiles.CssScope =
 [C:/Users/merzd/source/repos/FlomiApp/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/merzd/source/repos/FlomiApp/Pages/Admin/FurniturePickupAdmin.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cRnVybml0dXJlUGlja3VwQWRtaW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-y82fwkjo9h
 
 [C:/Users/merzd/source/repos/FlomiApp/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=

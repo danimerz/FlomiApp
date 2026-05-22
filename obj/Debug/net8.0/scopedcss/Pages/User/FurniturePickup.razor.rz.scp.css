@@ -138,6 +138,57 @@
     background: #ffffff;
 }
 
+/* ── Consent Block ────────────────────────────────────────────────────────── */
+.pickup-block--consent[b-b67f4d8u8h] {
+    border-left: 4px solid #f59e0b;
+    background: #fffbeb;
+}
+
+.pickup-block--consent .pickup-block__body[b-b67f4d8u8h] {
+    background: #fffbeb;
+}
+
+.pickup-consent[b-b67f4d8u8h] {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+    cursor: pointer;
+}
+
+.pickup-consent__checkbox[b-b67f4d8u8h] {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    margin-top: .2rem;
+    accent-color: #2563eb;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.pickup-consent__text[b-b67f4d8u8h] {
+    font-size: .95rem;
+    color: #374151;
+    line-height: 1.65;
+}
+
+.pickup-consent__text strong[b-b67f4d8u8h] {
+    color: #92400e;
+}
+
+.pickup-consent__error[b-b67f4d8u8h] {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .85rem;
+    padding: .65rem 1rem;
+    border-radius: 10px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: .9rem;
+    font-weight: 600;
+}
+
 /* ── Grid-Layouts ─────────────────────────────────────────────────────────── */
 .pickup-grid[b-b67f4d8u8h] {
     display: grid;

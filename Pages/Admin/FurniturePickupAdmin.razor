@@ -406,6 +406,11 @@
                         @onclick="() => UpdateStatus(PickupRequestStatus.Rejected)">
                     ❌ Ablehnen
                 </button>
+                    <!-- ✅ NEU: Admin kann löschen -->
+                <button class="btn btn-dark"
+                        @onclick="AdminDeleteRequest">
+                    🗑️ Löschen
+                </button>
                 <button class="btn btn-secondary"
                         @onclick="CloseDetail">
                     Schliessen
@@ -572,6 +577,16 @@
         PickupRequestStatus.Pending  => "⏳ Ausstehend",
         PickupRequestStatus.Accepted => "✅ Akzeptiert",
         PickupRequestStatus.Rejected => "❌ Abgelehnt",
+        PickupRequestStatus.Deleted => "🗑️ Gelöscht",
         _                            => s.ToString()
     };
+    // ── Admin: Anfrage löschen ────────────────────────────────────────────────
+private async Task AdminDeleteRequest()
+{
+    if (selectedRequest == null) return;
+
+    await FurniturePickupService.DeleteRequestAsync(selectedRequest.Id);
+    requests = await FurniturePickupService.GetAllRequestsAsync();
+    CloseDetail();
+}
 }

@@ -274,6 +274,7 @@ C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.sourcelink.json
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\Admin\FurniturePickupAdmin.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\index.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\User\Dashboard.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\User\FurniturePickup.razor.rz.scp.css
@@ -294,4 +295,3 @@ C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\refint\FlomiApp.dll
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.pdb
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.genruntimeconfig.cache
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\ref\FlomiApp.dll
-c:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\Admin\FurniturePickupAdmin.razor.rz.scp.css

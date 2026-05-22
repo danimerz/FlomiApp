@@ -48,10 +48,10 @@ public class FurniturePickupService : IFurniturePickupService
         return await _context.FurniturePickupRequests
             .Include(r => r.Images)
             .Include(r => r.Event)
-            .Where(r => r.UserId == userId)
+            .Where(r => r.UserId == userId && r.Status != PickupRequestStatus.Deleted)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
-    }
+}
 
     public async Task<List<FurniturePickupRequest>> GetAllRequestsAsync()
     {
@@ -83,12 +83,11 @@ public class FurniturePickupService : IFurniturePickupService
     public async Task DeleteRequestAsync(int id)
     {
         var request = await _context.FurniturePickupRequests
-            .Include(r => r.Images)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (request != null)
         {
-            _context.FurniturePickupRequests.Remove(request);
+            request.Status = PickupRequestStatus.Deleted;
             await _context.SaveChangesAsync();
         }
     }
