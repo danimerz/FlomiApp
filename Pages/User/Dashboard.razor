@@ -29,7 +29,7 @@
             </div>
         </div>
     }
-    else if (!appointments.Any())
+    else if (!appointments.Any() && !pickupRequests.Any())
     {
         <div class="state-card state-card--empty">
             <div class="state-card__icon">📭</div>
@@ -63,6 +63,13 @@
                 var eventKey  = eventGroup.Key;
                 var eventOpen = IsEventOpen(eventKey);
 
+                // Pickups die zu diesem Event gehören
+                var eventPickups = PickupsByEvent.ContainsKey(eventKey)
+                    ? PickupsByEvent[eventKey]
+                    : new List<FurniturePickupRequest>();
+
+                var totalCount = eventGroup.Value.Sum(d => d.Value.Count) + eventPickups.Count;
+
                 <!-- Event-Sektion (Ebene 1) -->
                 <div class="group-event">
                     <button class="group-event__toggle"
@@ -70,7 +77,7 @@
                         <span class="group-event__icon">🎪</span>
                         <span class="group-event__name">@eventKey</span>
                         <span class="group-event__count">
-                            @eventGroup.Value.Sum(d => d.Value.Count) Anmeldungen
+                            @totalCount Einträge
                         </span>
                         <span class="group-chevron @(eventOpen ? "group-chevron--open" : "")">
                             ▾
@@ -80,6 +87,8 @@
                     @if (eventOpen)
                     {
                         <div class="group-event__body">
+
+                            <!-- Datum-Gruppen (Anmeldungen) -->
                             @foreach (var dateGroup in eventGroup.Value)
                             {
                                 var dateKey  = dateGroup.Key;
@@ -170,72 +179,153 @@
                                     }
                                 </div>
                             }
+
+                            <!-- ── Möbel-Abholungen innerhalb dieses Events ── -->
+                            @if (eventPickups.Any())
+                            {
+                                <div class="group-date group-date--pickup">
+                                    <button class="group-date__toggle group-date__toggle--pickup"
+                                            @onclick="() => TogglePickupGroup(eventKey)">
+                                        <span class="group-date__icon">🛋️</span>
+                                        <span class="group-date__name">Möbel Abholungen</span>
+                                        <span class="group-date__count">
+                                            @eventPickups.Count Anfrage(n)
+                                        </span>
+                                        <span class="group-chevron group-chevron--dark @(IsPickupGroupOpen(eventKey) ? "group-chevron--open" : "")">
+                                            ▾
+                                        </span>
+                                    </button>
+
+                                    @if (IsPickupGroupOpen(eventKey))
+                                    {
+                                        <div class="appointments-grid">
+                                            @foreach (var req in eventPickups)
+                                            {
+                                                <article class="appointment-card appointment-card--pickup">
+                                                    <div class="appointment-card__body">
+                                                        <div class="appointment-card__header">
+                                                            <div>
+                                                                <div class="appointment-card__topline appointment-card__topline--pickup">
+                                                                    Abholung
+                                                                </div>
+                                                                <h3>Auftrag #@req.OrderNumber</h3>
+                                                            </div>
+                                                            <span class="status-badge status-badge--pickup">
+                                                                @StatusLabel(req.Status)
+                                                            </span>
+                                                        </div>
+                                                        <div class="appointment-info-list">
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Adresse</span>
+                                                                <span class="value">
+                                                                    @req.Street, @req.PostalCode @req.City
+                                                                </span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Abholdatum</span>
+                                                                <span class="value">
+                                                                    @req.PickupDate.ToShortDateString()
+                                                                </span>
+                                                            </div>
+                                                            <div class="appointment-info-item">
+                                                                <span class="label">Eingereicht</span>
+                                                                <span class="value">
+                                                                    @req.CreatedAt.ToShortDateString()
+                                                                </span>
+                                                            </div>
+                                                            @if (!string.IsNullOrEmpty(req.AdminNote))
+                                                            {
+                                                                <div class="appointment-info-item">
+                                                                    <span class="label">Notiz</span>
+                                                                    <span class="value">@req.AdminNote</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+
                         </div>
                     }
                 </div>
             }
 
-        </section>
-    }
-
-    @if (pickupRequests.Any())
-    {
-        <section class="appointments-section" style="margin-bottom:2rem">
-            <div class="appointments-section__header">
-                <h2>🛋️ Möbel Abholungen</h2>
-                <div class="appointments-section__controls">
-                    <span class="appointments-section__count">
-                        @pickupRequests.Count Anfrage(n)
-                    </span>
-                    <button class="pickup-collapse-btn"
-                            @onclick="TogglePickup">
-                        <span class="group-chevron @(pickupOpen ? "group-chevron--open" : "")">
-                            ▾
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            @if (pickupOpen)
+            <!-- ── Pickups ohne Event-Zuordnung ── -->
+            @if (UnassignedPickups.Any())
             {
-                <div class="appointments-grid">
-                    @foreach (var req in pickupRequests)
+                <section class="appointments-section" style="margin-top:1.5rem">
+                    <div class="appointments-section__header">
+                        <h2>🛋️ Weitere Abholungen</h2>
+                        <div class="appointments-section__controls">
+                            <span class="appointments-section__count">
+                                @UnassignedPickups.Count Anfrage(n)
+                            </span>
+                            <button class="pickup-collapse-btn"
+                                    @onclick="ToggleUnassignedPickup">
+                                <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">
+                                    ▾
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (unassignedPickupOpen)
                     {
-                        <article class="appointment-card">
-                            <div class="appointment-card__body">
-                                <div class="appointment-card__header">
-                                    <div>
-                                        <div class="appointment-card__topline">Abholung</div>
-                                        <h3>Auftrag #@req.OrderNumber</h3>
-                                    </div>
-                                    <span class="status-badge">@StatusLabel(req.Status)</span>
-                                </div>
-                                <div class="appointment-info-list">
-                                    <div class="appointment-info-item">
-                                        <span class="label">Adresse</span>
-                                        <span class="value">@req.Street, @req.PostalCode @req.City</span>
-                                    </div>
-                                    <div class="appointment-info-item">
-                                        <span class="label">Abholdatum</span>
-                                        <span class="value">@req.PickupDate.ToShortDateString()</span>
-                                    </div>
-                                    <div class="appointment-info-item">
-                                        <span class="label">Eingereicht</span>
-                                        <span class="value">@req.CreatedAt.ToShortDateString()</span>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(req.AdminNote))
-                                    {
-                                        <div class="appointment-info-item">
-                                            <span class="label">Notiz</span>
-                                            <span class="value">@req.AdminNote</span>
+                        <div class="appointments-grid">
+                            @foreach (var req in UnassignedPickups)
+                            {
+                                <article class="appointment-card appointment-card--pickup">
+                                    <div class="appointment-card__body">
+                                        <div class="appointment-card__header">
+                                            <div>
+                                                <div class="appointment-card__topline appointment-card__topline--pickup">
+                                                    Abholung
+                                                </div>
+                                                <h3>Auftrag #@req.OrderNumber</h3>
+                                            </div>
+                                            <span class="status-badge status-badge--pickup">
+                                                @StatusLabel(req.Status)
+                                            </span>
                                         </div>
-                                    }
-                                </div>
-                            </div>
-                        </article>
+                                        <div class="appointment-info-list">
+                                            <div class="appointment-info-item">
+                                                <span class="label">Adresse</span>
+                                                <span class="value">
+                                                    @req.Street, @req.PostalCode @req.City
+                                                </span>
+                                            </div>
+                                            <div class="appointment-info-item">
+                                                <span class="label">Abholdatum</span>
+                                                <span class="value">
+                                                    @req.PickupDate.ToShortDateString()
+                                                </span>
+                                            </div>
+                                            <div class="appointment-info-item">
+                                                <span class="label">Eingereicht</span>
+                                                <span class="value">
+                                                    @req.CreatedAt.ToShortDateString()
+                                                </span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(req.AdminNote))
+                                            {
+                                                <div class="appointment-info-item">
+                                                    <span class="label">Notiz</span>
+                                                    <span class="value">@req.AdminNote</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
                     }
-                </div>
+                </section>
             }
+
         </section>
     }
 
@@ -248,9 +338,21 @@
 
     // ── Pickup ────────────────────────────────────────────────────────────────
     private List<FurniturePickupRequest> pickupRequests = new();
-    private bool pickupOpen = true;
+    private bool unassignedPickupOpen = true;
 
-    private void TogglePickup() => pickupOpen = !pickupOpen;
+    private void ToggleUnassignedPickup() => unassignedPickupOpen = !unassignedPickupOpen;
+
+    // ── Pickup-Gruppen Collapse ───────────────────────────────────────────────
+    private HashSet<string> openPickupGroups = new();
+
+    private bool IsPickupGroupOpen(string eventKey) =>
+        openPickupGroups.Contains(eventKey);
+
+    private void TogglePickupGroup(string eventKey)
+    {
+        if (!openPickupGroups.Remove(eventKey))
+            openPickupGroups.Add(eventKey);
+    }
 
     // ── Collapse-State ────────────────────────────────────────────────────────
     private HashSet<string> openEvents = new();
@@ -276,6 +378,25 @@
                         d => d.ToList()
                     )
             );
+
+    // ── Pickups gruppiert nach Event-Name ─────────────────────────────────────
+    /// <summary>
+    /// Pickups mit EventId → dem passenden Event-Namen zuordnen.
+    /// Der Key entspricht dem Event-Namen aus GroupedAppointments.
+    /// </summary>
+    private Dictionary<string, List<FurniturePickupRequest>> PickupsByEvent =>
+        pickupRequests
+            .Where(r => r.EventId.HasValue && r.Event != null)
+            .GroupBy(r => r.Event!.Name)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+    /// <summary>
+    /// Pickups ohne Event-Zuordnung – erscheinen im separaten Abschnitt.
+    /// </summary>
+    private List<FurniturePickupRequest> UnassignedPickups =>
+        pickupRequests
+            .Where(r => !r.EventId.HasValue || r.Event == null)
+            .ToList();
 
     // ── Collapse-Logik ────────────────────────────────────────────────────────
     private bool IsEventOpen(string eventName) =>
@@ -309,6 +430,10 @@
             foreach (var dateGroup in eventGroup.Value)
                 openDates.Add(DateKey(eventGroup.Key, dateGroup.Key));
         }
+
+        // Pickup-Gruppen ebenfalls aufklappen
+        foreach (var key in PickupsByEvent.Keys)
+            openPickupGroups.Add(key);
     }
 
     // ── Initialisierung ───────────────────────────────────────────────────────
@@ -321,15 +446,18 @@
         {
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                      ?? string.Empty;
-            await LoadAppointments();
+
+            // Pickups mit Event-Navigation laden
             pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
+
+            await LoadAppointments();
         }
     }
 
     private async Task LoadAppointments()
     {
         appointments = await AppointmentService.GetUserAppointmentsAsync(userId);
-        ExpandAll(); // 👈 nach dem Laden alle aufklappen
+        ExpandAll();
         StateHasChanged();
     }
 

@@ -57,6 +57,9 @@ public class FurniturePickupRequest
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public int? EventId { get; set; }
+
+    public Event? Event { get; set; }
+
 }
 
 public enum PickupRequestStatus

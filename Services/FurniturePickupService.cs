@@ -47,6 +47,7 @@ public class FurniturePickupService : IFurniturePickupService
     {
         return await _context.FurniturePickupRequests
             .Include(r => r.Images)
+            .Include(r => r.Event)
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
