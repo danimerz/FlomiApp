@@ -293,3 +293,4 @@ C:\Users\merzd\source\repos\FlomiApp\obj\Release\net8.0\refint\FlomiApp.dll
 C:\Users\merzd\source\repos\FlomiApp\obj\Release\net8.0\FlomiApp.pdb
 C:\Users\merzd\source\repos\FlomiApp\obj\Release\net8.0\FlomiApp.genruntimeconfig.cache
 C:\Users\merzd\source\repos\FlomiApp\obj\Release\net8.0\ref\FlomiApp.dll
+C:\Users\merzd\source\repos\FlomiApp\obj\Release\net8.0\scopedcss\Pages\User\FurniturePickup.razor.rz.scp.css

@@ -17,4 +17,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FamilyMember> FamilyMembers { get; set; }
     public DbSet<FurniturePickupRequest> FurniturePickupRequests { get; set; }
     public DbSet<FurniturePickupImage> FurniturePickupImages { get; set; }
+    public DbSet<FurniturePickupSettings> FurniturePickupSettings { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // ── FurniturePickupSettings Seed ────────────────────────────────────────
+        modelBuilder.Entity<FurniturePickupSettings>().HasData(
+            new FurniturePickupSettings
+            {
+                Id             = 1,
+                IsEnabled      = false,
+                PickupDateFrom = null,
+                PickupDateTo   = null
+            }
+        );
+    }
 }

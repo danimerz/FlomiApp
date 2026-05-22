@@ -87,4 +87,47 @@ public class FurniturePickupService : IFurniturePickupService
             await _context.SaveChangesAsync();
         }
     }
+    public async Task<FurniturePickupSettings> GetSettingsAsync()
+    {
+        var settings = await _context.FurniturePickupSettings
+            .FirstOrDefaultAsync(s => s.Id == 1);
+
+        // Falls noch gar kein Eintrag existiert → leeres Objekt zurückgeben
+        return settings ?? new FurniturePickupSettings
+        {
+            Id             = 1,
+            IsEnabled      = false,
+            PickupDateFrom = null,
+            PickupDateTo   = null
+        };
+    }
+
+   public async Task SaveSettingsAsync(FurniturePickupSettings settings)
+    {
+        var existing = await _context.FurniturePickupSettings
+            .FirstOrDefaultAsync(s => s.Id == 1);
+
+        if (existing == null)
+        {
+            // Kein Eintrag vorhanden → neu anlegen
+            var newSettings = new FurniturePickupSettings
+            {
+                Id             = 1,
+                IsEnabled      = settings.IsEnabled,
+                PickupDateFrom = settings.PickupDateFrom,
+                PickupDateTo   = settings.PickupDateTo
+            };
+            await _context.FurniturePickupSettings.AddAsync(newSettings);
+        }
+        else
+        {
+            // Eintrag vorhanden → updaten
+            existing.IsEnabled      = settings.IsEnabled;
+            existing.PickupDateFrom = settings.PickupDateFrom;
+            existing.PickupDateTo   = settings.PickupDateTo;
+            _context.FurniturePickupSettings.Update(existing);
+        }
+
+        await _context.SaveChangesAsync();
+    }
 }

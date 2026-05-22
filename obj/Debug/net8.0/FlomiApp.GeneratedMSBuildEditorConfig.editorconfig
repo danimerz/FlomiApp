@@ -32,10 +32,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[c:/Users/merzd/source/repos/FlomiApp/Pages/Admin/FurniturePickupAdmin.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cRnVybml0dXJlUGlja3VwQWRtaW4ucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
 [c:/Users/merzd/source/repos/FlomiApp/Pages/Admin/ManageAreas.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlQXJlYXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -44,13 +40,13 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlRXZlbnRzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[c:/Users/merzd/source/repos/FlomiApp/Pages/User/FurniturePickup.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxGdXJuaXR1cmVQaWNrdXAucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
 [c:/Users/merzd/source/repos/FlomiApp/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
+
+[c:/Users/merzd/source/repos/FlomiApp/Pages/Admin/FurniturePickupAdmin.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cRnVybml0dXJlUGlja3VwQWRtaW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-y82fwkjo9h
 
 [c:/Users/merzd/source/repos/FlomiApp/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
@@ -59,6 +55,10 @@ build_metadata.AdditionalFiles.CssScope = b-mh7w8zyaj1
 [c:/Users/merzd/source/repos/FlomiApp/Pages/User/Dashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxEYXNoYm9hcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = b-x6hkyvm1le
+
+[c:/Users/merzd/source/repos/FlomiApp/Pages/User/FurniturePickup.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxGdXJuaXR1cmVQaWNrdXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-b67f4d8u8h
 
 [c:/Users/merzd/source/repos/FlomiApp/Pages/User/Register.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclxSZWdpc3Rlci5yYXpvcg==

@@ -1,0 +1,383 @@
+/* ── Page ─────────────────────────────────────────────────────────────────── */
+.pickup-page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+    color: #1f2937;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.pickup-hero {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    isolation: isolate;
+}
+
+.pickup-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(15,98,254,.80) 0%, rgba(36,87,214,.82) 45%, rgba(22,62,168,.86) 100%),
+        url('/img/home-hero-bg.jpg') center center / cover no-repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.pickup-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(255,255,255,.10), transparent 25%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pickup-hero__content {
+    position: relative;
+    padding: 2rem;
+    color: #ffffff;
+    z-index: 2;
+}
+
+.pickup-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: .8rem;
+    padding: .35rem .8rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.18);
+    font-size: .85rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.pickup-hero h1 {
+    margin: 0 0 .6rem;
+    font-size: 2.2rem;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+.pickup-hero p {
+    max-width: 720px;
+    margin: 0;
+    color: rgba(255,255,255,.92);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ── State Cards ──────────────────────────────────────────────────────────── */
+.state-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.1rem 1.2rem;
+    border-radius: 18px;
+    border: 1px solid transparent;
+}
+
+.state-card__icon {
+    flex-shrink: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.state-card__content h3 {
+    margin: 0 0 .25rem;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.state-card__content p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.state-card--info    { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.state-card--empty   { background: #f8fafc; border-color: #e5e7eb; color: #475569; }
+.state-card--error   { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.state-card--success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+
+/* ── Formular-Block ───────────────────────────────────────────────────────── */
+.pickup-block {
+    margin-bottom: 1.25rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 4px 16px rgba(15,23,42,.05);
+    overflow: hidden;
+}
+
+.pickup-block__header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    color: #ffffff;
+}
+
+.pickup-block__header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: .01em;
+}
+
+.pickup-block__body {
+    padding: 1.25rem 1.5rem 1.5rem;
+    background: #ffffff;
+}
+
+/* ── Grid-Layouts ─────────────────────────────────────────────────────────── */
+.pickup-grid {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.pickup-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pickup-grid--3 {
+    grid-template-columns: 1fr 140px 1fr;
+}
+
+.pickup-field--full {
+    grid-column: 1 / -1;
+}
+
+/* ── Einzelnes Feld ───────────────────────────────────────────────────────── */
+.pickup-field {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.pickup-field label {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #374151;
+    letter-spacing: .01em;
+}
+
+.pickup-label-hint {
+    margin-left: .4rem;
+    font-size: .8rem;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+/* ── Input – der eigentliche Fix ─────────────────────────────────────────── */
+.pickup-input {
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #111827;
+    font-size: .95rem;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.pickup-input:hover:not([readonly]):not(:disabled) {
+    border-color: #93c5fd;
+    background: #ffffff;
+}
+
+.pickup-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+/* Readonly-Felder – klar als nicht editierbar erkennbar */
+.pickup-input--readonly,
+.pickup-input[readonly] {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+    cursor: default;
+    box-shadow: none;
+}
+
+.pickup-input--readonly:focus,
+.pickup-input[readonly]:focus {
+    border-color: #e5e7eb;
+    box-shadow: none;
+}
+
+.pickup-textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+/* InputDate nativer Kalender-Button angleichen */
+.pickup-input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: .5;
+    cursor: pointer;
+}
+
+/* ── File Upload ──────────────────────────────────────────────────────────── */
+.pickup-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .85rem 1.2rem;
+    border: 2px dashed #93c5fd;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pickup-file-label:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
+.pickup-file-input {
+    display: none;
+}
+
+/* ── Bild-Vorschau ────────────────────────────────────────────────────────── */
+.pickup-image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: .9rem;
+}
+
+.pickup-image-thumb {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .3rem;
+    width: 110px;
+}
+
+.pickup-image-thumb img {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid #bfdbfe;
+    box-shadow: 0 4px 10px rgba(15,23,42,.08);
+}
+
+.pickup-image-remove {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(239,68,68,.35);
+    transition: background .15s ease, transform .15s ease;
+}
+
+.pickup-image-remove:hover {
+    background: #dc2626;
+    transform: scale(1.12);
+}
+
+.pickup-image-name {
+    font-size: .72rem;
+    color: #6b7280;
+    text-align: center;
+    word-break: break-all;
+    max-width: 110px;
+    line-height: 1.3;
+}
+
+/* ── Submit Button ────────────────────────────────────────────────────────── */
+.pickup-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    max-width: 360px;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(37,99,235,.22);
+    transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    margin-top: .5rem;
+}
+
+.pickup-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 12px 24px rgba(37,99,235,.30);
+}
+
+.pickup-submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.pickup-submit-btn:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* ── Media Queries ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .pickup-page {
+        padding: 1rem .8rem 2rem;
+    }
+
+    .pickup-hero__content {
+        padding: 1.35rem;
+    }
+
+    .pickup-hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .pickup-grid--2,
+    .pickup-grid--3 {
+        grid-template-columns: 1fr;
+    }
+
+    .pickup-submit-btn {
+        max-width: 100%;
+    }
+}

@@ -8,6 +8,7 @@
 
 <div class="dashboard-page">
 
+    <!-- Hero -->
     <section class="dashboard-hero">
         <div class="dashboard-hero__content">
             <span class="dashboard-hero__badge">Administration</span>
@@ -16,92 +17,267 @@
         </div>
     </section>
 
-    @if (requests == null)
-    {
-        <div class="state-card state-card--info">
-            <div class="state-card__icon">⏳</div>
-            <div class="state-card__content">
-                <h3>Anfragen werden geladen...</h3>
-            </div>
-        </div>
-    }
-    else if (!requests.Any())
-    {
-        <div class="state-card state-card--empty">
-            <div class="state-card__icon">📭</div>
-            <div class="state-card__content">
-                <h3>Keine Anfragen vorhanden</h3>
-                <p>Es wurden noch keine Abholungsanfragen eingereicht.</p>
-            </div>
-        </div>
-    }
-    else
-    {
-        <!-- Filter -->
-        <div style="margin-bottom:1rem; display:flex; gap:.5rem; flex-wrap:wrap">
-            @foreach (var status in Enum.GetValues<PickupRequestStatus>())
+    <!-- Tabs -->
+    <div class="afp-tabs">
+        <button class="afp-tab @(activeTab == Tab.Requests ? "afp-tab--active" : "")"
+                @onclick="() => activeTab = Tab.Requests">
+            📋 Anfragen
+            @if (requests != null)
             {
-                <button class="btn @(filterStatus == status ? "btn-primary" : "btn-secondary")"
-                        @onclick="() => SetFilter(status)">
-                    @StatusLabel(status) (@requests.Count(r => r.Status == status))
-                </button>
+                <span class="afp-tab__badge">@requests.Count</span>
             }
-            <button class="btn @(filterStatus == null ? "btn-primary" : "btn-secondary")"
-                    @onclick="() => SetFilter(null)">
-                Alle (@requests.Count)
-            </button>
-        </div>
+        </button>
+        <button class="afp-tab @(activeTab == Tab.Settings ? "afp-tab--active" : "")"
+                @onclick="() => activeTab = Tab.Settings">
+            ⚙️ Einstellungen
+        </button>
+    </div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Adresse</th>
-                    <th>Abholdatum</th>
-                    <th>Status</th>
-                    <th>Bilder</th>
-                    <th>Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var req in FilteredRequests)
+    <!-- ══════════════════════════════════════════════════
+         TAB: ANFRAGEN
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Requests)
+    {
+        @if (requests == null)
+        {
+            <div class="state-card state-card--info">
+                <div class="state-card__icon">⏳</div>
+                <div class="state-card__content">
+                    <h3>Anfragen werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!requests.Any())
+        {
+            <div class="state-card state-card--empty">
+                <div class="state-card__icon">📭</div>
+                <div class="state-card__content">
+                    <h3>Keine Anfragen vorhanden</h3>
+                    <p>Es wurden noch keine Abholungsanfragen eingereicht.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Filter -->
+            <div class="afp-filter-row">
+                <button class="btn @(filterStatus == null ? "btn-primary" : "btn-secondary")"
+                        @onclick="() => SetFilter(null)">
+                    Alle (@requests.Count)
+                </button>
+                @foreach (var status in Enum.GetValues<PickupRequestStatus>())
                 {
-                    <tr>
-                        <td><strong>#@req.OrderNumber</strong></td>
-                        <td>
-                            @req.FirstName @req.LastName<br />
-                            <small>@req.Email</small>
-                        </td>
-                        <td>@req.Street, @req.PostalCode @req.City</td>
-                        <td>@req.PickupDate.ToShortDateString()</td>
-                        <td>
-                            <span class="status-pill">@StatusLabel(req.Status)</span>
-                        </td>
-                        <td>@req.Images.Count Bild(er)</td>
-                        <td>
-                            <button class="btn btn-warning"
-                                    @onclick="() => OpenDetail(req)">
-                                Details
-                            </button>
-                        </td>
-                    </tr>
+                    <button class="btn @(filterStatus == status ? "btn-primary" : "btn-secondary")"
+                            @onclick="() => SetFilter(status)">
+                        @StatusLabel(status) (@requests.Count(r => r.Status == status))
+                    </button>
                 }
-            </tbody>
-        </table>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Adresse</th>
+                        <th>Abholdatum</th>
+                        <th>Status</th>
+                        <th>Bilder</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var req in FilteredRequests)
+                    {
+                        <tr>
+                            <td><strong>#@req.OrderNumber</strong></td>
+                            <td>
+                                @req.FirstName @req.LastName<br />
+                                <small>@req.Email</small>
+                            </td>
+                            <td>@req.Street, @req.PostalCode @req.City</td>
+                            <td>@req.PickupDate.ToShortDateString()</td>
+                            <td>
+                                <span class="status-pill">@StatusLabel(req.Status)</span>
+                            </td>
+                            <td>@req.Images.Count Bild(er)</td>
+                            <td>
+                                <button class="btn btn-warning"
+                                        @onclick="() => OpenDetail(req)">
+                                    Details
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     }
 
-    <!-- Detail-Modal -->
-    @if (selectedRequest != null)
+    <!-- ══════════════════════════════════════════════════
+         TAB: EINSTELLUNGEN
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Settings)
     {
-        <div style="position:fixed; inset:0; background:rgba(0,0,0,.5);
-                    display:flex; align-items:center; justify-content:center;
-                    z-index:1000; padding:1rem">
-            <div style="background:var(--card-bg, white); border-radius:12px;
-                        padding:2rem; max-width:640px; width:100%;
-                        max-height:90vh; overflow-y:auto">
+        @if (settings == null)
+        {
+            <div class="state-card state-card--info">
+                <div class="state-card__icon">⏳</div>
+                <div class="state-card__content">
+                    <h3>Einstellungen werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            @if (settingsSuccess != null)
+            {
+                <div class="state-card state-card--success">
+                    <div class="state-card__icon">✅</div>
+                    <div class="state-card__content">
+                        <h3>Gespeichert!</h3>
+                        <p>@settingsSuccess</p>
+                    </div>
+                </div>
+            }
 
+            @if (settingsError != null)
+            {
+                <div class="state-card state-card--error">
+                    <div class="state-card__icon">⚠️</div>
+                    <div class="state-card__content">
+                        <h3>Fehler</h3>
+                        <p>@settingsError</p>
+                    </div>
+                </div>
+            }
+
+            <EditForm Model="settings" OnValidSubmit="SaveSettings">
+                <DataAnnotationsValidator />
+
+                <!-- Service Status -->
+                <div class="afp-block">
+                    <div class="afp-block__header">
+                        <h3>⚙️ Service-Status</h3>
+                    </div>
+                    <div class="afp-block__body">
+
+                        <div class="afp-toggle-row">
+                            <div class="afp-toggle-info">
+                                <span class="afp-toggle-label">Abholservice aktiv</span>
+                                <span class="afp-toggle-desc">
+                                    Wenn deaktiviert, können Benutzer keine neuen Anfragen einreichen.
+                                </span>
+                            </div>
+                            <label class="afp-toggle">
+                                <input type="checkbox" @bind="settings.IsEnabled" />
+                                <span class="afp-toggle__track">
+                                    <span class="afp-toggle__thumb"></span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="afp-status-badge @(settings.IsEnabled ? "afp-status-badge--on" : "afp-status-badge--off")">
+                            @if (settings.IsEnabled)
+                            {
+                                <span>🟢 Service ist aktiv – Benutzer können Anfragen einreichen</span>
+                            }
+                            else
+                            {
+                                <span>🔴 Service ist deaktiviert – keine neuen Anfragen möglich</span>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Datumsspanne -->
+                <div class="afp-block">
+                    <div class="afp-block__header">
+                        <h3>📅 Abhol-Zeitraum</h3>
+                    </div>
+                    <div class="afp-block__body">
+
+                        <p class="afp-hint">
+                            Lege fest, in welchem Zeitraum Benutzer ein Abholdatum wählen dürfen.
+                            Leer lassen = keine Einschränkung.
+                        </p>
+
+                        <div class="afp-date-grid">
+                            <div class="afp-field">
+                                <label>Frühestes Abholdatum</label>
+                                <InputDate @bind-Value="settings.PickupDateFrom"
+                                           class="afp-input" />
+                            </div>
+
+                            <div class="afp-date-arrow">→</div>
+
+                            <div class="afp-field">
+                                <label>Spätestes Abholdatum</label>
+                                <InputDate @bind-Value="settings.PickupDateTo"
+                                           class="afp-input" />
+                            </div>
+                        </div>
+
+                        @if (settings.PickupDateFrom.HasValue && settings.PickupDateTo.HasValue)
+                        {
+                            @if (settings.PickupDateTo < settings.PickupDateFrom)
+                            {
+                                <div class="state-card state-card--error" style="margin-top:1rem">
+                                    <div class="state-card__icon">⚠️</div>
+                                    <div class="state-card__content">
+                                        <p>Das Enddatum darf nicht vor dem Startdatum liegen.</p>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="afp-date-preview">
+                                    📦 Abholungen möglich vom
+                                    <strong>@settings.PickupDateFrom.Value.ToShortDateString()</strong>
+                                    bis
+                                    <strong>@settings.PickupDateTo.Value.ToShortDateString()</strong>
+                                </div>
+                            }
+                        }
+
+                    </div>
+                </div>
+
+                <!-- Speichern -->
+                <button type="submit"
+                        class="afp-submit-btn"
+                        disabled="@(isSaving || IsDateRangeInvalid())">
+                    @if (isSaving)
+                    {
+                        <span>⏳ Wird gespeichert...</span>
+                    }
+                    else
+                    {
+                        <span>💾 Einstellungen speichern</span>
+                    }
+                </button>
+
+            </EditForm>
+        }
+    }
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     DETAIL MODAL
+══════════════════════════════════════════════════ -->
+@if (selectedRequest != null)
+{
+    <div class="afp-modal-backdrop" @onclick="CloseDetail">
+        <div class="afp-modal" @onclick:stopPropagation="true">
+
+            <div class="afp-modal__header">
                 <h3>Anfrage #@selectedRequest.OrderNumber</h3>
+                <button class="afp-modal__close" @onclick="CloseDetail">✕</button>
+            </div>
+
+            <div class="afp-modal__body">
 
                 <div class="appointment-info-list">
                     <div class="appointment-info-item">
@@ -136,63 +312,60 @@
                 <!-- Bilder -->
                 @if (selectedRequest.Images.Any())
                 {
-                    <h4 style="margin-top:1rem">Fotos</h4>
-                    <div style="display:flex; flex-wrap:wrap; gap:.5rem">
+                    <h4 style="margin-top:1.25rem; margin-bottom:.75rem">📷 Fotos</h4>
+                    <div class="afp-modal__images">
                         @foreach (var img in selectedRequest.Images)
                         {
                             var src = $"data:{img.ContentType};base64,{Convert.ToBase64String(img.ImageData)}";
                             <img src="@src" alt="@img.FileName"
-                                 style="width:120px; height:120px; object-fit:cover;
-                                        border-radius:8px; cursor:pointer"
                                  @onclick="() => OpenImageModal(src)" />
                         }
                     </div>
                 }
 
                 <!-- Admin-Notiz -->
-                <div class="form-group" style="margin-top:1rem">
+                <div class="form-group" style="margin-top:1.25rem">
                     <label>Admin-Notiz (optional)</label>
                     <textarea class="form-control" rows="3"
                               @bind="adminNote"
                               placeholder="z.B. Termin bestätigt für..."></textarea>
                 </div>
 
-                <!-- Aktionen -->
-                <div style="display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap">
-                    <button class="btn btn-success"
-                            @onclick="() => UpdateStatus(PickupRequestStatus.Accepted)">
-                        ✅ Akzeptieren
-                    </button>
-                    <button class="btn btn-danger"
-                            @onclick="() => UpdateStatus(PickupRequestStatus.Rejected)">
-                        ❌ Ablehnen
-                    </button>
-                    <button class="btn btn-secondary"
-                            @onclick="CloseDetail">
-                        Schliessen
-                    </button>
-                </div>
-
             </div>
-        </div>
-    }
 
-    <!-- Bild-Vollansicht -->
-    @if (fullImageSrc != null)
-    {
-        <div style="position:fixed; inset:0; background:rgba(0,0,0,.85);
-                    display:flex; align-items:center; justify-content:center;
-                    z-index:2000; cursor:pointer"
-             @onclick="CloseImageModal">
-            <img src="@fullImageSrc"
-                 style="max-width:90vw; max-height:90vh;
-                        border-radius:8px; object-fit:contain" />
-        </div>
-    }
+            <div class="afp-modal__footer">
+                <button class="btn btn-success"
+                        @onclick="() => UpdateStatus(PickupRequestStatus.Accepted)">
+                    ✅ Akzeptieren
+                </button>
+                <button class="btn btn-danger"
+                        @onclick="() => UpdateStatus(PickupRequestStatus.Rejected)">
+                    ❌ Ablehnen
+                </button>
+                <button class="btn btn-secondary"
+                        @onclick="CloseDetail">
+                    Schliessen
+                </button>
+            </div>
 
-</div>
+        </div>
+    </div>
+}
+
+<!-- Bild-Vollansicht -->
+@if (fullImageSrc != null)
+{
+    <div class="afp-image-backdrop" @onclick="CloseImageModal">
+        <img src="@fullImageSrc" alt="Vollansicht" />
+    </div>
+}
 
 @code {
+    // ── Enums ────────────────────────────────────────────────────────────────
+    private enum Tab { Requests, Settings }
+    private Tab activeTab = Tab.Requests;
+
+    // ── Anfragen ─────────────────────────────────────────────────────────────
     private List<FurniturePickupRequest>? requests;
     private FurniturePickupRequest?       selectedRequest;
     private PickupRequestStatus?          filterStatus = null;
@@ -204,16 +377,23 @@
             ? requests!
             : requests!.Where(r => r.Status == filterStatus).ToList();
 
+    // ── Einstellungen ────────────────────────────────────────────────────────
+    private FurniturePickupSettings? settings;
+    private bool    isSaving        = false;
+    private string? settingsSuccess = null;
+    private string? settingsError   = null;
+
+    // ── Init ─────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
         requests = await FurniturePickupService.GetAllRequestsAsync();
+        settings = await FurniturePickupService.GetSettingsAsync();
     }
 
-    private void SetFilter(PickupRequestStatus? status)
-    {
-        filterStatus = status;
-    }
+    // ── Filter ───────────────────────────────────────────────────────────────
+    private void SetFilter(PickupRequestStatus? status) => filterStatus = status;
 
+    // ── Detail Modal ─────────────────────────────────────────────────────────
     private void OpenDetail(FurniturePickupRequest req)
     {
         selectedRequest = req;
@@ -237,9 +417,40 @@
         CloseDetail();
     }
 
-    private void OpenImageModal(string src)  => fullImageSrc = src;
-    private void CloseImageModal()           => fullImageSrc = null;
+    // ── Bild Modal ───────────────────────────────────────────────────────────
+    private void OpenImageModal(string src) => fullImageSrc = src;
+    private void CloseImageModal()          => fullImageSrc = null;
 
+    // ── Einstellungen speichern ───────────────────────────────────────────────
+    private bool IsDateRangeInvalid() =>
+        settings?.PickupDateFrom.HasValue == true &&
+        settings?.PickupDateTo.HasValue   == true &&
+        settings.PickupDateTo < settings.PickupDateFrom;
+
+    private async Task SaveSettings()
+    {
+        if (settings == null) return;
+
+        isSaving        = true;
+        settingsSuccess = null;
+        settingsError   = null;
+
+        try
+        {
+            await FurniturePickupService.SaveSettingsAsync(settings);
+            settingsSuccess = "Die Einstellungen wurden erfolgreich gespeichert.";
+        }
+        catch (Exception ex)
+        {
+            settingsError = $"Fehler beim Speichern: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Status Label ─────────────────────────────────────────────────────────
     private string StatusLabel(PickupRequestStatus s) => s switch
     {
         PickupRequestStatus.Pending  => "⏳ Ausstehend",
