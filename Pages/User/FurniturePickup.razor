@@ -127,28 +127,28 @@
                         <div class="pickup-field">
                             <label>Vorname</label>
                             <InputText @bind-Value="model.FirstName"
-                                       class="pickup-input pickup-input--readonly"
+                                       class="form-control-modern"
                                        readonly />
                         </div>
 
                         <div class="pickup-field">
                             <label>Nachname</label>
                             <InputText @bind-Value="model.LastName"
-                                       class="pickup-input pickup-input--readonly"
+                                       class="form-control-modern"
                                        readonly />
                         </div>
 
                         <div class="pickup-field">
                             <label>E-Mail</label>
-                            <InputText @bind-Value="model.Email"
-                                       class="pickup-input pickup-input--readonly"
+                                <InputText @bind-Value="model.Email"
+                                        class="form-control-modern"
                                        readonly />
                         </div>
 
                         <div class="pickup-field">
                             <label>Telefon</label>
                             <InputText @bind-Value="model.PhoneNumber"
-                                       class="pickup-input"
+                                       class="form-control-modern"
                                        placeholder="z.B. +41 79 123 45 67" />
                         </div>
 
@@ -162,26 +162,26 @@
                     <h3>📍 Abholadresse</h3>
                 </div>
                 <div class="pickup-block__body">
-                    <div class="pickup-grid pickup-grid--3">
+                    <div class="pickup-grid pickup-grid--2">
 
                         <div class="pickup-field pickup-field--full">
                             <label>Strasse & Hausnummer</label>
                             <InputText @bind-Value="model.Street"
-                                       class="pickup-input"
+                                       class="form-control-modern"
                                        placeholder="z.B. Musterstrasse 12" />
                         </div>
 
                         <div class="pickup-field">
                             <label>PLZ</label>
                             <InputText @bind-Value="model.PostalCode"
-                                       class="pickup-input"
+                                       class="form-control-modern"
                                        placeholder="z.B. 8000" />
                         </div>
 
-                        <div class="pickup-field pickup-field--wide">
+                        <div class="pickup-field">
                             <label>Ort</label>
                             <InputText @bind-Value="model.City"
-                                       class="pickup-input"
+                                       class="form-control-modern"
                                        placeholder="z.B. Zürich" />
                         </div>
 
@@ -200,9 +200,9 @@
                         <div class="pickup-field pickup-field--full">
                             <label>Beschreibung der Möbel</label>
                             <InputTextArea @bind-Value="model.Description"
-                                           class="pickup-input pickup-textarea"
+                                           class="form-control-modern"
                                            rows="4"
-                                           placeholder="z.B. 1 Sofa (braun, 2-Sitzer), 1 Holztisch..." />
+                                           placeholder="z.B. 1 Stuhl, 2 Hocker, 1 Holztisch..." />
                         </div>
 
                         <div class="pickup-field">
@@ -210,16 +210,16 @@
                                 Gewünschtes Abholdatum
                                 @if (pickupDateMin != null && pickupDateMax != null)
                                 {
-                                    <span class="pickup-label-hint">
+                                    <span class="pickup-label-hint pickup-label-hint--block">
                                         (@DateTime.Parse(pickupDateMin).ToShortDateString()
                                         – @DateTime.Parse(pickupDateMax).ToShortDateString())
                                     </span>
                                 }
                             </label>
                             <InputDate @bind-Value="model.PickupDate"
-                                       class="pickup-input"
-                                       min="@pickupDateMin"
-                                       max="@pickupDateMax" />
+                                    class="form-control-modern"
+                                    min="@pickupDateMin"
+                                    max="@pickupDateMax" />
                         </div>
 
                         <!-- Bilder Upload -->
@@ -281,7 +281,7 @@
                             Ich bestätige, dass ich im Falle eines <strong>Nicht-Verkaufs</strong>
                             meiner Möbel die anfallenden
                             <strong>Entsorgungsgebühren selbst trage</strong>.
-                            Der Abholservice übernimmt keine Kosten für die Entsorgung
+                            Der Pfadiflomi übernimmt keine Kosten für die Entsorgung
                             nicht verkaufter Gegenstände.
                         </span>
                     </label>

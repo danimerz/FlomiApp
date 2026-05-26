@@ -8,11 +8,19 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IAreaService _areaService;
+    private readonly IMailService _mailService;
+    private readonly ILogger<AppointmentService> _logger;
 
-    public AppointmentService(ApplicationDbContext context, IAreaService areaService)
+    public AppointmentService(
+        ApplicationDbContext context,
+        IAreaService areaService,
+        IMailService mailService,
+        ILogger<AppointmentService> logger)
     {
-        _context = context;
+        _context     = context;
         _areaService = areaService;
+        _mailService = mailService;
+        _logger      = logger;
     }
 
     public async Task<List<Appointment>> GetUserAppointmentsAsync(string userId)
@@ -21,7 +29,7 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Area)
                 .ThenInclude(area => area.Event)
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)   // ← neu
+                .ThenInclude(area => area.AreaCategory)
             .Include(a => a.User)
             .Include(a => a.FamilyMember)
             .Where(a => a.UserId == userId)
@@ -50,11 +58,11 @@ public class AppointmentService : IAppointmentService
         if (existingMember == null)
             throw new InvalidOperationException("Family member not found.");
 
-        existingMember.FirstName  = familyMember.FirstName;
-        existingMember.LastName   = familyMember.LastName;
-        existingMember.Pfadiname  = familyMember.Pfadiname;
-        existingMember.Stufe      = familyMember.Stufe;
-        existingMember.Birthday   = familyMember.Birthday;
+        existingMember.FirstName = familyMember.FirstName;
+        existingMember.LastName  = familyMember.LastName;
+        existingMember.Pfadiname = familyMember.Pfadiname;
+        existingMember.Stufe     = familyMember.Stufe;
+        existingMember.Birthday  = familyMember.Birthday;
 
         await _context.SaveChangesAsync();
     }
@@ -82,7 +90,8 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException("Area not found.");
 
         if (area.MinAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, area.MinAge))
-            throw new InvalidOperationException($"Person erfüllt das Mindestalter von {area.MinAge} Jahren nicht.");
+            throw new InvalidOperationException(
+                $"Person erfüllt das Mindestalter von {area.MinAge} Jahren nicht.");
 
         if (!await CanRegisterAsync(userId, areaId, familyMemberId))
         {
@@ -110,6 +119,25 @@ public class AppointmentService : IAppointmentService
 
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
+
+        // ── Mails senden ──────────────────────────────────────────────────────
+        await SendRegistrationMailsAsync(userId, familyMemberId, area);
+    }
+
+    public async Task CancelAppointmentAsync(int appointmentId, string userId)
+    {
+        var appointment = await _context.Appointments
+            .Include(a => a.Area)
+                .ThenInclude(a => a.Event)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.UserId == userId);
+
+        if (appointment == null) return;
+
+        appointment.Status = AppointmentStatus.Cancelled;
+        await _context.SaveChangesAsync();
+
+        // ── Storno-Mail senden ────────────────────────────────────────────────
+        await SendCancellationMailAsync(userId, appointment);
     }
 
     public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null)
@@ -154,6 +182,97 @@ public class AppointmentService : IAppointmentService
 
         return true;
     }
+
+    // ── Mail-Hilfsmethoden ────────────────────────────────────────────────────
+
+    private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user?.Email == null) return;
+
+            var userName  = $"{user.FirstName} {user.LastName}";
+            var eventName = area.Event?.Name ?? "";
+            var forPerson = await GetPersonNameAsync(userId, familyMemberId);
+
+            // ✅ User-Mail nur senden wenn aktiviert
+            if (user.EmailNotificationsEnabled)
+            {
+                await _mailService.SendRegistrationConfirmationAsync(
+                    user.Email,
+                    userName,
+                    area.Name,
+                    eventName,
+                    area.Date,
+                    area.TimeSlot);
+            }
+
+            // ✅ Admin-Mail IMMER senden
+            await _mailService.SendAdminNewRegistrationAsync(
+                area.Name,
+                eventName,
+                forPerson ?? userName,
+                area.Date,
+                area.TimeSlot);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MAIL FEHLER DETAIL: {Message}", ex.Message);
+        }
+    }
+
+    private async Task SendCancellationMailAsync(string userId, Appointment appointment)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user?.Email == null) return;
+
+            var userName  = $"{user.FirstName} {user.LastName}";
+            var areaName  = appointment.Area?.Name ?? "";
+            var eventName = appointment.Area?.Event?.Name ?? "";
+            var date      = appointment.Area?.Date ?? DateTime.MinValue;
+            var timeSlot  = appointment.Area?.TimeSlot ?? "";
+
+            // ✅ User-Mail nur senden wenn aktiviert
+            if (user.EmailNotificationsEnabled)
+            {
+                await _mailService.SendCancellationConfirmationAsync(
+                    user.Email,
+                    userName,
+                    areaName,
+                    eventName,
+                    date,
+                    timeSlot);
+            }
+
+            // ✅ Admin-Mail IMMER senden
+            await _mailService.SendAdminCancellationAsync(
+                areaName,
+                eventName,
+                userName,
+                date,
+                timeSlot);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fehler beim Senden der Storno-Mail für UserId {UserId}", userId);
+        }
+    }
+
+    private async Task<string?> GetPersonNameAsync(string userId, int? familyMemberId)
+    {
+        if (!familyMemberId.HasValue) return null;
+
+        var member = await _context.FamilyMembers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == familyMemberId.Value && f.UserId == userId);
+
+        return member != null ? $"{member.FirstName} {member.LastName}" : null;
+    }
+
+    // ── Bestehende Hilfsmethoden ──────────────────────────────────────────────
 
     private async Task<bool> PersonHasConflictingRegistrationAsync(
         string userId, int? familyMemberId, DateTime date, string timeSlot)
@@ -208,33 +327,24 @@ public class AppointmentService : IAppointmentService
         return age;
     }
 
-    private async Task<bool> PersonHasRegisteredSaleAreaAsync(string userId, int? familyMemberId, int eventId)
+    private async Task<bool> PersonHasRegisteredSaleAreaAsync(
+        string userId, int? familyMemberId, int eventId)
     {
         return await _context.Appointments
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)   // ← neu
+                .ThenInclude(area => area.AreaCategory)
             .Where(a => a.UserId == userId
                      && a.Status == AppointmentStatus.Registered
                      && a.Area.EventId == eventId)
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null)
-            .AnyAsync(a => a.Area.AreaCategory != null && a.Area.AreaCategory.Name == "Verkauf");
+            .AnyAsync(a => a.Area.AreaCategory != null
+                        && a.Area.AreaCategory.Name == "Verkauf");
     }
 
-    public async Task CancelAppointmentAsync(int appointmentId, string userId)
-    {
-        var appointment = await _context.Appointments
-            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.UserId == userId);
-
-        if (appointment != null)
-        {
-            appointment.Status = AppointmentStatus.Cancelled;
-            await _context.SaveChangesAsync();
-        }
-    }
-
-    private async Task<bool> UserHasConflictingRegistrationAsync(string userId, DateTime date, string timeSlot)
+    private async Task<bool> UserHasConflictingRegistrationAsync(
+        string userId, DateTime date, string timeSlot)
     {
         var existingAppointments = await _context.Appointments
             .Include(a => a.Area)
@@ -286,10 +396,11 @@ public class AppointmentService : IAppointmentService
     {
         return await _context.Appointments
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)   // ← neu
+                .ThenInclude(area => area.AreaCategory)
             .Where(a => a.UserId == userId
                      && a.Status == AppointmentStatus.Registered
                      && a.Area.EventId == eventId)
-            .AnyAsync(a => a.Area.AreaCategory != null && a.Area.AreaCategory.Name == "Verkauf");
+            .AnyAsync(a => a.Area.AreaCategory != null
+                        && a.Area.AreaCategory.Name == "Verkauf");
     }
 }

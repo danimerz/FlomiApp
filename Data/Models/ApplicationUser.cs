@@ -19,4 +19,7 @@ public class ApplicationUser : IdentityUser
     public DateTime? Birthday { get; set; }
 
     public ICollection<FamilyMember> FamilyMembers { get; set; } = new List<FamilyMember>();
+
+    // ✅ NEU:
+    public bool EmailNotificationsEnabled { get; set; } = true;
 }

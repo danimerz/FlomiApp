@@ -43,7 +43,6 @@
     {
         <section class="appointments-section">
 
-            <!-- Haupt-Header mit Toggle -->
             <div class="appointments-section__header">
                 <h2>Übersicht</h2>
                 <div class="appointments-section__controls">
@@ -57,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Gruppierung: Event → Datum -->
             @foreach (var eventKey in AllEventKeys)
             {
                 var eventOpen = IsEventOpen(eventKey);
@@ -72,31 +70,24 @@
 
                 var totalCount = dateGroups.Sum(d => d.Value.Count) + eventPickups.Count;
 
-                <!-- Event-Sektion (Ebene 1) -->
                 <div class="group-event">
                     <button class="group-event__toggle"
                             @onclick="() => ToggleEvent(eventKey)">
                         <span class="group-event__icon">🎪</span>
                         <span class="group-event__name">@eventKey</span>
-                        <span class="group-event__count">
-                            @totalCount Einträge
-                        </span>
-                        <span class="group-chevron @(eventOpen ? "group-chevron--open" : "")">
-                            ▾
-                        </span>
+                        <span class="group-event__count">@totalCount Einträge</span>
+                        <span class="group-chevron @(eventOpen ? "group-chevron--open" : "")">▾</span>
                     </button>
 
                     @if (eventOpen)
                     {
                         <div class="group-event__body">
 
-                            <!-- Datum-Gruppen (Anmeldungen) -->
                             @foreach (var dateGroup in dateGroups)
                             {
                                 var dateKey  = dateGroup.Key;
                                 var dateOpen = IsDateOpen(eventKey, dateKey);
 
-                                <!-- Datum-Sektion (Ebene 2) -->
                                 <div class="group-date">
                                     <button class="group-date__toggle"
                                             @onclick="() => ToggleDate(eventKey, dateKey)">
@@ -105,12 +96,8 @@
                                             @dateKey.ToString("dddd, dd. MMMM yyyy",
                                                 new System.Globalization.CultureInfo("de-CH"))
                                         </span>
-                                        <span class="group-date__count">
-                                            @dateGroup.Value.Count Einträge
-                                        </span>
-                                        <span class="group-chevron @(dateOpen ? "group-chevron--open" : "")">
-                                            ▾
-                                        </span>
+                                        <span class="group-date__count">@dateGroup.Value.Count Einträge</span>
+                                        <span class="group-chevron @(dateOpen ? "group-chevron--open" : "")">▾</span>
                                     </button>
 
                                     @if (dateOpen)
@@ -121,7 +108,6 @@
                                                 <article class="appointment-card">
                                                     <div class="appointment-card__body">
 
-                                                        <!-- Header -->
                                                         <div class="appointment-card__header">
                                                             <div>
                                                                 <div class="appointment-card__topline">Anmeldung</div>
@@ -132,7 +118,6 @@
                                                             </div>
                                                         </div>
 
-                                                        <!-- Info-Liste -->
                                                         <div class="appointment-info-list">
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Person</span>
@@ -158,19 +143,30 @@
                                                             </div>
                                                         </div>
 
-                                                        <!-- Actions -->
                                                         <div class="appointment-actions">
                                                             @if (appointment.Status == AppointmentStatus.Registered)
                                                             {
-                                                                <button class="cancel-btn"
-                                                                        @onclick="() => CancelAppointment(appointment.Id)">
-                                                                    Absagen
-                                                                </button>
-                                                                <button class="ics-icon-btn"
-                                                                        title="Zum Kalender hinzufügen"
-                                                                        @onclick="() => DownloadIcs(appointment)">
-                                                                    📅
-                                                                </button>
+                                                                @* ── Loading-Overlay für diese Karte ── *@
+                                                                @if (cancellingId == appointment.Id)
+                                                                {
+                                                                    <div class="btn-loading">
+                                                                        <span class="btn-spinner"></span>
+                                                                        <span>Wird abgesagt...</span>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <button class="cancel-btn"
+                                                                            disabled="@(cancellingId.HasValue)"
+                                                                            @onclick="() => CancelAppointment(appointment.Id)">
+                                                                        Absagen
+                                                                    </button>
+                                                                    <button class="ics-icon-btn"
+                                                                            title="Zum Kalender hinzufügen"
+                                                                            @onclick="() => DownloadIcs(appointment)">
+                                                                        📅
+                                                                    </button>
+                                                                }
                                                             }
                                                         </div>
 
@@ -182,7 +178,6 @@
                                 </div>
                             }
 
-                            <!-- Möbel-Abholungen innerhalb dieses Events -->
                             @if (eventPickups.Any())
                             {
                                 <div class="group-date group-date--pickup">
@@ -190,12 +185,8 @@
                                             @onclick="() => TogglePickupGroup(eventKey)">
                                         <span class="group-date__icon">🛋️</span>
                                         <span class="group-date__name">Möbel Abholungen</span>
-                                        <span class="group-date__count">
-                                            @eventPickups.Count Anfrage(n)
-                                        </span>
-                                        <span class="group-chevron group-chevron--dark @(IsPickupGroupOpen(eventKey) ? "group-chevron--open" : "")">
-                                            ▾
-                                        </span>
+                                        <span class="group-date__count">@eventPickups.Count Anfrage(n)</span>
+                                        <span class="group-chevron group-chevron--dark @(IsPickupGroupOpen(eventKey) ? "group-chevron--open" : "")">▾</span>
                                     </button>
 
                                     @if (IsPickupGroupOpen(eventKey))
@@ -207,39 +198,27 @@
                                                     <div class="appointment-card__body">
                                                         <div class="appointment-card__header">
                                                             <div>
-                                                                <div class="appointment-card__topline appointment-card__topline--pickup">
-                                                                    Abholung
-                                                                </div>
+                                                                <div class="appointment-card__topline appointment-card__topline--pickup">Abholung</div>
                                                                 <h3>Auftrag #@req.OrderNumber</h3>
                                                             </div>
-                                                            <span class="status-badge status-badge--pickup">
-                                                                @StatusLabel(req.Status)
-                                                            </span>
+                                                            <span class="status-badge status-badge--pickup">@StatusLabel(req.Status)</span>
                                                         </div>
                                                         <div class="appointment-info-list">
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Adresse</span>
-                                                                <span class="value">
-                                                                    @req.Street, @req.PostalCode @req.City
-                                                                </span>
+                                                                <span class="value">@req.Street, @req.PostalCode @req.City</span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Was</span>
-                                                                <span class="value" title="@req.Description">
-                                                                    @Truncate(req.Description)
-                                                                </span>
+                                                                <span class="value" title="@req.Description">@Truncate(req.Description)</span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Abholdatum</span>
-                                                                <span class="value">
-                                                                    @req.PickupDate.ToShortDateString()
-                                                                </span>
+                                                                <span class="value">@req.PickupDate.ToShortDateString()</span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Eingereicht</span>
-                                                                <span class="value">
-                                                                    @req.CreatedAt.ToShortDateString()
-                                                                </span>
+                                                                <span class="value">@req.CreatedAt.ToShortDateString()</span>
                                                             </div>
                                                             @if (!string.IsNullOrEmpty(req.AdminNote))
                                                             {
@@ -252,10 +231,21 @@
                                                         @if (req.Status == PickupRequestStatus.Pending)
                                                         {
                                                             <div class="appointment-actions">
-                                                                <button class="cancel-btn"
-                                                                        @onclick="() => DeletePickupRequest(req.Id)">
-                                                                    🗑️ Löschen
-                                                                </button>
+                                                                @if (deletingPickupId == req.Id)
+                                                                {
+                                                                    <div class="btn-loading">
+                                                                        <span class="btn-spinner"></span>
+                                                                        <span>Wird gelöscht...</span>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <button class="cancel-btn"
+                                                                            disabled="@(deletingPickupId.HasValue)"
+                                                                            @onclick="() => DeletePickupRequest(req.Id)">
+                                                                        🗑️ Löschen
+                                                                    </button>
+                                                                }
                                                             </div>
                                                         }
                                                     </div>
@@ -271,21 +261,15 @@
                 </div>
             }
 
-            <!-- Pickups ohne Event-Zuordnung -->
             @if (UnassignedPickups.Any())
             {
                 <section class="appointments-section" style="margin-top:1.5rem">
                     <div class="appointments-section__header">
                         <h2>🛋️ Weitere Abholungen</h2>
                         <div class="appointments-section__controls">
-                            <span class="appointments-section__count">
-                                @UnassignedPickups.Count Anfrage(n)
-                            </span>
-                            <button class="pickup-collapse-btn"
-                                    @onclick="ToggleUnassignedPickup">
-                                <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">
-                                    ▾
-                                </span>
+                            <span class="appointments-section__count">@UnassignedPickups.Count Anfrage(n)</span>
+                            <button class="pickup-collapse-btn" @onclick="ToggleUnassignedPickup">
+                                <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">▾</span>
                             </button>
                         </div>
                     </div>
@@ -299,33 +283,23 @@
                                     <div class="appointment-card__body">
                                         <div class="appointment-card__header">
                                             <div>
-                                                <div class="appointment-card__topline appointment-card__topline--pickup">
-                                                    Abholung
-                                                </div>
+                                                <div class="appointment-card__topline appointment-card__topline--pickup">Abholung</div>
                                                 <h3>Auftrag #@req.OrderNumber</h3>
                                             </div>
-                                            <span class="status-badge status-badge--pickup">
-                                                @StatusLabel(req.Status)
-                                            </span>
+                                            <span class="status-badge status-badge--pickup">@StatusLabel(req.Status)</span>
                                         </div>
                                         <div class="appointment-info-list">
                                             <div class="appointment-info-item">
                                                 <span class="label">Adresse</span>
-                                                <span class="value">
-                                                    @req.Street, @req.PostalCode @req.City
-                                                </span>
+                                                <span class="value">@req.Street, @req.PostalCode @req.City</span>
                                             </div>
                                             <div class="appointment-info-item">
                                                 <span class="label">Abholdatum</span>
-                                                <span class="value">
-                                                    @req.PickupDate.ToShortDateString()
-                                                </span>
+                                                <span class="value">@req.PickupDate.ToShortDateString()</span>
                                             </div>
                                             <div class="appointment-info-item">
                                                 <span class="label">Eingereicht</span>
-                                                <span class="value">
-                                                    @req.CreatedAt.ToShortDateString()
-                                                </span>
+                                                <span class="value">@req.CreatedAt.ToShortDateString()</span>
                                             </div>
                                             @if (!string.IsNullOrEmpty(req.AdminNote))
                                             {
@@ -338,10 +312,21 @@
                                         @if (req.Status == PickupRequestStatus.Pending)
                                         {
                                             <div class="appointment-actions">
-                                                <button class="cancel-btn"
-                                                        @onclick="() => DeletePickupRequest(req.Id)">
-                                                    🗑️ Löschen
-                                                </button>
+                                                @if (deletingPickupId == req.Id)
+                                                {
+                                                    <div class="btn-loading">
+                                                        <span class="btn-spinner"></span>
+                                                        <span>Wird gelöscht...</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <button class="cancel-btn"
+                                                            disabled="@(deletingPickupId.HasValue)"
+                                                            @onclick="() => DeletePickupRequest(req.Id)">
+                                                        🗑️ Löschen
+                                                    </button>
+                                                }
                                             </div>
                                         }
                                     </div>
@@ -361,6 +346,10 @@
     private List<Appointment> appointments = new();
     private string userId = string.Empty;
     private bool showCancelledAppointments = false;
+
+    // ── Loading State ─────────────────────────────────────────────────────────
+    private int? cancellingId    = null;
+    private int? deletingPickupId = null;
 
     // ── Pickup ────────────────────────────────────────────────────────────────
     private List<FurniturePickupRequest> pickupRequests = new();
@@ -405,20 +394,17 @@
                     )
             );
 
-    // ── Pickups gruppiert nach Event-Name ─────────────────────────────────────
     private Dictionary<string, List<FurniturePickupRequest>> PickupsByEvent =>
         pickupRequests
             .Where(r => r.EventId.HasValue && r.Event != null)
             .GroupBy(r => r.Event!.Name)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-    // ── Pickups ohne Event-Zuordnung ──────────────────────────────────────────
     private List<FurniturePickupRequest> UnassignedPickups =>
         pickupRequests
             .Where(r => !r.EventId.HasValue || r.Event == null)
             .ToList();
 
-    // ── NEU: Kombinierte Event-Liste (Appointments + Pickups) ─────────────────
     private IEnumerable<string> AllEventKeys =>
         GroupedAppointments.Keys
             .Union(PickupsByEvent.Keys)
@@ -447,20 +433,13 @@
             openDates.Add(key);
     }
 
-    // ── Alle aufklappen nach dem Laden ────────────────────────────────────────
     private void ExpandAll()
     {
-        // Events aus Appointments aufklappen
         foreach (var eventGroup in GroupedAppointments)
-        {
             openEvents.Add(eventGroup.Key);
-        }
 
-        // NEU: Pickup-Events ebenfalls aufklappen
         foreach (var eventKey in PickupsByEvent.Keys)
-        {
             openEvents.Add(eventKey);
-        }
     }
 
     // ── Initialisierung ───────────────────────────────────────────────────────
@@ -474,9 +453,7 @@
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                      ?? string.Empty;
 
-            // Pickups mit Event-Navigation laden
             pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
-
             await LoadAppointments();
         }
     }
@@ -488,10 +465,15 @@
         StateHasChanged();
     }
 
-    // ── Absagen ───────────────────────────────────────────────────────────────
+    // ── Absagen mit Loading ───────────────────────────────────────────────────
     private async Task CancelAppointment(int appointmentId)
     {
+        cancellingId = appointmentId;
+        StateHasChanged();
+
         await AppointmentService.CancelAppointmentAsync(appointmentId, userId);
+
+        cancellingId = null;
         await LoadAppointments();
     }
 
@@ -573,7 +555,6 @@
         return (fallbackStart, fallbackEnd);
     }
 
-    // ── Status Label ──────────────────────────────────────────────────────────
     private string StatusLabel(PickupRequestStatus s) => s switch
     {
         PickupRequestStatus.Pending  => "⏳ Ausstehend",
@@ -583,18 +564,22 @@
         _                            => s.ToString()
     };
 
-    // ── Truncate Helper ───────────────────────────────────────────────────────
     private string Truncate(string? text, int maxLength = 20)
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
         return text.Length <= maxLength ? text : text[..maxLength] + "...";
     }
 
-    // ── Pickup löschen ────────────────────────────────────────────────────────
+    // ── Pickup löschen mit Loading ────────────────────────────────────────────
     private async Task DeletePickupRequest(int id)
     {
+        deletingPickupId = id;
+        StateHasChanged();
+
         await FurniturePickupService.DeleteRequestAsync(id);
         pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
+
+        deletingPickupId = null;
         ExpandAll();
         StateHasChanged();
     }

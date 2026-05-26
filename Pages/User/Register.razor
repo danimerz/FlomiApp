@@ -165,9 +165,7 @@
                                                 <div class="area-info-list">
                                                     <div class="area-info-item">
                                                         <span class="label">Datum</span>
-                                                        <span class="value">
-                                                            @area.Date.ToShortDateString()
-                                                        </span>
+                                                        <span class="value">@area.Date.ToShortDateString()</span>
                                                     </div>
                                                     <div class="area-info-item">
                                                         <span class="label">Zeit</span>
@@ -197,11 +195,22 @@
                                                     }
                                                 </div>
 
-                                                <button class="register-btn"
-                                                        @onclick="() => RegisterAppointment(area.Id)"
-                                                        disabled="@(!canRegister[area.Id])">
-                                                    Jetzt registrieren
-                                                </button>
+                                                @* ── Register Button mit Loading ── *@
+                                                @if (registeringAreaId == area.Id)
+                                                {
+                                                    <div class="btn-loading btn-loading--register">
+                                                        <span class="btn-spinner btn-spinner--white"></span>
+                                                        <span>Wird registriert...</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <button class="register-btn"
+                                                            @onclick="() => RegisterAppointment(area.Id)"
+                                                            disabled="@(!canRegister[area.Id] || registeringAreaId.HasValue)">
+                                                        Jetzt registrieren
+                                                    </button>
+                                                }
 
                                                 @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
                                                 {
@@ -224,21 +233,24 @@
 
 @code {
     // ── State ─────────────────────────────────────────────────────────────────
-    private List<Event>?        events               = null;
-    private Event?              selectedEvent;
-    private int                 selectedEventId;
-    private List<Area>?         areas;
-    private List<FamilyMember>  familyMembers        = new();
-    private int                 selectedMemberId     = 0;
-    private Dictionary<int,int> currentRegistrations = new();
-    private Dictionary<int,bool> canRegister         = new();
-    private string              userId               = string.Empty;
-    private ApplicationUser?    currentUser;
-    private int?                selectedPersonAge;
-    private string              errorMessage         = string.Empty;
-    private string              successMessage       = string.Empty;
+    private List<Event>?         events               = null;
+    private Event?               selectedEvent;
+    private int                  selectedEventId;
+    private List<Area>?          areas;
+    private List<FamilyMember>   familyMembers        = new();
+    private int                  selectedMemberId     = 0;
+    private Dictionary<int, int> currentRegistrations = new();
+    private Dictionary<int,bool> canRegister          = new();
+    private string               userId               = string.Empty;
+    private ApplicationUser?     currentUser;
+    private int?                 selectedPersonAge;
+    private string               errorMessage         = string.Empty;
+    private string               successMessage       = string.Empty;
     private CancellationTokenSource? successMessageCts;
-    private HashSet<string>     collapsedCategories  = new();
+    private HashSet<string>      collapsedCategories  = new();
+
+    // ── Loading State ─────────────────────────────────────────────────────────
+    private int? registeringAreaId = null;
 
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
@@ -248,9 +260,9 @@
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId      = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                          ?? string.Empty;
-            currentUser = await UserManager.GetUserAsync(user);
+            userId        = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                            ?? string.Empty;
+            currentUser   = await UserManager.GetUserAsync(user);
             familyMembers = await AppointmentService.GetFamilyMembersAsync(userId);
             UpdateSelectedPersonAge();
 
@@ -327,15 +339,17 @@
                 selectedMemberId == 0 ? null : selectedMemberId);
         }
 
-        // Alle Kategorien standardmässig eingeklappt
         collapsedCategories = areas
             .Select(a => a.AreaCategory?.Name ?? "Sonstiges")
             .ToHashSet();
     }
 
-    // ── Registrierung ─────────────────────────────────────────────────────────
+    // ── Registrierung mit Loading ─────────────────────────────────────────────
     private async Task RegisterAppointment(int areaId)
     {
+        registeringAreaId = areaId;
+        StateHasChanged();
+
         try
         {
             await AppointmentService.RegisterForAppointmentAsync(
@@ -354,6 +368,11 @@
             successMessage = string.Empty;
             successMessageCts?.Cancel();
         }
+        finally
+        {
+            registeringAreaId = null;
+            StateHasChanged();
+        }
     }
 
     private async Task ShowTemporarySuccessMessageAsync(string message)
@@ -370,10 +389,7 @@
             successMessage = string.Empty;
             StateHasChanged();
         }
-        catch (TaskCanceledException)
-        {
-            // Ignorieren – neue Nachricht oder Fehler hat abgebrochen
-        }
+        catch (TaskCanceledException) { }
     }
 
     // ── Kategorie ein-/ausklappen ─────────────────────────────────────────────

@@ -29,6 +29,9 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Smtp"));
+
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
 builder.Services.AddRazorPages();
@@ -38,6 +41,8 @@ builder.Services.AddScoped<ThemeState>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IFurniturePickupService, FurniturePickupService>();
+builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 var app = builder.Build();
 

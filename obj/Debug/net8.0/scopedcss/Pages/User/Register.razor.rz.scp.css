@@ -478,7 +478,50 @@
     font-size: 0.88rem;
     line-height: 1.5;
 }
+/* ─── Button Loading State ───────────────────────────────────────────────── */
+.btn-loading[b-a3sakhx0ve] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 14px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 1px solid #e2e8f0;
+    min-width: 140px;
+}
 
+.btn-loading--register[b-a3sakhx0ve] {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.1rem;
+}
+
+/* ─── Spinner ────────────────────────────────────────────────────────────── */
+.btn-spinner[b-a3sakhx0ve] {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2.5px solid #cbd5e1;
+    border-top-color: #64748b;
+    border-radius: 50%;
+    animation: spin-b-a3sakhx0ve 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+.btn-spinner--white[b-a3sakhx0ve] {
+    border-color: #bfdbfe;
+    border-top-color: #2563eb;
+}
+
+@keyframes spin-b-a3sakhx0ve {
+    to { transform: rotate(360deg); }
+}
 /* ── Media Queries ────────────────────────────────────────────────────────── */
 @media (max-width: 992px) {
     .area-grid[b-a3sakhx0ve] {

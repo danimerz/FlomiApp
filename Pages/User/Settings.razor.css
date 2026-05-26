@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SETTINGS PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .settings-page {
     max-width: 1240px;
     margin: 0 auto;
@@ -5,6 +9,7 @@
     color: #1f2937;
 }
 
+/* ─── Hero ───────────────────────────────────────────────────────────────── */
 .settings-hero {
     position: relative;
     overflow: hidden;
@@ -39,6 +44,7 @@
 
 .settings-hero__content {
     position: relative;
+    z-index: 2;
     padding: 2rem;
     color: #ffffff;
 }
@@ -71,6 +77,7 @@
     line-height: 1.6;
 }
 
+/* ─── State Cards ────────────────────────────────────────────────────────── */
 .state-card {
     display: flex;
     align-items: flex-start;
@@ -110,6 +117,56 @@
     color: #047857;
 }
 
+/* ─── Tabs ───────────────────────────────────────────────────────────────── */
+.settings-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.75rem;
+    padding: 0.4rem;
+    background: #f1f5f9;
+    border-radius: 18px;
+    width: fit-content;
+}
+
+.settings-tab {
+    padding: 0.65rem 1.4rem;
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.settings-tab:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.settings-tab--active {
+    background: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+/* ─── Tab Content ────────────────────────────────────────────────────────── */
+.settings-tab-content {
+    animation: fadeIn 0.2s ease;
+}
+
+.settings-tab-content .settings-column {
+    max-width: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
 .settings-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
@@ -122,26 +179,46 @@
     display: grid;
     gap: 1.5rem;
     min-width: 0;
+    width: 100%;
 }
 
+/* ─── Card ───────────────────────────────────────────────────────────────── */
 .settings-card {
+    width: 100%;
     border: 1px solid #e7edf5;
     border-radius: 22px;
     background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
     box-shadow:
         0 10px 24px rgba(15, 23, 42, 0.05),
         0 1px 0 rgba(255, 255, 255, 0.9) inset;
-    overflow: hidden;
+    overflow: visible;
     min-width: 0;
+    box-sizing: border-box;
 }
 
+/* ─── Danger Card ────────────────────────────────────────────────────────── */
+.settings-card--danger {
+    border-color: #fecaca;
+    background: linear-gradient(180deg, #ffffff 0%, #fff8f8 100%);
+    box-shadow:
+        0 10px 24px rgba(220, 38, 38, 0.06),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+/* ─── Card Header ────────────────────────────────────────────────────────── */
 .settings-card__header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.5rem 1.5rem 0.5rem;
+    padding: 1.25rem 1.5rem;
     min-width: 0;
+    flex-wrap: wrap;
+}
+
+.settings-card__header-left {
+    min-width: 0;
+    flex: 1;
 }
 
 .settings-card__topline {
@@ -153,29 +230,46 @@
     letter-spacing: 0.08em;
 }
 
+.settings-card__topline--danger {
+    color: #dc2626;
+}
+
 .settings-card__header h2 {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 800;
     color: #111827;
+    white-space: nowrap;
+}
+
+.settings-card__header .primary-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.88rem;
 }
 
 .settings-card__body {
     padding: 0 1.5rem 1.6rem;
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .settings-card__body form {
     margin: 0;
     min-width: 0;
+    width: 100%;
 }
 
+/* ─── Form Grid ──────────────────────────────────────────────────────────── */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem 1.1rem;
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
 }
 
 .form-grid--single {
@@ -192,6 +286,7 @@
     gap: 0.5rem;
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
 }
 
 .form-group > * {
@@ -209,6 +304,7 @@
     color: #334155;
 }
 
+/* ─── Form Controls ──────────────────────────────────────────────────────── */
 .form-control-modern,
 ::deep .form-control-modern,
 ::deep input.form-control-modern,
@@ -303,6 +399,7 @@
     color: #94a3b8;
 }
 
+/* ─── Validation ─────────────────────────────────────────────────────────── */
 .validation-summary {
     margin-bottom: 1rem;
     padding: 0.9rem 1rem;
@@ -312,12 +409,17 @@
     color: #9a3412;
 }
 
+/* ─── Form Actions ───────────────────────────────────────────────────────── */
 .form-actions {
     margin-top: 1.35rem;
     display: flex;
+    gap: 0.75rem;
     justify-content: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
 .primary-btn,
 .secondary-btn,
 .danger-btn {
@@ -364,21 +466,99 @@
     box-shadow: 0 14px 28px rgba(220, 38, 38, 0.24);
 }
 
+.danger-btn:disabled,
+.secondary-btn:disabled,
+.primary-btn:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+}
+
+/* ─── Button Loading State ───────────────────────────────────────────────── */
+.btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.1rem;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    min-width: 160px;
+    white-space: nowrap;
+}
+
+/* Blau — für Speichern-Aktionen */
+.btn-loading--primary {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+/* Rot — für Löschen-Aktionen */
+.btn-loading--danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+/* ─── Spinner ────────────────────────────────────────────────────────────── */
+.btn-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: spin 0.7s linear infinite;
+}
+
+/* Blauer Spinner */
+.btn-spinner--white {
+    border: 2.5px solid #bfdbfe;
+    border-top-color: #2563eb;
+}
+
+/* Roter Spinner */
+.btn-spinner--danger {
+    border: 2.5px solid #fecaca;
+    border-top-color: #dc2626;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ─── Member Card — Deleting State ──────────────────────────────────────── */
+.member-card--deleting {
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+/* ─── Member List ────────────────────────────────────────────────────────── */
 .member-list {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     margin-top: 1.25rem;
 }
 
+/* ─── Member Card ────────────────────────────────────────────────────────── */
 .member-card {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.05rem;
+    gap: 0.85rem;
+    padding: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 18px;
     background: #f8fafc;
+    min-width: 0;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease;
 }
 
 .member-card__content {
@@ -390,61 +570,104 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.8rem;
+    gap: 0.5rem;
     margin-bottom: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .member-card__header h3 {
     margin: 0;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     font-weight: 800;
     color: #111827;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .member-stage {
     display: inline-flex;
     align-items: center;
-    padding: 0.3rem 0.65rem;
+    padding: 0.25rem 0.6rem;
     border-radius: 999px;
     background: #eef2ff;
     color: #4338ca;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 700;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
+/* ─── Member Info ────────────────────────────────────────────────────────── */
 .member-info-list {
     display: grid;
-    gap: 0.55rem;
+    gap: 0;
 }
 
 .member-info-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 0.45rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
     border-bottom: 1px dashed #e5e7eb;
+}
+
+.member-info-item:last-child {
+    border-bottom: none;
 }
 
 .member-info-item .label {
     color: #6b7280;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .member-info-item .value {
     color: #111827;
-    font-size: 0.92rem;
+    font-size: 0.85rem;
     font-weight: 700;
     text-align: right;
+    word-break: break-word;
+    min-width: 0;
 }
 
+/* ─── Member Card Actions ────────────────────────────────────────────────── */
 .member-card__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
     flex-shrink: 0;
-    padding: 5px;
+    margin-top: auto;
+    align-items: center;
 }
 
+.member-card__actions .secondary-btn,
+.member-card__actions .danger-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.82rem;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.member-card__actions .secondary-btn:hover,
+.member-card__actions .danger-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading im Member-Card Actions — volle Breite */
+.member-card__actions .btn-loading {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.82rem;
+    border-radius: 12px;
+}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
 .inline-empty-state {
     margin-top: 1.25rem;
     padding: 1rem 1.1rem;
@@ -452,6 +675,236 @@
     border-radius: 16px;
     background: #f8fafc;
     color: #64748b;
+}
+
+/* ─── Notification Toggle ────────────────────────────────────────────────── */
+.notification-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e7edf5;
+    margin-bottom: 1rem;
+}
+
+.notification-toggle__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-toggle__title {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.notification-toggle__desc {
+    margin: 0;
+    font-size: 0.83rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* ─── Toggle Switch ──────────────────────────────────────────────────────── */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cbd5e1;
+    border-radius: 999px;
+    transition: background-color 0.25s ease;
+    box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    transition: transform 0.25s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.30);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+}
+
+.toggle-switch input:focus-visible + .toggle-slider {
+    outline: 3px solid rgba(59, 130, 246, 0.45);
+    outline-offset: 2px;
+}
+
+/* ─── Toggle Status ──────────────────────────────────────────────────────── */
+.toggle-status {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.toggle-status--on  { color: #059669; }
+.toggle-status--off { color: #94a3b8; }
+
+/* ─── Family Form Panel ──────────────────────────────────────────────────── */
+.family-form-panel {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    background: #f0f7ff;
+    animation: fadeIn 0.2s ease;
+}
+
+.family-form-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+}
+
+.family-form-panel__header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e40af;
+}
+
+.icon-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #e0eaff;
+    color: #3b82f6;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+    flex-shrink: 0;
+}
+
+.icon-close-btn:hover {
+    background: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.icon-close-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ─── Delete Account Warning ─────────────────────────────────────────────── */
+.delete-account-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.1rem 1.25rem;
+    border-radius: 16px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+.delete-account-warning__icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.delete-account-warning__text {
+    font-size: 0.92rem;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.delete-account-warning__text strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #92400e;
+    font-size: 0.95rem;
+}
+
+.delete-account-warning__text p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* ─── Delete Confirm Panel ───────────────────────────────────────────────── */
+.delete-confirm-panel {
+    padding: 1.25rem;
+    border: 1.5px solid #fecaca;
+    border-radius: 18px;
+    background: #fff8f8;
+    animation: fadeIn 0.2s ease;
+}
+
+.delete-confirm-panel__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+}
+
+.delete-confirm-panel__icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.delete-confirm-panel__title {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #b91c1c;
+    margin-bottom: 0.3rem;
+}
+
+.delete-confirm-panel__subtitle {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+    .member-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 992px) {
@@ -473,8 +926,34 @@
         font-size: 1.8rem;
     }
 
+    .settings-tabs {
+        width: 100%;
+    }
+
+    .settings-tab {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    .settings-tab-content .settings-column {
+        max-width: 100%;
+    }
+
     .settings-card__header {
-        padding: 1.25rem 1.1rem 0.4rem;
+        padding: 1.1rem 1.1rem 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .settings-card__header h2 {
+        font-size: 1.15rem;
+        white-space: normal;
+    }
+
+    .settings-card__header .primary-btn {
+        width: 100%;
+        text-align: center;
     }
 
     .settings-card__body {
@@ -486,25 +965,29 @@
         gap: 1rem;
     }
 
-    .member-card {
-        flex-direction: column;
-        align-items: stretch;
+    .member-list {
+        grid-template-columns: 1fr;
     }
 
-    .member-card__header,
-    .member-info-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .member-info-item .value {
-        text-align: left;
-    }
-
+    .member-card__actions .secondary-btn,
     .member-card__actions .danger-btn,
+    .member-card__actions .btn-loading,
     .form-actions .primary-btn,
     .form-actions .secondary-btn,
-    .form-actions .danger-btn {
+    .form-actions .danger-btn,
+    .form-actions .btn-loading {
         width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .delete-account-warning {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .delete-confirm-panel__header {
+        flex-direction: column;
+        gap: 0.6rem;
     }
 }

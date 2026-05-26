@@ -4,6 +4,8 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAppointmentService AppointmentService
+@inject NavigationManager NavigationManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <PageTitle>Settings</PageTitle>
 
@@ -17,6 +19,21 @@
             </p>
         </div>
     </section>
+
+    <nav class="settings-tabs">
+        <button class="settings-tab @(activeTab == "profile"  ? "settings-tab--active" : "")"
+                @onclick='() => SetTab("profile")'>
+            👤 Profil
+        </button>
+        <button class="settings-tab @(activeTab == "family"   ? "settings-tab--active" : "")"
+                @onclick='() => SetTab("family")'>
+            👨‍👩‍👧 Familie
+        </button>
+        <button class="settings-tab @(activeTab == "security" ? "settings-tab--active" : "")"
+                @onclick='() => SetTab("security")'>
+            🔒 Sicherheit
+        </button>
+    </nav>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -40,310 +57,604 @@
         </div>
     }
 
-    <div class="settings-layout">
-        <div class="settings-column">
-            <section class="settings-card">
-                <div class="settings-card__header">
-                    <div>
-                        <div class="settings-card__topline">Profil</div>
-                        <h2>Persönliche Daten</h2>
+    <div class="settings-tab-content">
+
+        @* ── Tab: Profil ───────────────────────────────────────────────── *@
+        @if (activeTab == "profile")
+        {
+            <div class="settings-column">
+                <section class="settings-card">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline">Profil</div>
+                            <h2>Persönliche Daten</h2>
+                        </div>
                     </div>
-                </div>
-
-                <div class="settings-card__body">
-                    <EditForm Model="user" OnValidSubmit="UpdateUser">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="validation-summary" />
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="firstName">Vorname</label>
-                                <InputText id="firstName" @bind-Value="user.FirstName" class="form-control-modern" />
+                    <div class="settings-card__body">
+                        <EditForm Model="user" OnValidSubmit="UpdateUser">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="validation-summary" />
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="firstName">Vorname</label>
+                                    <InputText id="firstName" @bind-Value="user.FirstName" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Nachname</label>
+                                    <InputText id="lastName" @bind-Value="user.LastName" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="pfadiname">Pfadiname</label>
+                                    <InputText id="pfadiname" @bind-Value="user.Pfadiname" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="stufe">Stufe</label>
+                                    <InputSelect id="stufe" @bind-Value="user.Stufe" class="form-control-modern">
+                                        <option value="">Select stage</option>
+                                        <option value="Biber">Biber</option>
+                                        <option value="Wolf">Wolf</option>
+                                        <option value="Pfadi">Pfadi</option>
+                                        <option value="Pio">Pio</option>
+                                        <option value="Leiter">Leiter</option>
+                                        <option value="Sonstiges">Sonstiges</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="form-group">
+                                    <label for="birthday">Geburtstag</label>
+                                    <InputDate id="birthday" @bind-Value="user.Birthday" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="phoneNumber">Telefonnummer</label>
+                                    <InputText id="phoneNumber" @bind-Value="user.PhoneNumber"
+                                               class="form-control-modern" placeholder="+41 41 750 06 49" />
+                                </div>
+                                <div class="form-group form-group--full">
+                                    <label for="email">Email</label>
+                                    <InputText id="email" @bind-Value="user.Email" class="form-control-modern" />
+                                </div>
                             </div>
-
-                            <div class="form-group">
-                                <label for="lastName">Nachname</label>
-                                <InputText id="lastName" @bind-Value="user.LastName" class="form-control-modern" />
+                            <div class="form-actions">
+                                @if (isSavingProfile)
+                                {
+                                    <div class="btn-loading btn-loading--primary">
+                                        <span class="btn-spinner btn-spinner--blue"></span>
+                                        <span>Wird gespeichert...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="primary-btn">Daten speichern</button>
+                                }
                             </div>
-
-                            <div class="form-group">
-                                <label for="pfadiname">Pfadiname</label>
-                                <InputText id="pfadiname" @bind-Value="user.Pfadiname" class="form-control-modern" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="stufe">Stufe</label>
-                                <InputSelect id="stufe" @bind-Value="user.Stufe" class="form-control-modern">
-                                    <option value="">Select stage</option>
-                                    <option value="Biber">Biber</option>
-                                    <option value="Wolf">Wolf</option>
-                                    <option value="Pfadi">Pfadi</option>
-                                    <option value="Pio">Pio</option>
-                                    <option value="Leiter">Leiter</option>
-                                    <option value="Sonstiges">Sonstiges</option>
-                                </InputSelect>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="birthday">Geburtstag</label>
-                                <InputDate id="birthday" @bind-Value="user.Birthday" class="form-control-modern" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phoneNumber">Telefonnummer</label>
-                                <InputText id="phoneNumber" @bind-Value="user.PhoneNumber" class="form-control-modern" placeholder="+41 41 750 06 49" />
-                            </div>
-
-                            <div class="form-group form-group--full">
-                                <label for="email">Email</label>
-                                <InputText id="email" @bind-Value="user.Email" class="form-control-modern" />
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="primary-btn">Daten speichern</button>
-                        </div>
-                    </EditForm>
-                </div>
-            </section>
-
-            <section class="settings-card">
-                <div class="settings-card__header">
-                    <div>
-                        <div class="settings-card__topline">Familie</div>
-                        <h2>Familienmitglieder</h2>
+                        </EditForm>
                     </div>
-                </div>
+                </section>
 
-                <div class="settings-card__body">
-                    <EditForm Model="familyMemberForm" OnValidSubmit="SaveFamilyMember">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="validation-summary" />
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="familyFirstName">Vorname</label>
-                                <InputText id="familyFirstName" @bind-Value="familyMemberForm.FirstName" class="form-control-modern" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="familyLastName">Nachname</label>
-                                <InputText id="familyLastName" @bind-Value="familyMemberForm.LastName" class="form-control-modern" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="familyPfadiname">Pfadiname</label>
-                                <InputText id="familyPfadiname" @bind-Value="familyMemberForm.Pfadiname" class="form-control-modern" />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="familyStufe">Stufe</label>
-                                <InputSelect id="familyStufe" @bind-Value="familyMemberForm.Stufe" class="form-control-modern">
-                                    <option value="">Select stage</option>
-                                    <option value="Biber">Biber</option>
-                                    <option value="Wolf">Wolf</option>
-                                    <option value="Pfadi">Pfadi</option>
-                                    <option value="Pio">Pio</option>
-                                    <option value="Leiter">Leiter</option>
-                                    <option value="Sonstiges">Sonstiges</option>
-                                </InputSelect>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="familyBirthday">Geburtstag</label>
-                                <InputDate id="familyBirthday" @bind-Value="familyMemberForm.Birthday" class="form-control-modern" />
-                            </div>
+                <section class="settings-card">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline">Benachrichtigungen</div>
+                            <h2>E-Mail Einstellungen</h2>
                         </div>
+                    </div>
+                    <div class="settings-card__body">
+                        <div class="notification-toggle">
+                            <div class="notification-toggle__info">
+                                <p class="notification-toggle__title">Bestätigungs-Mails</p>
+                                <p class="notification-toggle__desc">
+                                    Erhalte eine E-Mail bei Anmeldung und Stornierung.
+                                    Admin-Benachrichtigungen werden immer gesendet.
+                                </p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       @bind="user.EmailNotificationsEnabled"
+                                       @bind:after="SaveNotificationSetting" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <p class="toggle-status @(user.EmailNotificationsEnabled ? "toggle-status--on" : "toggle-status--off")">
+                            @(user.EmailNotificationsEnabled
+                                ? "✅ E-Mail Benachrichtigungen sind aktiv"
+                                : "🔕 E-Mail Benachrichtigungen sind deaktiviert")
+                        </p>
+                    </div>
+                </section>
+            </div>
+        }
 
-                        <div class="form-actions">
-                            <button type="submit" class="secondary-btn">
-                                @(isEditingFamilyMember ? "Familienmitglied speichern" : "Familienmitglied hinzufügen")
+        @* ── Tab: Familie ──────────────────────────────────────────────── *@
+        @if (activeTab == "family")
+        {
+            <div class="settings-column">
+                <section class="settings-card">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline">Familie</div>
+                            <h2>Familienmitglieder</h2>
+                        </div>
+                        @if (!showFamilyForm && !isEditingFamilyMember)
+                        {
+                            <button class="primary-btn"
+                                    disabled="@(isDeletingMember != null || isSavingMember)"
+                                    @onclick="OpenFamilyForm">
+                                + Mitglied hinzufügen
                             </button>
-                            @if (isEditingFamilyMember)
-                            {
-                                <button type="button" class="secondary-btn" @onclick="CancelFamilyEdit">Abbrechen</button>
-                            }
-                        </div>
-                    </EditForm>
-
-                    @if (familyMembers.Any())
-                    {
-                        <div class="member-list">
-                            @foreach (var member in familyMembers)
-                            {
-                                <article class="member-card">
-                                    <div class="member-card__content">
-                                        <div class="member-card__header">
-                                            <h3>@member.FirstName @member.LastName</h3>
-                                            <span class="member-stage">@member.Stufe</span>
-                                        </div>
-
-                                        <div class="member-info-list">
-                                            <div class="member-info-item">
-                                                <span class="label">Pfadiname</span>
-                                                <span class="value">@member.Pfadiname</span>
-                                            </div>
-                                            <div class="member-info-item">
-                                                <span class="label">Geburtstag</span>
-                                                <span class="value">@member.Birthday.ToShortDateString()</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="member-card__actions">
-                                        <button class="secondary-btn" @onclick="() => EditFamilyMember(member)">Bearbeiten</button>
-                                        <button class="danger-btn" @onclick="() => RemoveFamilyMember(member.Id)">Löschen</button>
-                                    </div>
-                                </article>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="inline-empty-state">
-                            <p>Noch keine Familienmitglieder hinterlegt.</p>
-                        </div>
-                    }
-                </div>
-            </section>
-        </div>
-
-        <div class="settings-column">
-            <section class="settings-card">
-                <div class="settings-card__header">
-                    <div>
-                        <div class="settings-card__topline">Sicherheit</div>
-                        <h2>Passwort ändern</h2>
+                        }
                     </div>
-                </div>
 
-                <div class="settings-card__body">
-                    <EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="validation-summary" />
+                    <div class="settings-card__body">
 
-                        <div class="form-grid form-grid--single">
-                            <div class="form-group">
-                                <label for="currentPassword">Aktuelles Passwort</label>
-                                <InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword" type="password" class="form-control-modern" />
+                        @* ── Einklappbares Formular ── *@
+                        @if (showFamilyForm || isEditingFamilyMember)
+                        {
+                            <div class="family-form-panel">
+                                <div class="family-form-panel__header">
+                                    <h3>@(isEditingFamilyMember ? "Mitglied bearbeiten" : "Neues Mitglied")</h3>
+                                    <button class="icon-close-btn"
+                                            disabled="@isSavingMember"
+                                            @onclick="CancelFamilyEdit"
+                                            title="Schliessen">✕</button>
+                                </div>
+
+                                <EditForm Model="familyMemberForm" OnValidSubmit="SaveFamilyMember">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="validation-summary" />
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="familyFirstName">Vorname</label>
+                                            <InputText id="familyFirstName" @bind-Value="familyMemberForm.FirstName"
+                                                       class="form-control-modern" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="familyLastName">Nachname</label>
+                                            <InputText id="familyLastName" @bind-Value="familyMemberForm.LastName"
+                                                       class="form-control-modern" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="familyPfadiname">Pfadiname</label>
+                                            <InputText id="familyPfadiname" @bind-Value="familyMemberForm.Pfadiname"
+                                                       class="form-control-modern" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="familyStufe">Stufe</label>
+                                            <InputSelect id="familyStufe" @bind-Value="familyMemberForm.Stufe"
+                                                         class="form-control-modern">
+                                                <option value="">Select stage</option>
+                                                <option value="Biber">Biber</option>
+                                                <option value="Wolf">Wolf</option>
+                                                <option value="Pfadi">Pfadi</option>
+                                                <option value="Pio">Pio</option>
+                                                <option value="Leiter">Leiter</option>
+                                                <option value="Sonstiges">Sonstiges</option>
+                                            </InputSelect>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="familyBirthday">Geburtstag</label>
+                                            <InputDate id="familyBirthday" @bind-Value="familyMemberForm.Birthday"
+                                                       class="form-control-modern" />
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        @if (isSavingMember)
+                                        {
+                                            <div class="btn-loading btn-loading--primary">
+                                                <span class="btn-spinner btn-spinner--blue"></span>
+                                                <span>Wird gespeichert...</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="primary-btn">
+                                                @(isEditingFamilyMember ? "Speichern" : "Hinzufügen")
+                                            </button>
+                                            <button type="button" class="secondary-btn" @onclick="CancelFamilyEdit">
+                                                Abbrechen
+                                            </button>
+                                        }
+                                    </div>
+                                </EditForm>
                             </div>
+                        }
 
-                            <div class="form-group">
-                                <label for="newPassword">Neues Passwort</label>
-                                <InputText id="newPassword" @bind-Value="passwordModel.NewPassword" type="password" class="form-control-modern" />
-                            </div>
+                        @* ── Mitgliederliste ── *@
+                        @if (familyMembers.Any())
+                        {
+                            <div class="member-list">
+                                @foreach (var member in familyMembers)
+                                {
+                                    <article class="member-card @(isDeletingMember == member.Id ? "member-card--deleting" : "")">
+                                        <div class="member-card__content">
+                                            <div class="member-card__header">
+                                                <h3>@member.FirstName @member.LastName</h3>
+                                                <span class="member-stage">@member.Stufe</span>
+                                            </div>
+                                            <div class="member-info-list">
+                                                <div class="member-info-item">
+                                                    <span class="label">Pfadiname</span>
+                                                    <span class="value">@member.Pfadiname</span>
+                                                </div>
+                                                <div class="member-info-item">
+                                                    <span class="label">Geburtstag</span>
+                                                    <span class="value">@member.Birthday.ToShortDateString()</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                            <div class="form-group">
-                                <label for="confirmPassword">Neues Passwort bestätigen</label>
-                                <InputText id="confirmPassword" @bind-Value="passwordModel.ConfirmPassword" type="password" class="form-control-modern" />
+                                        <div class="member-card__actions">
+                                            @if (isDeletingMember == member.Id)
+                                            {
+                                                <div class="btn-loading btn-loading--danger">
+                                                    <span class="btn-spinner btn-spinner--red"></span>
+                                                    <span>Wird gelöscht...</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <button class="secondary-btn"
+                                                        disabled="@(isDeletingMember != null || isSavingMember)"
+                                                        @onclick="() => EditFamilyMember(member)">
+                                                    Bearbeiten
+                                                </button>
+                                                <button class="danger-btn"
+                                                        disabled="@(isDeletingMember != null || isSavingMember)"
+                                                        @onclick="() => RemoveFamilyMember(member.Id)">
+                                                    Löschen
+                                                </button>
+                                            }
+                                        </div>
+                                    </article>
+                                }
                             </div>
+                        }
+                        else if (!showFamilyForm && !isEditingFamilyMember)
+                        {
+                            <div class="inline-empty-state">
+                                <p>Noch keine Familienmitglieder hinterlegt.</p>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+
+        @* ── Tab: Sicherheit ───────────────────────────────────────────── *@
+        @if (activeTab == "security")
+        {
+            <div class="settings-column">
+
+                @* ── Passwort ändern ── *@
+                <section class="settings-card">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline">Sicherheit</div>
+                            <h2>Passwort ändern</h2>
                         </div>
+                    </div>
+                    <div class="settings-card__body">
+                        <EditForm Model="passwordModel" OnValidSubmit="ChangePassword">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="validation-summary" />
+                            <div class="form-grid form-grid--single">
+                                <div class="form-group">
+                                    <label for="currentPassword">Aktuelles Passwort</label>
+                                    <InputText id="currentPassword" @bind-Value="passwordModel.CurrentPassword"
+                                               type="password" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="newPassword">Neues Passwort</label>
+                                    <InputText id="newPassword" @bind-Value="passwordModel.NewPassword"
+                                               type="password" class="form-control-modern" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">Neues Passwort bestätigen</label>
+                                    <InputText id="confirmPassword" @bind-Value="passwordModel.ConfirmPassword"
+                                               type="password" class="form-control-modern" />
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                @if (isSavingPassword)
+                                {
+                                    <div class="btn-loading btn-loading--primary">
+                                        <span class="btn-spinner btn-spinner--blue"></span>
+                                        <span>Wird gespeichert...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="primary-btn">Passwort ändern</button>
+                                }
+                            </div>
+                        </EditForm>
+                    </div>
+                </section>
 
-                        <div class="form-actions">
-                            <button type="submit" class="primary-btn">Passwort ändern</button>
+                @* ── Konto löschen ── *@
+                <section class="settings-card settings-card--danger">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline settings-card__topline--danger">Konto verwalten</div>
+                            <h2>Konto löschen</h2>
                         </div>
-                    </EditForm>
-                </div>
-            </section>
-        </div>
+                    </div>
+                    <div class="settings-card__body">
+
+                        @if (!showDeleteConfirm)
+                        {
+                            <div class="delete-account-info">
+                                <div class="delete-account-warning">
+                                    <span class="delete-account-warning__icon">⚠️</span>
+                                    <div class="delete-account-warning__text">
+                                        <strong>Diese Aktion kann nicht rückgängig gemacht werden.</strong>
+                                        <p>
+                                            Dein Konto, alle persönlichen Daten und Familienmitglieder
+                                            werden dauerhaft gelöscht. Bestehende Anmeldungen bleiben
+                                            im System erhalten.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="danger-btn" @onclick="ShowDeleteConfirm">
+                                        🗑️ Konto löschen
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="delete-confirm-panel">
+                                <div class="delete-confirm-panel__header">
+                                    <span class="delete-confirm-panel__icon">🚨</span>
+                                    <div>
+                                        <strong class="delete-confirm-panel__title">Bist du sicher?</strong>
+                                        <p class="delete-confirm-panel__subtitle">
+                                            Gib dein Passwort ein, um dein Konto endgültig zu löschen.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid form-grid--single">
+                                    <div class="form-group">
+                                        <label for="deletePassword">Passwort zur Bestätigung</label>
+                                        <InputText id="deletePassword"
+                                                   @bind-Value="deleteConfirmPassword"
+                                                   type="password"
+                                                   class="form-control-modern"
+                                                   placeholder="Dein aktuelles Passwort" />
+                                    </div>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(deleteErrorMessage))
+                                {
+                                    <div class="state-card state-card--error" style="margin: 0.75rem 0 0;">
+                                        <div class="state-card__icon">⚠️</div>
+                                        <div class="state-card__content">
+                                            <p>@deleteErrorMessage</p>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="form-actions">
+                                    @if (isDeletingAccount)
+                                    {
+                                        <div class="btn-loading btn-loading--danger">
+                                            <span class="btn-spinner btn-spinner--red"></span>
+                                            <span>Konto wird gelöscht...</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="danger-btn"
+                                                @onclick="DeleteAccount">
+                                            🗑️ Ja, Konto endgültig löschen
+                                        </button>
+                                        <button type="button"
+                                                class="secondary-btn"
+                                                @onclick="CancelDeleteConfirm">
+                                            Abbrechen
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </section>
+
+            </div>
+        }
+
     </div>
 </div>
 
 @code {
-    private ApplicationUser user = new();
-    private PasswordChangeModel passwordModel = new();
-    private FamilyMember familyMemberForm = new();
-    private bool isEditingFamilyMember = false;
-    private List<FamilyMember> familyMembers = new();
-    private string errorMessage = string.Empty;
-    private string successMessage = string.Empty;
+    private ApplicationUser    user             = new();
+    private PasswordChangeModel passwordModel   = new();
+    private FamilyMember       familyMemberForm = new();
+    private bool  isEditingFamilyMember         = false;
+    private List<FamilyMember> familyMembers    = new();
+    private string errorMessage                 = string.Empty;
+    private string successMessage               = string.Empty;
+    private string activeTab                    = "profile";
+    private bool   showFamilyForm               = false;
+
+    // ── Loading States ────────────────────────────────────────────────────────
+    private int?  isDeletingMember              = null;
+    private bool  isSavingMember                = false;
+    private bool  isSavingProfile               = false;
+    private bool  isSavingPassword              = false;
+
+    // ── Konto löschen ─────────────────────────────────────────────────────────
+    private bool   showDeleteConfirm            = false;
+    private bool   isDeletingAccount            = false;
+    private string deleteConfirmPassword        = string.Empty;
+    private string deleteErrorMessage           = string.Empty;
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void SetTab(string tab)
+    {
+        activeTab             = tab;
+        errorMessage          = string.Empty;
+        successMessage        = string.Empty;
+        showDeleteConfirm     = false;
+        deleteConfirmPassword = string.Empty;
+        deleteErrorMessage    = string.Empty;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState   = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var currentUser = authState.User;
         if (currentUser.Identity?.IsAuthenticated == true)
         {
             var foundUser = await UserManager.GetUserAsync(currentUser);
             if (foundUser is not null)
             {
-                user = foundUser;
+                user          = foundUser;
                 familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
             }
         }
     }
 
-    private async Task SaveFamilyMember()
+    // ── Benachrichtigung speichern ────────────────────────────────────────────
+    private async Task SaveNotificationSetting()
     {
-        if (user.Id == null)
+        try
         {
-            errorMessage = "User not found.";
-            return;
+            await UserManager.UpdateAsync(user);
+            successMessage = user.EmailNotificationsEnabled
+                ? "E-Mail Benachrichtigungen aktiviert."
+                : "E-Mail Benachrichtigungen deaktiviert.";
+            errorMessage = string.Empty;
         }
-
-        if (isEditingFamilyMember && familyMemberForm.Id != 0)
+        catch
         {
-            await AppointmentService.UpdateFamilyMemberAsync(familyMemberForm.Id, user.Id, familyMemberForm);
-            successMessage = "Familienmitglied aktualisiert.";
+            errorMessage   = "Einstellung konnte nicht gespeichert werden.";
+            successMessage = string.Empty;
         }
-        else
-        {
-            await AppointmentService.AddFamilyMemberAsync(user.Id, familyMemberForm);
-            successMessage = "Familienmitglied hinzugefügt.";
-        }
-
-        familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
-        familyMemberForm = new FamilyMember();
-        isEditingFamilyMember = false;
-        errorMessage = string.Empty;
     }
 
+    // ── Formular öffnen ───────────────────────────────────────────────────────
+    private void OpenFamilyForm()
+    {
+        showFamilyForm        = true;
+        familyMemberForm      = new FamilyMember();
+        isEditingFamilyMember = false;
+        errorMessage          = string.Empty;
+        successMessage        = string.Empty;
+    }
+
+    // ── Familienmitglied speichern mit Loading ────────────────────────────────
+    private async Task SaveFamilyMember()
+    {
+        if (user.Id == null) { errorMessage = "User not found."; return; }
+
+        isSavingMember = true;
+        StateHasChanged();
+
+        try
+        {
+            if (isEditingFamilyMember && familyMemberForm.Id != 0)
+            {
+                await AppointmentService.UpdateFamilyMemberAsync(
+                    familyMemberForm.Id, user.Id, familyMemberForm);
+                successMessage = "Familienmitglied aktualisiert.";
+            }
+            else
+            {
+                await AppointmentService.AddFamilyMemberAsync(user.Id, familyMemberForm);
+                successMessage = "Familienmitglied hinzugefügt.";
+            }
+
+            familyMembers         = await AppointmentService.GetFamilyMembersAsync(user.Id);
+            familyMemberForm      = new FamilyMember();
+            isEditingFamilyMember = false;
+            showFamilyForm        = false;
+            errorMessage          = string.Empty;
+        }
+        catch
+        {
+            errorMessage   = "Fehler beim Speichern des Familienmitglieds.";
+            successMessage = string.Empty;
+        }
+        finally
+        {
+            isSavingMember = false;
+            StateHasChanged();
+        }
+    }
+
+    // ── Familienmitglied bearbeiten ───────────────────────────────────────────
     private void EditFamilyMember(FamilyMember member)
     {
         familyMemberForm = new FamilyMember
         {
-            Id = member.Id,
-            UserId = member.UserId,
+            Id        = member.Id,
+            UserId    = member.UserId,
             FirstName = member.FirstName,
-            LastName = member.LastName,
+            LastName  = member.LastName,
             Pfadiname = member.Pfadiname,
-            Stufe = member.Stufe,
-            Birthday = member.Birthday
+            Stufe     = member.Stufe,
+            Birthday  = member.Birthday
         };
         isEditingFamilyMember = true;
-        successMessage = string.Empty;
-        errorMessage = string.Empty;
+        showFamilyForm        = true;
+        successMessage        = string.Empty;
+        errorMessage          = string.Empty;
     }
 
+    // ── Formular abbrechen ────────────────────────────────────────────────────
     private void CancelFamilyEdit()
     {
-        familyMemberForm = new FamilyMember();
+        familyMemberForm      = new FamilyMember();
         isEditingFamilyMember = false;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
+        showFamilyForm        = false;
+        errorMessage          = string.Empty;
+        successMessage        = string.Empty;
     }
 
+    // ── Familienmitglied löschen mit Loading ──────────────────────────────────
     private async Task RemoveFamilyMember(int familyMemberId)
     {
-        if (user.Id == null)
-        {
-            errorMessage = "User not found.";
-            return;
-        }
+        if (user.Id == null) { errorMessage = "User not found."; return; }
 
-        await AppointmentService.DeleteFamilyMemberAsync(familyMemberId, user.Id);
-        familyMembers = await AppointmentService.GetFamilyMembersAsync(user.Id);
+        isDeletingMember = familyMemberId;
+        StateHasChanged();
+
+        try
+        {
+            await AppointmentService.DeleteFamilyMemberAsync(familyMemberId, user.Id);
+            familyMembers  = await AppointmentService.GetFamilyMembersAsync(user.Id);
+            successMessage = "Familienmitglied gelöscht.";
+            errorMessage   = string.Empty;
+        }
+        catch
+        {
+            errorMessage   = "Fehler beim Löschen des Familienmitglieds.";
+            successMessage = string.Empty;
+        }
+        finally
+        {
+            isDeletingMember = null;
+            StateHasChanged();
+        }
     }
 
+    // ── Profil speichern mit Loading ──────────────────────────────────────────
     private async Task UpdateUser()
     {
+        isSavingProfile = true;
+        StateHasChanged();
+
         try
         {
             var result = await UserManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                successMessage = "Data updated successfully.";
-                errorMessage = string.Empty;
+                successMessage = "Daten erfolgreich gespeichert.";
+                errorMessage   = string.Empty;
             }
             else
             {
@@ -352,48 +663,118 @@
         }
         catch
         {
-            errorMessage = "Failed to update data.";
+            errorMessage   = "Fehler beim Speichern.";
             successMessage = string.Empty;
+        }
+        finally
+        {
+            isSavingProfile = false;
+            StateHasChanged();
         }
     }
 
+    // ── Passwort ändern mit Loading ───────────────────────────────────────────
     private async Task ChangePassword()
     {
-        errorMessage = string.Empty;
+        errorMessage   = string.Empty;
         successMessage = string.Empty;
 
         if (passwordModel.NewPassword != passwordModel.ConfirmPassword)
         {
-            errorMessage = "Passwords do not match.";
+            errorMessage = "Passwörter stimmen nicht überein.";
             return;
         }
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var currentUser = authState.User;
-        var foundUser = await UserManager.GetUserAsync(currentUser);
+        isSavingPassword = true;
+        StateHasChanged();
 
-        if (foundUser == null)
+        try
         {
-            errorMessage = "User not found.";
-            return;
-        }
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var foundUser = await UserManager.GetUserAsync(authState.User);
+            if (foundUser == null) { errorMessage = "User not found."; return; }
 
-        var result = await UserManager.ChangePasswordAsync(foundUser, passwordModel.CurrentPassword, passwordModel.NewPassword);
-        if (result.Succeeded)
-        {
-            successMessage = "Password changed successfully.";
-            passwordModel = new PasswordChangeModel();
+            var result = await UserManager.ChangePasswordAsync(
+                foundUser, passwordModel.CurrentPassword, passwordModel.NewPassword);
+
+            if (result.Succeeded)
+            {
+                successMessage = "Passwort erfolgreich geändert.";
+                passwordModel  = new PasswordChangeModel();
+            }
+            else
+            {
+                errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            }
         }
-        else
+        catch
         {
-            errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+            errorMessage = "Fehler beim Ändern des Passworts.";
+        }
+        finally
+        {
+            isSavingPassword = false;
+            StateHasChanged();
         }
     }
+
+    // ── Konto löschen ─────────────────────────────────────────────────────────
+    private void ShowDeleteConfirm()
+    {
+        showDeleteConfirm     = true;
+        deleteConfirmPassword = string.Empty;
+        deleteErrorMessage    = string.Empty;
+    }
+
+    private void CancelDeleteConfirm()
+    {
+        showDeleteConfirm     = false;
+        deleteConfirmPassword = string.Empty;
+        deleteErrorMessage    = string.Empty;
+    }
+
+    private async Task DeleteAccount()
+    {
+        deleteErrorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(deleteConfirmPassword))
+        {
+            deleteErrorMessage = "Bitte gib dein Passwort ein.";
+            return;
+        }
+
+        isDeletingAccount = true;
+        StateHasChanged();
+
+        try
+        {
+            var passwordOk = await UserManager.CheckPasswordAsync(user, deleteConfirmPassword);
+            if (!passwordOk)
+            {
+                deleteErrorMessage = "Das eingegebene Passwort ist falsch.";
+                isDeletingAccount  = false;
+                return;
+            }
+
+            foreach (var member in familyMembers)
+                await AppointmentService.DeleteFamilyMemberAsync(member.Id, user.Id);
+
+            await UserManager.DeleteAsync(user);
+            NavigationManager.NavigateTo("/Identity/Account/LogoutDeleted", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            deleteErrorMessage = $"Fehler: {ex.Message}";
+            isDeletingAccount  = false;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     private class PasswordChangeModel
     {
         public string CurrentPassword { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
+        public string NewPassword     { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

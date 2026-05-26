@@ -110,17 +110,19 @@
 /* ── Formular-Block ───────────────────────────────────────────────────────── */
 .pickup-block[b-b67f4d8u8h] {
     margin-bottom: 1.25rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    background: #ffffff;
-    box-shadow: 0 4px 16px rgba(15,23,42,.05);
+    border: 1px solid #e7edf5;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+    box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.05),
+        0 1px 0 rgba(255, 255, 255, 0.9) inset;
     overflow: hidden;
 }
 
 .pickup-block__header[b-b67f4d8u8h] {
     display: flex;
     align-items: center;
-    padding: 1rem 1.25rem;
+    padding: 1rem 1.5rem;
     background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
     color: #ffffff;
 }
@@ -134,7 +136,7 @@
 }
 
 .pickup-block__body[b-b67f4d8u8h] {
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1.5rem 1.5rem 1.75rem;
     background: #ffffff;
 }
 
@@ -162,7 +164,6 @@
     margin-top: .2rem;
     accent-color: #2563eb;
     cursor: pointer;
-    border-radius: 4px;
 }
 
 .pickup-consent__text[b-b67f4d8u8h] {
@@ -192,15 +193,15 @@
 /* ── Grid-Layouts ─────────────────────────────────────────────────────────── */
 .pickup-grid[b-b67f4d8u8h] {
     display: grid;
-    gap: 1.1rem;
+    gap: 1.25rem 1.1rem;
 }
 
 .pickup-grid--2[b-b67f4d8u8h] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.pickup-grid--3[b-b67f4d8u8h] {
-    grid-template-columns: 1fr 140px 1fr;
+.pickup-grid--plz-ort[b-b67f4d8u8h] {
+    grid-template-columns: 1fr 2fr;
 }
 
 .pickup-field--full[b-b67f4d8u8h] {
@@ -211,102 +212,182 @@
 .pickup-field[b-b67f4d8u8h] {
     display: flex;
     flex-direction: column;
-    gap: .5rem;
+    gap: 0.5rem;
+    min-width: 0;
 }
 
 .pickup-field label[b-b67f4d8u8h] {
-    font-size: .88rem;
+    display: flex;
+    flex-wrap: wrap;           /* ← Hint bricht sauber um */
+    align-items: baseline;
+    gap: 0.2rem 0.4rem;
+    font-size: 0.92rem;
     font-weight: 700;
-    color: #374151;
+    color: #334155;
     letter-spacing: .01em;
+    line-height: 1.4;
 }
 
+/* ── Label Hint — inline (Desktop) ───────────────────────────────────────── */
 .pickup-label-hint[b-b67f4d8u8h] {
-    margin-left: .4rem;
     font-size: .8rem;
     font-weight: 500;
     color: #9ca3af;
+    white-space: nowrap;
 }
 
-/* ── Input ────────────────────────────────────────────────────────────────── */
-.pickup-input[b-b67f4d8u8h] {
-    width: 100%;
-    padding: .75rem 1rem;
-    border: 1.5px solid #d1d5db;
-    border-radius: 10px;
-    background: #f9fafb;
-    color: #111827;
-    font-size: .95rem;
-    font-family: inherit;
-    line-height: 1.5;
-    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+/* ── Label Hint — Block (neue Zeile auf Mobile) ───────────────────────────── */
+.pickup-label-hint--block[b-b67f4d8u8h] {
+    display: inline;           /* Desktop: inline neben Label */
+}
+
+/* ─── Form Controls ──────────────────────────────────────────────────────── */
+.form-control-modern[b-b67f4d8u8h],
+[b-b67f4d8u8h] .form-control-modern,
+[b-b67f4d8u8h] input.form-control-modern,
+[b-b67f4d8u8h] select.form-control-modern,
+[b-b67f4d8u8h] textarea.form-control-modern {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    height: 3.35rem;
+    min-height: 3.35rem;
+    margin: 0;
+    padding: 0.95rem 1rem;
+    border: 1px solid #dbe3ef;
+    border-radius: 14px;
+    background: #f8fbff;
+    color: #0f172a;
+    font-size: 0.97rem;
+    line-height: 1.2;
     box-sizing: border-box;
+    box-shadow:
+        inset 0 1px 2px rgba(15, 23, 42, 0.03),
+        0 1px 0 rgba(255, 255, 255, 0.6);
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.form-control-modern:hover[b-b67f4d8u8h],
+[b-b67f4d8u8h] .form-control-modern:hover,
+[b-b67f4d8u8h] input.form-control-modern:hover,
+[b-b67f4d8u8h] select.form-control-modern:hover,
+[b-b67f4d8u8h] textarea.form-control-modern:hover {
+    border-color: #b8c7db;
+    background: #ffffff;
+}
+
+.form-control-modern:focus[b-b67f4d8u8h],
+[b-b67f4d8u8h] .form-control-modern:focus,
+[b-b67f4d8u8h] input.form-control-modern:focus,
+[b-b67f4d8u8h] select.form-control-modern:focus,
+[b-b67f4d8u8h] textarea.form-control-modern:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow:
+        0 0 0 4px rgba(59, 130, 246, 0.12),
+        0 8px 20px rgba(37, 99, 235, 0.08);
+}
+
+[b-b67f4d8u8h] input.form-control-modern,
+[b-b67f4d8u8h] select.form-control-modern,
+[b-b67f4d8u8h] .form-group input,
+[b-b67f4d8u8h] .form-group select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+[b-b67f4d8u8h] select.form-control-modern {
     appearance: none;
     -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 3rem;
+    background-color: #f8fbff;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #64748b 50%),
+        linear-gradient(135deg, #64748b 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 4px),
+        calc(100% - 12px) calc(50% - 4px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
 }
 
-.pickup-input:hover:not([readonly]):not(:disabled)[b-b67f4d8u8h] {
-    border-color: #93c5fd;
-    background: #ffffff;
+[b-b67f4d8u8h] input.form-control-modern[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 0.75rem;
+    background: #f8fbff;
 }
 
-.pickup-input:focus[b-b67f4d8u8h] {
-    outline: none;
-    border-color: #2563eb;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+[b-b67f4d8u8h] input.form-control-modern[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.72;
+    filter: contrast(0.9);
 }
 
-.pickup-input--readonly[b-b67f4d8u8h],
-.pickup-input[readonly][b-b67f4d8u8h] {
-    background: #f3f4f6;
-    color: #6b7280;
-    border-color: #e5e7eb;
+[b-b67f4d8u8h] input.form-control-modern[readonly] {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
     cursor: default;
     box-shadow: none;
 }
 
-.pickup-input--readonly:focus[b-b67f4d8u8h],
-.pickup-input[readonly]:focus[b-b67f4d8u8h] {
-    border-color: #e5e7eb;
-    box-shadow: none;
-}
-
-.pickup-textarea[b-b67f4d8u8h] {
-    resize: vertical;
+[b-b67f4d8u8h] textarea.form-control-modern {
+    height: auto;
     min-height: 110px;
+    resize: vertical;
 }
 
-.pickup-input[type="date"][b-b67f4d8u8h]::-webkit-calendar-picker-indicator {
-    opacity: .5;
-    cursor: pointer;
+[b-b67f4d8u8h] input.form-control-modern::placeholder,
+[b-b67f4d8u8h] textarea.form-control-modern::placeholder {
+    color: #94a3b8;
 }
 
-/* ── File Upload ──────────────────────────────────────────────────────────── */
+/* ── File Upload — nativen Input komplett verstecken ─────────────────────── */
 .pickup-file-label[b-b67f4d8u8h] {
     display: inline-flex;
     align-items: center;
-    gap: .6rem;
-    padding: .85rem 1.2rem;
+    justify-content: center;
+    gap: .75rem;
+    padding: 1rem 1.5rem;
     border: 2px dashed #93c5fd;
-    border-radius: 12px;
-    background: #eff6ff;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     color: #1d4ed8;
-    font-size: .95rem;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: background .2s ease, border-color .2s ease;
+    transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
     width: 100%;
     box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
 .pickup-file-label:hover[b-b67f4d8u8h] {
-    background: #dbeafe;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
     border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
 }
 
+.pickup-file-label:active[b-b67f4d8u8h] {
+    transform: scale(0.99);
+}
+
+/* ── Nativen File-Input + alles danach verstecken ────────────────────────── */
 .pickup-file-input[b-b67f4d8u8h] {
-    display: none;
+    display: none !important;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
 }
 
 /* ── Bild-Vorschau ────────────────────────────────────────────────────────── */
@@ -330,7 +411,7 @@
     width: 110px;
     height: 110px;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 2px solid #bfdbfe;
     box-shadow: 0 4px 10px rgba(15,23,42,.08);
 }
@@ -516,13 +597,26 @@
         font-size: 1.8rem;
     }
 
+    /* ── Grids auf Mobile: 1 Spalte ── */
     .pickup-grid--2[b-b67f4d8u8h],
-    .pickup-grid--3[b-b67f4d8u8h] {
+    .pickup-grid--plz-ort[b-b67f4d8u8h] {
         grid-template-columns: 1fr;
+    }
+
+    .pickup-block__body[b-b67f4d8u8h] {
+        padding: 1.25rem 1.1rem 1.4rem;
     }
 
     .pickup-submit-btn[b-b67f4d8u8h] {
         max-width: 100%;
+    }
+
+    /* ── Datumsspanne auf neue Zeile ── */
+    .pickup-label-hint--block[b-b67f4d8u8h] {
+        display: block;          /* ← Mobile: eigene Zeile */
+        margin-left: 0;
+        margin-top: 0.1rem;
+        white-space: normal;
     }
 
     .pickup-event-card[b-b67f4d8u8h] {

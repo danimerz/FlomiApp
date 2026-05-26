@@ -296,3 +296,17 @@ c:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.pdb
 c:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\FlomiApp.genruntimeconfig.cache
 c:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\ref\FlomiApp.dll
 c:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\Admin\AdminConfig.razor.rz.scp.css
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\MailKit.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\MimeKit.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\ClosedXML.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\ClosedXML.Parser.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\ExcelNumberFormat.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\RBush.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\SixLabors.Fonts.dll
+C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net8.0\System.IO.Packaging.dll
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net8.0\scopedcss\Pages\Admin\Export.razor.rz.scp.css
