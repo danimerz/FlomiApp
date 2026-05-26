@@ -46,7 +46,8 @@
         <section class="selection-panel">
             <div class="selection-card">
                 <label for="event-select">Event auswählen</label>
-                <select id="event-select" class="custom-select" value="@selectedEventId" @onchange="OnEventChanged">
+                <select id="event-select" class="custom-select" value="@selectedEventId"
+                        @onchange="OnEventChanged">
                     @foreach (var evt in events)
                     {
                         <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
@@ -56,11 +57,14 @@
 
             <div class="selection-card">
                 <label for="person-select">Registrieren als</label>
-                <select id="person-select" class="custom-select" value="@selectedMemberId" @onchange="OnPersonChanged">
+                <select id="person-select" class="custom-select" value="@selectedMemberId"
+                        @onchange="OnPersonChanged">
                     <option value="0">Ich selbst</option>
                     @foreach (var member in familyMembers)
                     {
-                        <option value="@member.Id">@member.FirstName @member.LastName (@member.Stufe)</option>
+                        <option value="@member.Id">
+                            @member.FirstName @member.LastName (@member.Stufe)
+                        </option>
                     }
                 </select>
             </div>
@@ -122,13 +126,16 @@
                 </div>
             }
 
-            @foreach (var group in areas.OrderBy(a => a.Category).GroupBy(a => a.Category))
+            @foreach (var group in areas
+                .OrderBy(a => a.AreaCategory?.Name)
+                .GroupBy(a => a.AreaCategory?.Name ?? "Sonstiges"))
             {
-                var categoryKey = group.Key.ToString();
+                var categoryKey = group.Key;
                 var isCollapsed = collapsedCategories.Contains(categoryKey);
 
                 <section class="category-block @(isCollapsed ? "is-collapsed" : "")">
-                    <div class="category-block__header" @onclick="() => ToggleCategory(categoryKey)">
+                    <div class="category-block__header"
+                         @onclick="() => ToggleCategory(categoryKey)">
                         <h3>🎪 @group.Key</h3>
                         <div class="category-block__header-right">
                             <span class="category-block__count">@group.Count() Bereiche</span>
@@ -137,7 +144,9 @@
                     </div>
 
                     <div class="category-block__body">
-                        @foreach (var dateGroup in group.OrderBy(a => a.Date).GroupBy(a => a.Date.ToShortDateString()))
+                        @foreach (var dateGroup in group
+                            .OrderBy(a => a.Date)
+                            .GroupBy(a => a.Date.ToShortDateString()))
                         {
                             <div class="date-subgroup">
                                 <h4>📅 @GetGermanDayName(dateGroup.Key), @dateGroup.Key</h4>
@@ -148,13 +157,17 @@
                                             <div class="area-card__body">
                                                 <div class="area-card__header">
                                                     <h4>@area.Name</h4>
-                                                    <span class="area-category">@area.Category</span>
+                                                    <span class="area-category">
+                                                        @(area.AreaCategory?.Name ?? "–")
+                                                    </span>
                                                 </div>
 
                                                 <div class="area-info-list">
                                                     <div class="area-info-item">
                                                         <span class="label">Datum</span>
-                                                        <span class="value">@area.Date.ToShortDateString()</span>
+                                                        <span class="value">
+                                                            @area.Date.ToShortDateString()
+                                                        </span>
                                                     </div>
                                                     <div class="area-info-item">
                                                         <span class="label">Zeit</span>
@@ -168,6 +181,20 @@
                                                             </span>
                                                         </span>
                                                     </div>
+                                                    @if (area.MinAge > 0)
+                                                    {
+                                                        <div class="area-info-item">
+                                                            <span class="label">Mindestalter</span>
+                                                            <span class="value">@area.MinAge Jahre</span>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(area.Location))
+                                                    {
+                                                        <div class="area-info-item">
+                                                            <span class="label">Standort</span>
+                                                            <span class="value">@area.Location</span>
+                                                        </div>
+                                                    }
                                                 </div>
 
                                                 <button class="register-btn"
@@ -178,7 +205,9 @@
 
                                                 @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
                                                 {
-                                                    <p class="registration-note">@GetRegistrationNote(area)</p>
+                                                    <p class="registration-note">
+                                                        @GetRegistrationNote(area)
+                                                    </p>
                                                 }
                                             </div>
                                         </article>
@@ -194,100 +223,65 @@
 </div>
 
 @code {
-    private List<Event> events = null;
-    private Event? selectedEvent;
-    private int selectedEventId;
-    private List<Area>? areas;
-    private List<FamilyMember> familyMembers = new();
-    private int selectedMemberId = 0;
-    private Dictionary<int, int> currentRegistrations = new();
-    private Dictionary<int, bool> canRegister = new();
-    private string userId = string.Empty;
-    private ApplicationUser? currentUser;
-    private int? selectedPersonAge;
-    private string errorMessage = string.Empty;
-    private string successMessage = string.Empty;
+    // ── State ─────────────────────────────────────────────────────────────────
+    private List<Event>?        events               = null;
+    private Event?              selectedEvent;
+    private int                 selectedEventId;
+    private List<Area>?         areas;
+    private List<FamilyMember>  familyMembers        = new();
+    private int                 selectedMemberId     = 0;
+    private Dictionary<int,int> currentRegistrations = new();
+    private Dictionary<int,bool> canRegister         = new();
+    private string              userId               = string.Empty;
+    private ApplicationUser?    currentUser;
+    private int?                selectedPersonAge;
+    private string              errorMessage         = string.Empty;
+    private string              successMessage       = string.Empty;
     private CancellationTokenSource? successMessageCts;
+    private HashSet<string>     collapsedCategories  = new();
 
-    // Speichert welche Kategorien eingeklappt sind
-    private HashSet<string> collapsedCategories = new();
-
-    private void ToggleCategory(string categoryKey)
-    {
-        if (collapsedCategories.Contains(categoryKey))
-            collapsedCategories.Remove(categoryKey);
-        else
-            collapsedCategories.Add(categoryKey);
-    }
-
+    // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var user      = authState.User;
+
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            userId      = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                          ?? string.Empty;
             currentUser = await UserManager.GetUserAsync(user);
             familyMembers = await AppointmentService.GetFamilyMembersAsync(userId);
             UpdateSelectedPersonAge();
-            events = (await AreaService.GetAllEventsAsync()).Where(e => e.IsActive).OrderBy(e => e.Date).ToList();
+
+            events = (await AreaService.GetAllEventsAsync())
+                .Where(e => e.IsActive)
+                .OrderBy(e => e.Date)
+                .ToList();
+
             if (events.Any())
             {
                 selectedEventId = events[0].Id;
-                selectedEvent = events[0];
+                selectedEvent   = events[0];
                 await LoadAreasForSelectedEvent();
             }
         }
     }
 
+    // ── Event-Wechsel ─────────────────────────────────────────────────────────
     private async Task OnEventChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var eventId))
         {
             selectedEventId = eventId;
-            selectedEvent = events.FirstOrDefault(evt => evt.Id == selectedEventId);
-            successMessage = string.Empty;
+            selectedEvent   = events?.FirstOrDefault(evt => evt.Id == selectedEventId);
+            successMessage  = string.Empty;
             await LoadAreasForSelectedEvent();
             StateHasChanged();
         }
     }
 
-    private void UpdateSelectedPersonAge()
-    {
-        if (selectedMemberId == 0)
-        {
-            selectedPersonAge = currentUser?.Birthday.HasValue == true
-                ? CalculateAge(currentUser!.Birthday.Value, DateTime.Today)
-                : null;
-            return;
-        }
-
-        var selectedMember = familyMembers.FirstOrDefault(m => m.Id == selectedMemberId);
-        selectedPersonAge = selectedMember != null
-            ? CalculateAge(selectedMember.Birthday, DateTime.Today)
-            : null;
-    }
-
-    private async Task LoadAreasForSelectedEvent()
-    {
-        errorMessage = string.Empty;
-        areas = await AreaService.GetAreasByEventAsync(selectedEventId) ?? new List<Area>();
-
-        currentRegistrations.Clear();
-        canRegister.Clear();
-
-        foreach (var area in areas)
-        {
-            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
-            canRegister[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, selectedMemberId == 0 ? null : selectedMemberId);
-        }
-
-        // Alle Kategorien standardmässig eingeklappt
-        collapsedCategories = areas
-            .Select(a => a.Category.ToString())
-            .ToHashSet();
-    }
-
+    // ── Person-Wechsel ────────────────────────────────────────────────────────
     private async Task OnPersonChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var memberId))
@@ -300,19 +294,63 @@
         }
     }
 
+    private void UpdateSelectedPersonAge()
+    {
+        if (selectedMemberId == 0)
+        {
+            selectedPersonAge = currentUser?.Birthday.HasValue == true
+                ? CalculateAge(currentUser!.Birthday!.Value, DateTime.Today)
+                : null;
+            return;
+        }
+
+        var selectedMember = familyMembers.FirstOrDefault(m => m.Id == selectedMemberId);
+        selectedPersonAge  = selectedMember != null
+            ? CalculateAge(selectedMember.Birthday, DateTime.Today)
+            : null;
+    }
+
+    // ── Bereiche laden ────────────────────────────────────────────────────────
+    private async Task LoadAreasForSelectedEvent()
+    {
+        errorMessage = string.Empty;
+        areas        = await AreaService.GetAreasByEventAsync(selectedEventId) ?? new List<Area>();
+
+        currentRegistrations.Clear();
+        canRegister.Clear();
+
+        foreach (var area in areas)
+        {
+            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+            canRegister[area.Id]          = await AppointmentService.CanRegisterAsync(
+                userId, area.Id,
+                selectedMemberId == 0 ? null : selectedMemberId);
+        }
+
+        // Alle Kategorien standardmässig eingeklappt
+        collapsedCategories = areas
+            .Select(a => a.AreaCategory?.Name ?? "Sonstiges")
+            .ToHashSet();
+    }
+
+    // ── Registrierung ─────────────────────────────────────────────────────────
     private async Task RegisterAppointment(int areaId)
     {
         try
         {
-            await AppointmentService.RegisterForAppointmentAsync(userId, areaId, selectedMemberId == 0 ? null : selectedMemberId);
+            await AppointmentService.RegisterForAppointmentAsync(
+                userId, areaId,
+                selectedMemberId == 0 ? null : selectedMemberId);
+
             errorMessage = string.Empty;
             await LoadAreasForSelectedEvent();
             await JS.InvokeVoidAsync("scrollToTop");
-            await ShowTemporarySuccessMessageAsync("Du wurdest erfolgreich für den Bereich registriert.");
+            await ShowTemporarySuccessMessageAsync(
+                "Du wurdest erfolgreich für den Bereich registriert.");
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            errorMessage   = ex.Message;
             successMessage = string.Empty;
             successMessageCts?.Cancel();
         }
@@ -334,43 +372,42 @@
         }
         catch (TaskCanceledException)
         {
-            // Ignore cancellation when a new message arrives or an error occurs.
+            // Ignorieren – neue Nachricht oder Fehler hat abgebrochen
         }
     }
 
+    // ── Kategorie ein-/ausklappen ─────────────────────────────────────────────
+    private void ToggleCategory(string categoryKey)
+    {
+        if (collapsedCategories.Contains(categoryKey))
+            collapsedCategories.Remove(categoryKey);
+        else
+            collapsedCategories.Add(categoryKey);
+    }
+
+    // ── Hinweis-Text pro Area-Karte ───────────────────────────────────────────
     private string GetRegistrationNote(Area area)
     {
         if (canRegister.TryGetValue(area.Id, out var can) && can)
-        {
             return string.Empty;
-        }
 
         if (area.MinAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < area.MinAge)
-        {
             return $"Mindestalter {area.MinAge} Jahre erforderlich.";
-        }
 
-        if (area.Category == AreaCategory.Verkauf)
-        {
+        if (area.AreaCategory?.Name == "Verkauf")
             return "Nur eine Verkauf-Registrierung ist möglich.";
-        }
 
         if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
-        {
             return "Bereich ist derzeit voll.";
-        }
 
         return "Registrierung aktuell nicht möglich.";
     }
 
+    // ── Hilfsmethoden ─────────────────────────────────────────────────────────
     private int CalculateAge(DateTime birthDate, DateTime referenceDate)
     {
         var age = referenceDate.Year - birthDate.Year;
-        if (referenceDate < birthDate.AddYears(age))
-        {
-            age--;
-        }
-
+        if (referenceDate < birthDate.AddYears(age)) age--;
         return age;
     }
 

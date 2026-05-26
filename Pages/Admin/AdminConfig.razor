@@ -1,0 +1,650 @@
+@page "/admin/config"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@inject IAreaService AreaService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Konfiguration – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <!-- Hero -->
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Konfiguration</h1>
+            <p>Verwalte Events, Bereiche und Kategorien für den Flomi.</p>
+        </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="ac-tabs">
+        <button class="ac-tab @(activeTab == Tab.Events ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Events)">
+            🎪 Events
+            @if (events != null)
+            {
+                <span class="ac-tab__badge">@events.Count</span>
+            }
+        </button>
+        <button class="ac-tab @(activeTab == Tab.Areas ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Areas)">
+            📋 Bereiche
+            @if (areas != null)
+            {
+                <span class="ac-tab__badge">@areas.Count</span>
+            }
+        </button>
+        <button class="ac-tab @(activeTab == Tab.Categories ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Categories)">
+            🏷️ Kategorien
+            @if (categories != null)
+            {
+                <span class="ac-tab__badge">@categories.Count</span>
+            }
+        </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         TAB: EVENTS
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Events)
+    {
+        <div class="ac-toolbar">
+            <button class="ac-submit-btn" @onclick="ShowCreateEventForm">
+                ＋ Neues Event
+            </button>
+        </div>
+
+        @if (showEventForm)
+        {
+            <div class="ac-form-card">
+                <div class="ac-form-card__header">
+                    <h3>@(isEditingEvent ? "✏️ Event bearbeiten" : "➕ Neues Event erstellen")</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <EditForm Model="currentEvent" OnValidSubmit="SubmitEventForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="ac-validation" />
+
+                        <div class="ac-form-grid">
+                            <div class="ac-field">
+                                <label>Name</label>
+                                <InputText @bind-Value="currentEvent.Name" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Datum</label>
+                                <InputDate @bind-Value="currentEvent.Date" class="ac-input" />
+                            </div>
+                        </div>
+
+                        <div class="ac-field" style="margin-top:1rem">
+                            <label>Beschreibung</label>
+                            <InputTextArea @bind-Value="currentEvent.Description"
+                                          class="ac-input ac-textarea" />
+                        </div>
+
+                        <div class="ac-checkbox-row">
+                            <InputCheckbox @bind-Value="currentEvent.IsActive"
+                                           id="activeCheck" class="ac-checkbox" />
+                            <label for="activeCheck">Event aktiv</label>
+                        </div>
+
+                        <div class="ac-form-actions">
+                            <button type="submit" class="ac-submit-btn">
+                                @(isEditingEvent ? "💾 Aktualisieren" : "✅ Erstellen")
+                            </button>
+                            <button type="button" class="ac-cancel-btn"
+                                    @onclick="CancelEventEdit">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (events == null)
+        {
+            <div class="ac-state-card ac-state-card--info">
+                <div class="ac-state-card__icon">⏳</div>
+                <div class="ac-state-card__content">
+                    <h3>Events werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!events.Any())
+        {
+            <div class="ac-state-card ac-state-card--empty">
+                <div class="ac-state-card__icon">📭</div>
+                <div class="ac-state-card__content">
+                    <h3>Keine Events vorhanden</h3>
+                    <p>Erstelle ein neues Event mit dem Button oben.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Datum</th>
+                        <th>Beschreibung</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var evt in events)
+                    {
+                        <tr>
+                            <td><strong>@evt.Name</strong></td>
+                            <td>@evt.Date.ToShortDateString()</td>
+                            <td>@evt.Description</td>
+                            <td>
+                                @if (evt.IsActive)
+                                {
+                                    <span class="ac-badge ac-badge--active">✅ Aktiv</span>
+                                }
+                                else
+                                {
+                                    <span class="ac-badge ac-badge--inactive">🔴 Inaktiv</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="ac-actions">
+                                    <button class="ac-btn ac-btn--edit"
+                                            @onclick="() => EditEvent(evt)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="ac-btn @(evt.IsActive ? "ac-btn--deactivate" : "ac-btn--activate")"
+                                            @onclick="() => ToggleEventActive(evt.Id)">
+                                        @(evt.IsActive ? "⏸ Deaktivieren" : "▶ Aktivieren")
+                                    </button>
+                                    <button class="ac-btn ac-btn--delete"
+                                            @onclick="() => DeleteEvent(evt.Id)">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         TAB: BEREICHE
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Areas)
+    {
+        <div class="ac-toolbar">
+            <button class="ac-submit-btn"
+                    @onclick="ShowCreateAreaForm"
+                    disabled="@(events == null || !events.Any())">
+                ＋ Neuer Bereich
+            </button>
+            @if (events != null && !events.Any())
+            {
+                <span class="ac-toolbar__hint">⚠️ Bitte erst ein Event anlegen.</span>
+            }
+        </div>
+
+        @if (showAreaForm && events != null && events.Any())
+        {
+            <div class="ac-form-card">
+                <div class="ac-form-card__header">
+                    <h3>@(isEditingArea ? "✏️ Bereich bearbeiten" : "➕ Neuen Bereich erstellen")</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <EditForm Model="currentArea" OnValidSubmit="SubmitAreaForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="ac-validation" />
+
+                        <div class="ac-form-grid">
+                            <div class="ac-field">
+                                <label>Name</label>
+                                <InputText @bind-Value="currentArea.Name" class="ac-input" />
+                            </div>
+
+                            <!-- ── Kategorie: dynamisch aus DB ── -->
+                            <div class="ac-field">
+                                <label>Kategorie</label>
+                                <InputSelect @bind-Value="currentArea.AreaCategoryId" class="ac-input">
+                                    <option value="0" disabled>– Bitte wählen –</option>
+                                    @foreach (var cat in categories ?? new())
+                                    {
+                                        <option value="@cat.Id">@cat.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="ac-field">
+                                <label>Mindestalter</label>
+                                <InputNumber @bind-Value="currentArea.MinAge" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Max. Kapazität</label>
+                                <InputNumber @bind-Value="currentArea.MaxCapacity" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Datum</label>
+                                <InputDate @bind-Value="currentArea.Date" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Zeitslot</label>
+                                <InputText @bind-Value="currentArea.TimeSlot" class="ac-input"
+                                           placeholder="z.B. 0830-1530" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Standort</label>
+                                <InputText @bind-Value="currentArea.Location" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Event</label>
+                                <InputSelect @bind-Value="currentArea.EventId" class="ac-input">
+                                    @foreach (var evt in events!)
+                                    {
+                                        <option value="@evt.Id">
+                                            @evt.Name (@evt.Date.ToShortDateString())
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="ac-form-actions">
+                            <button type="submit" class="ac-submit-btn">
+                                @(isEditingArea ? "💾 Aktualisieren" : "✅ Erstellen")
+                            </button>
+                            <button type="button" class="ac-cancel-btn"
+                                    @onclick="CancelAreaEdit">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (areas == null)
+        {
+            <div class="ac-state-card ac-state-card--info">
+                <div class="ac-state-card__icon">⏳</div>
+                <div class="ac-state-card__content">
+                    <h3>Bereiche werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!areas.Any())
+        {
+            <div class="ac-state-card ac-state-card--empty">
+                <div class="ac-state-card__icon">📭</div>
+                <div class="ac-state-card__content">
+                    <h3>Keine Bereiche vorhanden</h3>
+                    <p>Erstelle einen neuen Bereich mit dem Button oben.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Kategorie</th>
+                        <th>Min. Alter</th>
+                        <th>Kapazität</th>
+                        <th>Datum</th>
+                        <th>Zeit</th>
+                        <th>Event</th>
+                        <th>Standort</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var area in areas)
+                    {
+                        <tr>
+                            <td><strong>@area.Name</strong></td>
+                            <td>
+                                <span class="ac-badge ac-badge--category">
+                                    @(area.AreaCategory?.Name ?? "–")
+                                </span>
+                            </td>
+                            <td>@area.MinAge</td>
+                            <td>
+                                @if (area.MaxCapacity >= 999)
+                                {
+                                    <span class="ac-badge ac-badge--unlimited">∞ Unbegrenzt</span>
+                                }
+                                else
+                                {
+                                    @area.MaxCapacity
+                                }
+                            </td>
+                            <td>@area.Date.ToShortDateString()</td>
+                            <td>@area.TimeSlot</td>
+                            <td>
+                                <span class="ac-event-pill">🎪 @area.Event?.Name</span>
+                            </td>
+                            <td>@area.Location</td>
+                            <td>
+                                <div class="ac-actions">
+                                    <button class="ac-btn ac-btn--edit"
+                                            @onclick="() => EditArea(area)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="ac-btn ac-btn--delete"
+                                            @onclick="() => DeleteArea(area.Id)">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         TAB: KATEGORIEN
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Categories)
+    {
+        <div class="ac-toolbar">
+            <button class="ac-submit-btn" @onclick="ShowCreateCategoryForm">
+                ＋ Neue Kategorie
+            </button>
+        </div>
+
+        @if (showCategoryForm)
+        {
+            <div class="ac-form-card">
+                <div class="ac-form-card__header">
+                    <h3>@(isEditingCategory ? "✏️ Kategorie bearbeiten" : "➕ Neue Kategorie erstellen")</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <EditForm Model="currentCategory" OnValidSubmit="SubmitCategoryForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="ac-validation" />
+
+                        <div class="ac-form-grid">
+                            <div class="ac-field">
+                                <label>Name</label>
+                                <InputText @bind-Value="currentCategory.Name" class="ac-input"
+                                           placeholder="z.B. Verkauf" />
+                            </div>
+                        </div>
+
+                        <div class="ac-form-actions">
+                            <button type="submit" class="ac-submit-btn">
+                                @(isEditingCategory ? "💾 Aktualisieren" : "✅ Erstellen")
+                            </button>
+                            <button type="button" class="ac-cancel-btn"
+                                    @onclick="CancelCategoryEdit">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (categories == null)
+        {
+            <div class="ac-state-card ac-state-card--info">
+                <div class="ac-state-card__icon">⏳</div>
+                <div class="ac-state-card__content">
+                    <h3>Kategorien werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!categories.Any())
+        {
+            <div class="ac-state-card ac-state-card--empty">
+                <div class="ac-state-card__icon">📭</div>
+                <div class="ac-state-card__content">
+                    <h3>Keine Kategorien vorhanden</h3>
+                    <p>Erstelle eine neue Kategorie mit dem Button oben.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Bereiche</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cat in categories)
+                    {
+                        <tr>
+                            <td><strong>@cat.Name</strong></td>
+                            <td>
+                                <span class="ac-badge ac-badge--category">
+                                    @(areas?.Count(a => a.AreaCategoryId == cat.Id) ?? 0) Bereiche
+                                </span>
+                            </td>
+                            <td>
+                                <div class="ac-actions">
+                                    <button class="ac-btn ac-btn--edit"
+                                            @onclick="() => EditCategory(cat)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="ac-btn ac-btn--delete"
+                                            @onclick="() => DeleteCategory(cat.Id)"
+                                            disabled="@(areas?.Any(a => a.AreaCategoryId == cat.Id) ?? false)">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+</div>
+
+@code {
+    private enum Tab { Events, Areas, Categories }
+    private Tab activeTab = Tab.Events;
+
+    // ── Data ──────────────────────────────────────────────────────────────────
+    private List<Event>        events     = new();
+    private List<Area>         areas      = new();
+    private List<AreaCategory> categories = new();
+
+    // ── Events ────────────────────────────────────────────────────────────────
+    private Event currentEvent   = new();
+    private bool  showEventForm  = false;
+    private bool  isEditingEvent = false;
+
+    // ── Areas ─────────────────────────────────────────────────────────────────
+    private Area currentArea   = new();
+    private bool showAreaForm  = false;
+    private bool isEditingArea = false;
+
+    // ── Categories ────────────────────────────────────────────────────────────
+    private AreaCategory currentCategory   = new();
+    private bool         showCategoryForm  = false;
+    private bool         isEditingCategory = false;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        events     = await AreaService.GetAllEventsAsync();
+        areas      = await AreaService.GetAllAreasAsync();
+        categories = await AreaService.GetAllCategoriesAsync();
+    }
+
+    private void SetTab(Tab tab)
+    {
+        activeTab        = tab;
+        showEventForm    = false;
+        showAreaForm     = false;
+        showCategoryForm = false;
+    }
+
+    // ── Events CRUD ───────────────────────────────────────────────────────────
+    private void ShowCreateEventForm()
+    {
+        showEventForm  = true;
+        isEditingEvent = false;
+        currentEvent   = new Event { Date = DateTime.Today, IsActive = true };
+    }
+
+    private void CancelEventEdit()
+    {
+        showEventForm  = false;
+        isEditingEvent = false;
+        currentEvent   = new Event();
+    }
+
+    private async Task SubmitEventForm()
+    {
+        if (isEditingEvent)
+            await AreaService.UpdateEventAsync(currentEvent);
+        else
+            await AreaService.CreateEventAsync(currentEvent);
+
+        events = await AreaService.GetAllEventsAsync();
+        CancelEventEdit();
+    }
+
+    private void EditEvent(Event evt)
+    {
+        isEditingEvent = true;
+        showEventForm  = true;
+        currentEvent   = new Event
+        {
+            Id          = evt.Id,
+            Name        = evt.Name,
+            Date        = evt.Date,
+            Description = evt.Description,
+            IsActive    = evt.IsActive
+        };
+    }
+
+    private async Task ToggleEventActive(int id)
+    {
+        var evt = await AreaService.GetEventByIdAsync(id);
+        evt.IsActive = !evt.IsActive;
+        await AreaService.UpdateEventAsync(evt);
+        events = await AreaService.GetAllEventsAsync();
+    }
+
+    private async Task DeleteEvent(int id)
+    {
+        await AreaService.DeleteEventAsync(id);
+        events = await AreaService.GetAllEventsAsync();
+    }
+
+    // ── Areas CRUD ────────────────────────────────────────────────────────────
+    private void ShowCreateAreaForm()
+    {
+        showAreaForm  = true;
+        isEditingArea = false;
+        currentArea   = new Area
+        {
+            Date           = DateTime.Today,
+            EventId        = events.FirstOrDefault()?.Id ?? 0,
+            AreaCategoryId = categories.FirstOrDefault()?.Id ?? 0
+        };
+    }
+
+    private void CancelAreaEdit()
+    {
+        showAreaForm  = false;
+        isEditingArea = false;
+        currentArea   = new Area();
+    }
+
+    private async Task SubmitAreaForm()
+    {
+        if (isEditingArea)
+            await AreaService.UpdateAreaAsync(currentArea);
+        else
+            await AreaService.CreateAreaAsync(currentArea);
+
+        areas = await AreaService.GetAllAreasAsync();
+        CancelAreaEdit();
+    }
+
+    private void EditArea(Area area)
+    {
+        isEditingArea = true;
+        showAreaForm  = true;
+        currentArea   = new Area
+        {
+            Id             = area.Id,
+            Name           = area.Name,
+            MaxCapacity    = area.MaxCapacity,
+            Date           = area.Date,
+            TimeSlot       = area.TimeSlot,
+            AreaCategoryId = area.AreaCategoryId,   // ← neu
+            MinAge         = area.MinAge,
+            EventId        = area.EventId,
+            Location       = area.Location
+        };
+    }
+
+    private async Task DeleteArea(int id)
+    {
+        await AreaService.DeleteAreaAsync(id);
+        areas = await AreaService.GetAllAreasAsync();
+    }
+
+    // ── Categories CRUD ───────────────────────────────────────────────────────
+    private void ShowCreateCategoryForm()
+    {
+        showCategoryForm  = true;
+        isEditingCategory = false;
+        currentCategory   = new AreaCategory();
+    }
+
+    private void CancelCategoryEdit()
+    {
+        showCategoryForm  = false;
+        isEditingCategory = false;
+        currentCategory   = new AreaCategory();
+    }
+
+    private async Task SubmitCategoryForm()
+    {
+        if (isEditingCategory)
+            await AreaService.UpdateCategoryAsync(currentCategory);
+        else
+            await AreaService.CreateCategoryAsync(currentCategory);
+
+        categories = await AreaService.GetAllCategoriesAsync();
+        CancelCategoryEdit();
+    }
+
+    private void EditCategory(AreaCategory cat)
+    {
+        isEditingCategory = true;
+        showCategoryForm  = true;
+        currentCategory   = new AreaCategory
+        {
+            Id   = cat.Id,
+            Name = cat.Name
+        };
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        await AreaService.DeleteCategoryAsync(id);
+        categories = await AreaService.GetAllCategoriesAsync();
+        areas      = await AreaService.GetAllAreasAsync();
+    }
+}
