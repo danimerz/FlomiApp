@@ -56,7 +56,7 @@ public class RegisterModel : PageModel
         [Required]
         public string LastName { get; set; } = string.Empty;
 
-        public string Pfadiname { get; set; } = string.Empty;
+        public string? Pfadiname { get; set; } = string.Empty;
 
         [Required]
         public string Stufe { get; set; } = string.Empty;
@@ -89,7 +89,7 @@ public class RegisterModel : PageModel
                 Email = Input.Email,
                 FirstName = Input.FirstName,
                 LastName = Input.LastName,
-                Pfadiname = Input.Pfadiname,
+                Pfadiname = Input.Pfadiname ?? string.Empty,
                 Stufe = Input.Stufe,
                 Birthday = Input.Birthday,
                 PhoneNumber = Input.PhoneNumber

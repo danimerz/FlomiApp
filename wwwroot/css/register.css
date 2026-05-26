@@ -199,7 +199,11 @@
     background: #fef2f2;
     color: #b91c1c;
 }
-
+.register-required {
+    color: #e53e3e;
+    margin-left: 2px;
+    font-weight: 700;
+}
 .register-validation ul {
     margin: 0;
     padding-left: 1.2rem;
