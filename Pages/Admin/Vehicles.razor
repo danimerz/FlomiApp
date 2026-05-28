@@ -112,7 +112,7 @@
                             </td>
                             <td>
                                 <span class="av-badge av-badge--driver">
-                                    @v.Assignments.Count Events
+                                    @v.Assignments.Select(a => a.EventId).Distinct().Count() Events
                                 </span>
                             </td>
                             <td>
