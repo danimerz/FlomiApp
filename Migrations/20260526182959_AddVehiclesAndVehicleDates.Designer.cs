@@ -4,6 +4,7 @@ using FlomiApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlomiApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260526182959_AddVehiclesAndVehicleDates")]
+    partial class AddVehiclesAndVehicleDates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,51 +227,6 @@ namespace FlomiApp.Migrations
                             Id = 4,
                             Name = "Sonstiges"
                         });
-                });
-
-            modelBuilder.Entity("FlomiApp.Data.Models.AssignmentDate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AssignmentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DriverName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DriverPhone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DriverUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HelperName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HelperUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PickedUpBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReadyFrom")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReturnedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignmentId");
-
-                    b.ToTable("AssignmentDates");
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.Event", b =>
@@ -484,22 +442,58 @@ namespace FlomiApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("OwnerContact")
+                    b.Property<string>("DriverName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DriverPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DriverUserId")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HelperName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("HelperUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerContact")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("OwnerName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("OwnerPhone")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PickedUpBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ReadyFrom")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("ReturnedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Vehicles");
                 });
 
-            modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>
+            modelBuilder.Entity("FlomiApp.Data.Models.VehicleDate", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -507,19 +501,17 @@ namespace FlomiApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("EventId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
-
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("VehicleAssignments");
+                    b.ToTable("VehicleDates");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -703,17 +695,6 @@ namespace FlomiApp.Migrations
                     b.Navigation("Event");
                 });
 
-            modelBuilder.Entity("FlomiApp.Data.Models.AssignmentDate", b =>
-                {
-                    b.HasOne("FlomiApp.Data.Models.VehicleAssignment", "Assignment")
-                        .WithMany("AssignedDates")
-                        .HasForeignKey("AssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Assignment");
-                });
-
             modelBuilder.Entity("FlomiApp.Data.Models.FamilyMember", b =>
                 {
                     b.HasOne("FlomiApp.Data.Models.ApplicationUser", "User")
@@ -763,21 +744,13 @@ namespace FlomiApp.Migrations
                     b.Navigation("Event");
                 });
 
-            modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>
+            modelBuilder.Entity("FlomiApp.Data.Models.VehicleDate", b =>
                 {
-                    b.HasOne("FlomiApp.Data.Models.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FlomiApp.Data.Models.Vehicle", "Vehicle")
-                        .WithMany("Assignments")
+                        .WithMany("AssignedDates")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Event");
 
                     b.Navigation("Vehicle");
                 });
@@ -859,11 +832,6 @@ namespace FlomiApp.Migrations
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.Vehicle", b =>
-                {
-                    b.Navigation("Assignments");
-                });
-
-            modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>
                 {
                     b.Navigation("AssignedDates");
                 });

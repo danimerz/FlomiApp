@@ -3,7 +3,7 @@
     max-width: 1240px;
     margin: 0 auto;
     padding: 2rem 1rem 3rem;
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
@@ -13,7 +13,7 @@
     margin-bottom: 2rem;
     border-radius: 24px;
     background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
-    box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
 
@@ -74,48 +74,13 @@
     line-height: 1.6;
 }
 
-/* ── State Cards ──────────────────────────────────────────────────────────── */
-.state-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1.1rem 1.2rem;
-    border-radius: 18px;
-    border: 1px solid transparent;
-}
-
-.state-card__icon {
-    flex-shrink: 0;
-    font-size: 1.4rem;
-    line-height: 1;
-}
-
-.state-card__content h3 {
-    margin: 0 0 .25rem;
-    font-size: 1rem;
-    font-weight: 800;
-}
-
-.state-card__content p {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.state-card--info    { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
-.state-card--empty   { background: #f8fafc; border-color: #e5e7eb; color: #475569; }
-.state-card--error   { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
-.state-card--success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
-
 /* ── Formular-Block ───────────────────────────────────────────────────────── */
 .pickup-block {
     margin-bottom: 1.25rem;
-    border: 1px solid #e7edf5;
+    border: 1px solid var(--color-border-card);
     border-radius: 22px;
-    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
-    box-shadow:
-        0 10px 24px rgba(15, 23, 42, 0.05),
-        0 1px 0 rgba(255, 255, 255, 0.9) inset;
+    background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-soft) 100%);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
 }
 
@@ -123,7 +88,7 @@
     display: flex;
     align-items: center;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--color-primary-deeper) 0%, var(--color-primary) 100%);
     color: #ffffff;
 }
 
@@ -137,17 +102,17 @@
 
 .pickup-block__body {
     padding: 1.5rem 1.5rem 1.75rem;
-    background: #ffffff;
+    background: var(--color-surface-card);
 }
 
 /* ── Consent Block ────────────────────────────────────────────────────────── */
 .pickup-block--consent {
-    border-left: 4px solid #f59e0b;
-    background: #fffbeb;
+    border-left: 4px solid var(--color-warning-border);
+    background: var(--color-warning-bg);
 }
 
 .pickup-block--consent .pickup-block__body {
-    background: #fffbeb;
+    background: var(--color-warning-bg);
 }
 
 .pickup-consent {
@@ -162,18 +127,18 @@
     height: 1.25rem;
     min-width: 1.25rem;
     margin-top: .2rem;
-    accent-color: #2563eb;
+    accent-color: var(--color-primary);
     cursor: pointer;
 }
 
 .pickup-consent__text {
     font-size: .95rem;
-    color: #374151;
+    color: var(--color-text-medium);
     line-height: 1.65;
 }
 
 .pickup-consent__text strong {
-    color: #92400e;
+    color: var(--color-warning-text);
 }
 
 .pickup-consent__error {
@@ -183,9 +148,9 @@
     margin-top: .85rem;
     padding: .65rem 1rem;
     border-radius: 10px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error-text);
     font-size: .9rem;
     font-weight: 600;
 }
@@ -218,27 +183,26 @@
 
 .pickup-field label {
     display: flex;
-    flex-wrap: wrap;           /* ← Hint bricht sauber um */
+    flex-wrap: wrap;
     align-items: baseline;
     gap: 0.2rem 0.4rem;
     font-size: 0.92rem;
     font-weight: 700;
-    color: #334155;
+    color: var(--color-text-medium);
     letter-spacing: .01em;
     line-height: 1.4;
 }
 
-/* ── Label Hint — inline (Desktop) ───────────────────────────────────────── */
+/* ── Label Hint ───────────────────────────────────────────────────────────── */
 .pickup-label-hint {
     font-size: .8rem;
     font-weight: 500;
-    color: #9ca3af;
+    color: var(--color-text-placeholder);
     white-space: nowrap;
 }
 
-/* ── Label Hint — Block (neue Zeile auf Mobile) ───────────────────────────── */
 .pickup-label-hint--block {
-    display: inline;           /* Desktop: inline neben Label */
+    display: inline;
 }
 
 /* ─── Form Controls ──────────────────────────────────────────────────────── */
@@ -255,10 +219,10 @@
     min-height: 3.35rem;
     margin: 0;
     padding: 0.95rem 1rem;
-    border: 1px solid #dbe3ef;
+    border: 1px solid var(--color-border-form);
     border-radius: 14px;
-    background: #f8fbff;
-    color: #0f172a;
+    background: var(--color-surface-input);
+    color: var(--color-text-deep);
     font-size: 0.97rem;
     line-height: 1.2;
     box-sizing: border-box;
@@ -276,8 +240,8 @@
 ::deep input.form-control-modern:hover,
 ::deep select.form-control-modern:hover,
 ::deep textarea.form-control-modern:hover {
-    border-color: #b8c7db;
-    background: #ffffff;
+    border-color: var(--color-border-medium);
+    background: var(--color-surface-card);
 }
 
 .form-control-modern:focus,
@@ -286,8 +250,8 @@
 ::deep select.form-control-modern:focus,
 ::deep textarea.form-control-modern:focus {
     outline: none;
-    border-color: #3b82f6;
-    background: #ffffff;
+    border-color: var(--color-primary);
+    background: var(--color-surface-card);
     box-shadow:
         0 0 0 4px rgba(59, 130, 246, 0.12),
         0 8px 20px rgba(37, 99, 235, 0.08);
@@ -307,7 +271,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     padding-right: 3rem;
-    background-color: #f8fbff;
+    background-color: var(--color-surface-input);
     background-image:
         linear-gradient(45deg, transparent 50%, #64748b 50%),
         linear-gradient(135deg, #64748b 50%, transparent 50%);
@@ -322,7 +286,7 @@
     appearance: none;
     -webkit-appearance: none;
     padding-right: 0.75rem;
-    background: #f8fbff;
+    background: var(--color-surface-input);
 }
 
 ::deep input.form-control-modern[type="date"]::-webkit-calendar-picker-indicator {
@@ -332,9 +296,9 @@
 }
 
 ::deep input.form-control-modern[readonly] {
-    background: #f1f5f9;
-    color: #64748b;
-    border-color: #e2e8f0;
+    background: var(--color-surface-soft);
+    color: var(--color-text-lighter);
+    border-color: var(--color-border-soft);
     cursor: default;
     box-shadow: none;
 }
@@ -347,20 +311,20 @@
 
 ::deep input.form-control-modern::placeholder,
 ::deep textarea.form-control-modern::placeholder {
-    color: #94a3b8;
+    color: var(--color-text-placeholder);
 }
 
-/* ── File Upload — nativen Input komplett verstecken ─────────────────────── */
+/* ── File Upload ─────────────────────────────────────────────────────────── */
 .pickup-file-label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: .75rem;
     padding: 1rem 1.5rem;
-    border: 2px dashed #93c5fd;
+    border: 2px dashed var(--color-info-border);
     border-radius: 14px;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    color: #1d4ed8;
+    background: linear-gradient(135deg, var(--color-info-bg) 0%, var(--color-primary-tint) 100%);
+    color: var(--color-info-text);
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
@@ -371,8 +335,8 @@
 }
 
 .pickup-file-label:hover {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    border-color: #3b82f6;
+    background: linear-gradient(135deg, var(--color-primary-tint) 0%, var(--color-info-border) 100%);
+    border-color: var(--color-primary);
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
 }
 
@@ -380,7 +344,6 @@
     transform: scale(0.99);
 }
 
-/* ── Nativen File-Input + alles danach verstecken ────────────────────────── */
 .pickup-file-input {
     display: none !important;
     width: 0;
@@ -412,7 +375,7 @@
     height: 110px;
     object-fit: cover;
     border-radius: 12px;
-    border: 2px solid #bfdbfe;
+    border: 2px solid var(--color-info-border);
     box-shadow: 0 4px 10px rgba(15,23,42,.08);
 }
 
@@ -424,7 +387,7 @@
     height: 22px;
     border: none;
     border-radius: 50%;
-    background: #ef4444;
+    background: var(--color-error-text);
     color: #ffffff;
     font-size: 11px;
     font-weight: 700;
@@ -433,17 +396,17 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(239,68,68,.35);
-    transition: background .15s ease, transform .15s ease;
+    transition: filter .15s ease, transform .15s ease;
 }
 
 .pickup-image-remove:hover {
-    background: #dc2626;
+    filter: brightness(1.15);
     transform: scale(1.12);
 }
 
 .pickup-image-name {
     font-size: .72rem;
-    color: #6b7280;
+    color: var(--color-text-light);
     text-align: center;
     word-break: break-all;
     max-width: 110px;
@@ -461,12 +424,12 @@
     padding: 1rem 1.5rem;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     color: #ffffff;
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 8px 18px rgba(37,99,235,.22);
+    box-shadow: var(--shadow-btn);
     transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
     margin-top: .5rem;
 }
@@ -482,8 +445,8 @@
 }
 
 .pickup-submit-btn:disabled {
-    background: #cbd5e1;
-    color: #64748b;
+    background: var(--color-border-medium);
+    color: var(--color-text-lighter);
     box-shadow: none;
     cursor: not-allowed;
 }
@@ -501,17 +464,17 @@
     gap: 1rem;
     width: 100%;
     padding: 1rem 1.25rem;
-    border: 2px solid #e0e7ff;
+    border: 2px solid var(--color-primary-tint);
     border-radius: 16px;
-    background: #f8faff;
+    background: var(--color-primary-subtle);
     cursor: pointer;
     text-align: left;
     transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .pickup-event-card:hover {
-    border-color: #2563eb;
-    background: #eff6ff;
+    border-color: var(--color-primary);
+    background: var(--color-info-bg);
     transform: translateY(-2px);
 }
 
@@ -524,19 +487,19 @@
     flex: 1;
     font-size: 1rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--color-text-strong);
 }
 
 .pickup-event-card__date {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--color-text-light);
     white-space: nowrap;
 }
 
 .pickup-event-card__arrow {
     font-size: 1.1rem;
-    color: #2563eb;
+    color: var(--color-primary);
     flex-shrink: 0;
 }
 
@@ -548,14 +511,14 @@
     margin-bottom: 1.5rem;
     padding: 0.75rem 1.1rem;
     border-radius: 14px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
 }
 
 .pickup-selected-event__label {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #6b7280;
+    color: var(--color-text-light);
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
@@ -564,13 +527,13 @@
     flex: 1;
     font-size: 0.95rem;
     font-weight: 800;
-    color: #1d4ed8;
+    color: var(--color-info-text);
 }
 
 .pickup-selected-event__change {
     border: none;
     background: transparent;
-    color: #2563eb;
+    color: var(--color-primary);
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
@@ -580,7 +543,7 @@
 }
 
 .pickup-selected-event__change:hover {
-    background: #dbeafe;
+    background: var(--color-primary-tint);
 }
 
 /* ── Media Queries ────────────────────────────────────────────────────────── */
@@ -597,7 +560,6 @@
         font-size: 1.8rem;
     }
 
-    /* ── Grids auf Mobile: 1 Spalte ── */
     .pickup-grid--2,
     .pickup-grid--plz-ort {
         grid-template-columns: 1fr;
@@ -611,9 +573,8 @@
         max-width: 100%;
     }
 
-    /* ── Datumsspanne auf neue Zeile ── */
     .pickup-label-hint--block {
-        display: block;          /* ← Mobile: eigene Zeile */
+        display: block;
         margin-left: 0;
         margin-top: 0.1rem;
         white-space: normal;

@@ -1,69 +1,11 @@
+/* Variablen sind in wwwroot/css/site.css definiert */
 .app-shell {
-    --color-text: #0f172a;
-    --color-text-muted: #475569;
-    --color-surface: #f8fbff;
-    --color-surface-soft: #f3f7fc;
-    --color-surface-soft-2: #eef4fb;
-    --color-border: rgba(15, 23, 42, 0.08);
-
-    --color-sidebar-bg-start: rgba(15, 98, 254, 0.98);
-    --color-sidebar-bg-mid: rgba(29, 78, 216, 0.98);
-    --color-sidebar-bg-end: rgba(30, 41, 59, 0.98);
-    --color-sidebar-border: rgba(255, 255, 255, 0.12);
-
-    --color-sidebar-text: #ffffff;
-    --color-sidebar-text-muted: rgba(255, 255, 255, 0.85);
-    --color-sidebar-label: rgba(255, 255, 255, 0.58);
-
-    --color-button-soft: rgba(255, 255, 255, 0.08);
-    --color-button-soft-hover: rgba(255, 255, 255, 0.14);
-    --color-button-soft-border: rgba(255, 255, 255, 0.14);
-
-    --color-switch-track: rgba(255, 255, 255, 0.14);
-    --color-switch-thumb: #ffffff;
-    --color-switch-thumb-dark: #e2e8f0;
-
-    --shadow-sidebar: 8px 0 30px rgba(15, 23, 42, 0.08);
-    --shadow-soft: 0 10px 20px rgba(0, 0, 0, 0.12);
-    --shadow-switch: 0 8px 18px rgba(0, 0, 0, 0.14);
-
     min-height: 100vh;
     display: flex;
     background:
         radial-gradient(circle at top left, rgba(37, 99, 235, 0.05), transparent 22%),
         linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-soft) 58%, var(--color-surface-soft-2) 100%);
     color: var(--color-text);
-}
-
-/* ── Dark Theme ───────────────────────────────────────────────────────────── */
-.app-shell[data-theme="dark"] {
-    --color-text: #e5eef8;
-    --color-text-muted: #94a3b8;
-    --color-surface: #0f172a;
-    --color-surface-soft: #111827;
-    --color-surface-soft-2: #0b1220;
-    --color-border: rgba(255, 255, 255, 0.08);
-
-    --color-sidebar-bg-start: rgba(15, 23, 42, 0.98);
-    --color-sidebar-bg-mid: rgba(30, 41, 59, 0.98);
-    --color-sidebar-bg-end: rgba(2, 6, 23, 0.98);
-    --color-sidebar-border: rgba(255, 255, 255, 0.10);
-
-    --color-sidebar-text: #f8fafc;
-    --color-sidebar-text-muted: rgba(248, 250, 252, 0.78);
-    --color-sidebar-label: rgba(248, 250, 252, 0.58);
-
-    --color-button-soft: rgba(255, 255, 255, 0.06);
-    --color-button-soft-hover: rgba(255, 255, 255, 0.12);
-    --color-button-soft-border: rgba(255, 255, 255, 0.10);
-
-    --color-switch-track: rgba(255, 255, 255, 0.10);
-    --color-switch-thumb: #ffffff;
-    --color-switch-thumb-dark: #e2e8f0;
-
-    --shadow-sidebar: 8px 0 30px rgba(0, 0, 0, 0.30);
-    --shadow-soft: 0 10px 20px rgba(0, 0, 0, 0.24);
-    --shadow-switch: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 /* ── Sidebar ──────────────────────────────────────────────────────────────── */
@@ -91,7 +33,7 @@
     min-height: 0;
 }
 
-/* ── Topbar (Brand + Hamburger nebeneinander) ─────────────────────────────── */
+/* ── Topbar ───────────────────────────────────────────────────────────────── */
 .sidebar__topbar {
     display: flex;
     align-items: center;
@@ -155,7 +97,7 @@
     line-height: 1.2;
 }
 
-/* ── Hamburger Button ─────────────────────────────────────────────────────── */
+/* ── Hamburger ────────────────────────────────────────────────────────────── */
 .sidebar__hamburger {
     display: none;
     align-items: center;
@@ -164,8 +106,8 @@
     height: 42px;
     border: none;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.14);
-    color: #ffffff;
+    background: var(--color-button-soft);
+    color: var(--color-sidebar-text);
     font-size: 1.3rem;
     cursor: pointer;
     flex-shrink: 0;
@@ -173,7 +115,7 @@
 }
 
 .sidebar__hamburger:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--color-button-soft-hover);
 }
 
 /* ── Nav ──────────────────────────────────────────────────────────────────── */
@@ -249,19 +191,11 @@
     line-height: 1;
     color: var(--color-sidebar-text);
     opacity: 0.72;
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        color 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
-.theme-switch__icon--sun {
-    color: #fde68a;
-}
-
-.theme-switch__icon--moon {
-    color: #dbeafe;
-}
+.theme-switch__icon--sun  { color: #fde68a; }
+.theme-switch__icon--moon { color: #dbeafe; }
 
 .theme-switch__thumb {
     position: absolute;
@@ -274,21 +208,11 @@
     box-shadow:
         0 6px 14px rgba(15, 23, 42, 0.24),
         inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    transition:
-        transform 0.24s ease,
-        background-color 0.24s ease,
-        box-shadow 0.24s ease;
+    transition: transform 0.24s ease, background-color 0.24s ease, box-shadow 0.24s ease;
 }
 
-.theme-switch.is-light .theme-switch__icon--sun {
-    opacity: 1;
-    transform: scale(1.08);
-}
-
-.theme-switch.is-dark .theme-switch__icon--moon {
-    opacity: 1;
-    transform: scale(1.08);
-}
+.theme-switch.is-light .theme-switch__icon--sun  { opacity: 1; transform: scale(1.08); }
+.theme-switch.is-dark  .theme-switch__icon--moon { opacity: 1; transform: scale(1.08); }
 
 .theme-switch.is-dark .theme-switch__thumb {
     transform: translateX(34px);
@@ -302,7 +226,7 @@
     white-space: nowrap;
 }
 
-/* ── Login Desktop ────────────────────────────────────────────────────────── */
+/* ── Login / Footer ───────────────────────────────────────────────────────── */
 .sidebar-login-desktop {
     margin-top: 0.85rem;
     padding-top: 0.9rem;
@@ -343,12 +267,10 @@
         padding-bottom: 0;
     }
 
-    /* Hamburger im Mobile anzeigen */
     .sidebar__hamburger {
         display: inline-flex;
     }
 
-    /* Nav standardmässig eingeklappt */
     .sidebar__nav {
         overflow: hidden;
         max-height: 0;
@@ -357,7 +279,6 @@
         transition: max-height 0.35s ease, opacity 0.25s ease;
     }
 
-    /* Nav ausgeklappt wenn open */
     .sidebar.mobile-nav--open .sidebar__nav {
         max-height: 800px;
         opacity: 1;

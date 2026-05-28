@@ -1,0 +1,1136 @@
+@page "/admin/vehicles"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
+@inject IAreaService    AreaService
+@inject IVehicleService VehicleService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Fahrzeuge – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <!-- ── Hero ──────────────────────────────────────────────────────────── -->
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Fahrzeuge</h1>
+            <p>Verwalte Fahrzeugstammdaten und weise Fahrzeuge pro Event zu.</p>
+        </div>
+    </section>
+
+    <!-- ── Tabs ──────────────────────────────────────────────────────────── -->
+    <div class="av-tabs">
+        <button class="av-tab @(activeTab == Tab.Vehicles ? "av-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Vehicles)">
+            🚗 Fahrzeuge
+            @if (vehicles != null)
+            {
+                <span class="av-tab__badge">@vehicles.Count</span>
+            }
+        </button>
+        <button class="av-tab @(activeTab == Tab.Assignments ? "av-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Assignments)">
+            📋 Zuweisungen
+            @if (assignments != null)
+            {
+                <span class="av-tab__badge">
+                    @assignments.GroupBy(a => (a.VehicleId, a.EventId)).Count()
+                </span>
+            }
+        </button>
+        <button class="av-tab @(activeTab == Tab.AddVehicle ? "av-tab--active" : "")"
+                @onclick="() => SetTab(Tab.AddVehicle)">
+            ➕ Fahrzeug erfassen
+        </button>
+        <button class="av-tab @(activeTab == Tab.AddAssignment ? "av-tab--active" : "")"
+                @onclick="() => SetTab(Tab.AddAssignment)">
+            📌 Zuweisung erfassen
+        </button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TAB: FAHRZEUGE (Stammdaten)
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Vehicles)
+    {
+        @if (vehicles == null)
+        {
+            <div class="av-state-card av-state-card--info">
+                <div class="av-state-card__icon">⏳</div>
+                <div class="av-state-card__content">
+                    <h3>Fahrzeuge werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!vehicles.Any())
+        {
+            <div class="av-state-card av-state-card--empty">
+                <div class="av-state-card__icon">🚗</div>
+                <div class="av-state-card__content">
+                    <h3>Keine Fahrzeuge vorhanden</h3>
+                    <p>Erfasse ein neues Fahrzeug über den Tab «Fahrzeug erfassen».</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="av-table">
+                <thead>
+                    <tr>
+                        <th>Fahrzeughalter</th>
+                        <th>Telefon</th>
+                        <th>Kontakt / Bemerkung</th>
+                        <th>Zuweisungen</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var v in vehicles)
+                    {
+                        <tr>
+                            <td><strong>@v.OwnerName</strong></td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(v.OwnerPhone))
+                                {
+                                    <span>📞 @v.OwnerPhone</span>
+                                }
+                                else
+                                {
+                                    <span class="av-badge av-badge--none">–</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(v.OwnerContact))
+                                {
+                                    <small>@v.OwnerContact</small>
+                                }
+                                else
+                                {
+                                    <span class="av-badge av-badge--none">–</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="av-badge av-badge--driver">
+                                    @v.Assignments.Count Events
+                                </span>
+                            </td>
+                            <td>
+                                <div class="av-actions">
+                                    <button class="av-btn av-btn--edit"
+                                            @onclick="() => OpenEditVehicle(v)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="av-btn av-btn--delete"
+                                            @onclick="() => DeleteVehicle(v.Id)">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TAB: ZUWEISUNGEN
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Assignments)
+    {
+        <!-- Event Filter -->
+        <div class="av-toolbar">
+            <div class="av-field" style="min-width:280px">
+                <label>Event auswählen</label>
+                <select class="av-input"
+                        value="@selectedEventId"
+                        @onchange="OnEventFilterChanged">
+                    <option value="0">– Alle Events –</option>
+                    @foreach (var ev in events ?? new())
+                    {
+                        <option value="@ev.Id">
+                            @ev.Name (@ev.Date.ToShortDateString())
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <!-- Tag Filter -->
+            @if (filterDays.Any())
+            {
+                <div class="av-field">
+                    <label>Tag filtern</label>
+                    <div class="av-day-filter">
+                        <button class="av-day-filter-btn @(selectedFilterDate == null ? "av-day-filter-btn--active" : "")"
+                                @onclick="() => selectedFilterDate = null">
+                            Alle
+                        </button>
+                        @foreach (var day in filterDays)
+                        {
+                            var d = day;
+                            <button class="av-day-filter-btn @(selectedFilterDate == d ? "av-day-filter-btn--active" : "")"
+                                    @onclick="() => selectedFilterDate = d">
+                                @d.ToString("ddd dd.MM", new CultureInfo("de-CH"))
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (assignments == null)
+        {
+            <div class="av-state-card av-state-card--info">
+                <div class="av-state-card__icon">⏳</div>
+                <div class="av-state-card__content">
+                    <h3>Zuweisungen werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!FilteredAssignments.Any())
+        {
+            <div class="av-state-card av-state-card--empty">
+                <div class="av-state-card__icon">📋</div>
+                <div class="av-state-card__content">
+                    <h3>Keine Zuweisungen vorhanden</h3>
+                    <p>Weise ein Fahrzeug über den Tab «Zuweisung erfassen» einem Event zu.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            var grouped = FilteredAssignments
+                .GroupBy(a => (a.VehicleId, a.EventId))
+                .OrderBy(g => g.First().Vehicle.OwnerName)
+                .ToList();
+            <table class="av-table">
+                <thead>
+                    <tr>
+                        <th>Fahrzeughalter</th>
+                        <th>Kontakt</th>
+                        <th>Einsatztage</th>
+                        <th>Event</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var group in grouped)
+                    {
+                        var first = group.First();
+                        var ev    = events?.FirstOrDefault(e => e.Id == first.EventId);
+                        <tr>
+                            <td><strong>@first.Vehicle.OwnerName</strong></td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(first.Vehicle.OwnerPhone))
+                                {
+                                    <span>📞 @first.Vehicle.OwnerPhone</span><br />
+                                }
+                                @if (!string.IsNullOrEmpty(first.Vehicle.OwnerContact))
+                                {
+                                    <small>@first.Vehicle.OwnerContact</small>
+                                }
+                            </td>
+                            <td>
+                                <div class="av-day-pills">
+                                    @foreach (var a in group)
+                                    {
+                                        @foreach (var d in a.AssignedDates.OrderBy(d => d.Date))
+                                        {
+                                            var driverDisplay = GetDriverDisplay(d);
+                                            var helperDisplay = GetHelperDisplay(d);
+                                            <div class="av-day-pill-entry">
+                                                <span class="av-day-pill">
+                                                    @d.Date.ToString("ddd dd.MM", new CultureInfo("de-CH"))
+                                                </span>
+                                                @if (!string.IsNullOrEmpty(driverDisplay))
+                                                {
+                                                    <span class="av-badge av-badge--driver av-badge--sm">
+                                                        🧑‍✈️ @driverDisplay
+                                                    </span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(helperDisplay))
+                                                {
+                                                    <span class="av-badge av-badge--helper av-badge--sm">
+                                                        🙋 @helperDisplay
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if (ev != null)
+                                {
+                                    <span class="av-event-pill">🎪 @ev.Name</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="av-actions">
+                                    <button class="av-btn av-btn--edit"
+                                            @onclick="() => OpenEditAssignmentGroup(group)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="av-btn av-btn--delete"
+                                            @onclick="() => DeleteAssignmentGroup(group.Select(a => a.Id))">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TAB: FAHRZEUG ERFASSEN
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.AddVehicle)
+    {
+        <div class="av-form-card">
+            <div class="av-form-card__header">
+                <h3>🚗 Neues Fahrzeug erfassen</h3>
+            </div>
+            <div class="av-form-card__body">
+                <EditForm Model="newVehicle" OnValidSubmit="CreateVehicle">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="av-validation" />
+
+                    <div class="av-section-title">🚗 Fahrzeughalter</div>
+                    <div class="av-form-grid">
+                        <div class="av-field">
+                            <label>Name *</label>
+                            <InputText @bind-Value="newVehicle.OwnerName"
+                                       class="av-input"
+                                       placeholder="z.B. Max Mustermann" />
+                        </div>
+                        <div class="av-field">
+                            <label>Telefon</label>
+                            <InputText @bind-Value="newVehicle.OwnerPhone"
+                                       class="av-input"
+                                       placeholder="+41 79 000 00 00" />
+                        </div>
+                        <div class="av-field">
+                            <label>Kontakt / Bemerkung</label>
+                            <InputText @bind-Value="newVehicle.OwnerContact"
+                                       class="av-input"
+                                       placeholder="z.B. Transporter, 8 Plätze" />
+                        </div>
+                    </div>
+
+                    <div class="av-form-actions">
+                        <button type="submit" class="av-submit-btn" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span>⏳ Wird gespeichert...</span>
+                            }
+                            else
+                            {
+                                <span>✅ Fahrzeug erfassen</span>
+                            }
+                        </button>
+                        <button type="button" class="av-cancel-btn" @onclick="ResetVehicleForm">
+                            Abbrechen
+                        </button>
+                    </div>
+
+                </EditForm>
+            </div>
+        </div>
+
+        @if (createSuccess != null)
+        {
+            <div class="av-state-card av-state-card--success">
+                <div class="av-state-card__icon">✅</div>
+                <div class="av-state-card__content">
+                    <h3>Gespeichert!</h3>
+                    <p>@createSuccess</p>
+                </div>
+            </div>
+        }
+        @if (createError != null)
+        {
+            <div class="av-state-card av-state-card--error">
+                <div class="av-state-card__icon">⚠️</div>
+                <div class="av-state-card__content">
+                    <h3>Fehler</h3>
+                    <p>@createError</p>
+                </div>
+            </div>
+        }
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TAB: ZUWEISUNG ERFASSEN
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.AddAssignment)
+    {
+        <div class="av-form-card">
+            <div class="av-form-card__header">
+                <h3>📌 Fahrzeug einem Event zuweisen</h3>
+            </div>
+            <div class="av-form-card__body">
+                <EditForm Model="newAssignment" OnValidSubmit="CreateAssignment">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="av-validation" />
+
+                    <!-- Fahrzeug wählen -->
+                    <div class="av-section-title">🚗 Fahrzeug</div>
+                    <div class="av-form-grid">
+                        <div class="av-field">
+                            <label>Fahrzeug *</label>
+                            <select class="av-input"
+                                    value="@newAssignment.VehicleId"
+                                    @onchange="OnNewVehicleSelected">
+                                <option value="0" disabled>– Bitte wählen –</option>
+                                @foreach (var v in vehicles ?? new())
+                                {
+                                    <option value="@v.Id">@GetVehicleLabel(v)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Event wählen -->
+                    <div class="av-section-title">🎪 Event</div>
+                    <div class="av-form-grid">
+                        <div class="av-field">
+                            <label>Event *</label>
+                            <InputSelect @bind-Value="newAssignment.EventId"
+                                         class="av-input"
+                                         @bind-Value:after="OnAssignmentEventSelected">
+                                <option value="0" disabled>– Bitte wählen –</option>
+                                @foreach (var ev in events ?? new())
+                                {
+                                    <option value="@ev.Id">
+                                        @ev.Name (@ev.Date.ToShortDateString())
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <!-- Einsatztage wählen -->
+                    <div class="av-section-title">📅 Einsatztage wählen</div>
+                    @if (!assignmentEventDays.Any())
+                    {
+                        <div class="av-state-card av-state-card--info">
+                            <div class="av-state-card__icon">ℹ️</div>
+                            <div class="av-state-card__content">
+                                <h3>Bitte zuerst ein Event auswählen</h3>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="av-day-grid">
+                            @foreach (var day in assignmentEventDays)
+                            {
+                                var d         = day;
+                                var isChecked = newDayDetails.ContainsKey(d);
+                                var isTaken   = AlreadyAssignedDays.Contains(d);
+                                <label class="av-day-chip @(isTaken ? "av-day-chip--taken" : isChecked ? "av-day-chip--active" : "")">
+                                    <input type="checkbox"
+                                           checked="@(isChecked || isTaken)"
+                                           disabled="@isTaken"
+                                           @onchange="() => ToggleNewDay(d)" />
+                                    <span class="av-day-chip__name">
+                                        @d.ToString("ddd", new CultureInfo("de-CH"))
+                                    </span>
+                                    <span class="av-day-chip__date">
+                                        @d.ToString("dd.MM")
+                                    </span>
+                                </label>
+                            }
+                        </div>
+
+                        @if (existingAssignmentsForForm.Any())
+                        {
+                            <div class="av-state-card av-state-card--info" style="margin-top:.85rem">
+                                <div class="av-state-card__icon">ℹ️</div>
+                                <div class="av-state-card__content">
+                                    <h3>Bereits zugewiesene Tage für dieses Fahrzeug</h3>
+                                    @foreach (var ea in existingAssignmentsForForm)
+                                    {
+                                        @foreach (var ad in ea.AssignedDates.OrderBy(x => x.Date))
+                                        {
+                                            var driverDisplay = GetDriverDisplay(ad);
+                                            var helperDisplay = GetHelperDisplay(ad);
+                                            <div style="margin:.3rem 0; font-size:.88rem; display:flex; flex-wrap:wrap; align-items:center; gap:.4rem;">
+                                                <strong>@ad.Date.ToString("ddd dd.MM", new CultureInfo("de-CH"))</strong>
+                                                @if (!string.IsNullOrEmpty(driverDisplay))
+                                                {
+                                                    <span class="av-badge av-badge--driver av-badge--sm">🧑‍✈️ @driverDisplay</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(helperDisplay))
+                                                {
+                                                    <span class="av-badge av-badge--helper av-badge--sm">🙋 @helperDisplay</span>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <!-- Per-Day Details -->
+                    @if (newDayDetails.Any())
+                    {
+                        <div class="av-section-title">📋 Details pro Einsatztag</div>
+                        @foreach (var kvp in newDayDetails.OrderBy(k => k.Key))
+                        {
+                            var date   = kvp.Key;
+                            var detail = kvp.Value;
+                            <div class="av-day-detail-card">
+                                <div class="av-day-detail-card__header">
+                                    📅 @date.ToString("dddd, dd.MM.yyyy", new CultureInfo("de-CH"))
+                                </div>
+                                <div class="av-day-detail-card__body">
+                                    <div class="av-form-grid">
+                                        <div class="av-field">
+                                            <label>Bereit ab</label>
+                                            <input class="av-input" @bind="detail.ReadyFrom" placeholder="z.B. 08:00" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Abgeholt durch</label>
+                                            <input class="av-input" @bind="detail.PickedUpBy" placeholder="Name der Person" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Zurückgebracht durch</label>
+                                            <input class="av-input" @bind="detail.ReturnedBy" placeholder="Name der Person" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer (Benutzer)</label>
+                                            <select class="av-input" @bind="detail.DriverUserId">
+                                                <option value="">– Kein Benutzer –</option>
+                                                @foreach (var u in users ?? new())
+                                                {
+                                                    <option value="@u.Id">@u.FirstName @u.LastName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer Name (manuell)</label>
+                                            <input class="av-input" @bind="detail.DriverName" placeholder="Falls kein Benutzer" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer Telefon</label>
+                                            <input class="av-input" @bind="detail.DriverPhone" placeholder="+41 79 000 00 00" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Helfer (Benutzer)</label>
+                                            <select class="av-input" @bind="detail.HelperUserId">
+                                                <option value="">– Kein Benutzer –</option>
+                                                @foreach (var u in users ?? new())
+                                                {
+                                                    <option value="@u.Id">@u.FirstName @u.LastName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Helfer Name (manuell)</label>
+                                            <input class="av-input" @bind="detail.HelperName" placeholder="Falls kein Benutzer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    <div class="av-form-actions">
+                        <button type="submit" class="av-submit-btn" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span>⏳ Wird gespeichert...</span>
+                            }
+                            else
+                            {
+                                <span>📌 Zuweisung erfassen</span>
+                            }
+                        </button>
+                        <button type="button" class="av-cancel-btn" @onclick="ResetAssignmentForm">
+                            Abbrechen
+                        </button>
+                    </div>
+
+                </EditForm>
+            </div>
+        </div>
+
+        @if (createSuccess != null)
+        {
+            <div class="av-state-card av-state-card--success">
+                <div class="av-state-card__icon">✅</div>
+                <div class="av-state-card__content">
+                    <h3>Gespeichert!</h3>
+                    <p>@createSuccess</p>
+                </div>
+            </div>
+        }
+        @if (createError != null)
+        {
+            <div class="av-state-card av-state-card--error">
+                <div class="av-state-card__icon">⚠️</div>
+                <div class="av-state-card__content">
+                    <h3>Fehler</h3>
+                    <p>@createError</p>
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     EDIT MODAL — FAHRZEUG (Stammdaten)
+════════════════════════════════════════════════════════════════════════════ -->
+@if (editVehicle != null)
+{
+    <div class="av-modal-backdrop" @onclick="CloseEditVehicle">
+        <div class="av-modal" @onclick:stopPropagation="true">
+
+            <div class="av-modal__header">
+                <h3>✏️ Fahrzeug bearbeiten</h3>
+                <button class="av-modal__close" @onclick="CloseEditVehicle">✕</button>
+            </div>
+
+            <EditForm Model="editVehicle" OnValidSubmit="SaveEditVehicle">
+                <DataAnnotationsValidator />
+
+                <div class="av-modal__body">
+                    <ValidationSummary class="av-validation" />
+
+                    @if (createError != null)
+                    {
+                        <div class="av-state-card av-state-card--error" style="margin-bottom:1rem">
+                            <div class="av-state-card__icon">⚠️</div>
+                            <div class="av-state-card__content">
+                                <h3>Fehler</h3>
+                                <p>@createError</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="av-section-title">🚗 Fahrzeughalter</div>
+                    <div class="av-form-grid">
+                        <div class="av-field">
+                            <label>Name *</label>
+                            <InputText @bind-Value="editVehicle.OwnerName" class="av-input" />
+                        </div>
+                        <div class="av-field">
+                            <label>Telefon</label>
+                            <InputText @bind-Value="editVehicle.OwnerPhone" class="av-input" />
+                        </div>
+                        <div class="av-field">
+                            <label>Kontakt / Bemerkung</label>
+                            <InputText @bind-Value="editVehicle.OwnerContact" class="av-input" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="av-modal__footer">
+                    <button type="submit" class="av-submit-btn" disabled="@isSaving">
+                        @if (isSaving) { <span>⏳ Wird gespeichert...</span> }
+                        else           { <span>💾 Speichern</span> }
+                    </button>
+                    <button type="button" class="av-cancel-btn" @onclick="CloseEditVehicle">
+                        Abbrechen
+                    </button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+}
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     EDIT MODAL — ZUWEISUNG
+════════════════════════════════════════════════════════════════════════════ -->
+@if (editAssignment != null)
+{
+    <div class="av-modal-backdrop" @onclick="CloseEditAssignment">
+        <div class="av-modal" @onclick:stopPropagation="true">
+
+            <div class="av-modal__header">
+                <h3>✏️ Zuweisung bearbeiten — @editAssignment.Vehicle?.OwnerName</h3>
+                <button class="av-modal__close" @onclick="CloseEditAssignment">✕</button>
+            </div>
+
+            <EditForm Model="editAssignment" OnValidSubmit="SaveEditAssignment">
+                <DataAnnotationsValidator />
+
+                <div class="av-modal__body">
+                    <ValidationSummary class="av-validation" />
+
+                    @if (createError != null)
+                    {
+                        <div class="av-state-card av-state-card--error" style="margin-bottom:1rem">
+                            <div class="av-state-card__icon">⚠️</div>
+                            <div class="av-state-card__content">
+                                <h3>Fehler</h3>
+                                <p>@createError</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Einsatztage -->
+                    <div class="av-section-title">📅 Einsatztage</div>
+                    <div class="av-day-grid">
+                        @foreach (var day in editAssignmentDays)
+                        {
+                            var d         = day;
+                            var isChecked = editDayDetails.ContainsKey(d);
+                            <label class="av-day-chip @(isChecked ? "av-day-chip--active" : "")">
+                                <input type="checkbox"
+                                       checked="@isChecked"
+                                       @onchange="() => ToggleEditDay(d)" />
+                                <span class="av-day-chip__name">
+                                    @d.ToString("ddd", new CultureInfo("de-CH"))
+                                </span>
+                                <span class="av-day-chip__date">
+                                    @d.ToString("dd.MM")
+                                </span>
+                            </label>
+                        }
+                    </div>
+
+                    <!-- Per-Day Details -->
+                    @if (editDayDetails.Any())
+                    {
+                        <div class="av-section-title">📋 Details pro Einsatztag</div>
+                        @foreach (var kvp in editDayDetails.OrderBy(k => k.Key))
+                        {
+                            var date   = kvp.Key;
+                            var detail = kvp.Value;
+                            <div class="av-day-detail-card">
+                                <div class="av-day-detail-card__header">
+                                    📅 @date.ToString("dddd, dd.MM.yyyy", new CultureInfo("de-CH"))
+                                </div>
+                                <div class="av-day-detail-card__body">
+                                    <div class="av-form-grid">
+                                        <div class="av-field">
+                                            <label>Bereit ab</label>
+                                            <input class="av-input" @bind="detail.ReadyFrom" placeholder="z.B. 08:00" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Abgeholt durch</label>
+                                            <input class="av-input" @bind="detail.PickedUpBy" placeholder="Name der Person" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Zurückgebracht durch</label>
+                                            <input class="av-input" @bind="detail.ReturnedBy" placeholder="Name der Person" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer (Benutzer)</label>
+                                            <select class="av-input" @bind="detail.DriverUserId">
+                                                <option value="">– Kein Benutzer –</option>
+                                                @foreach (var u in users ?? new())
+                                                {
+                                                    <option value="@u.Id">@u.FirstName @u.LastName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer Name (manuell)</label>
+                                            <input class="av-input" @bind="detail.DriverName" placeholder="Falls kein Benutzer" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Fahrer Telefon</label>
+                                            <input class="av-input" @bind="detail.DriverPhone" placeholder="+41 79 000 00 00" />
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Helfer (Benutzer)</label>
+                                            <select class="av-input" @bind="detail.HelperUserId">
+                                                <option value="">– Kein Benutzer –</option>
+                                                @foreach (var u in users ?? new())
+                                                {
+                                                    <option value="@u.Id">@u.FirstName @u.LastName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="av-field">
+                                            <label>Helfer Name (manuell)</label>
+                                            <input class="av-input" @bind="detail.HelperName" placeholder="Falls kein Benutzer" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                </div>
+
+                <div class="av-modal__footer">
+                    <button type="submit" class="av-submit-btn" disabled="@isSaving">
+                        @if (isSaving) { <span>⏳ Wird gespeichert...</span> }
+                        else           { <span>💾 Speichern</span> }
+                    </button>
+                    <button type="button" class="av-cancel-btn" @onclick="CloseEditAssignment">
+                        Abbrechen
+                    </button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    // ── Enums ─────────────────────────────────────────────────────────────────
+    private enum Tab { Vehicles, Assignments, AddVehicle, AddAssignment }
+    private Tab activeTab = Tab.Vehicles;
+
+    // ── Data ──────────────────────────────────────────────────────────────────
+    private List<Vehicle>?           vehicles    = null;
+    private List<VehicleAssignment>? assignments = null;
+    private List<Event>?             events      = null;
+    private List<ApplicationUser>?   users       = null;
+
+    // ── Filter ────────────────────────────────────────────────────────────────
+    private int            selectedEventId    = 0;
+    private DateTime?      selectedFilterDate = null;
+    private List<DateTime> filterDays         = new();
+
+    private IEnumerable<VehicleAssignment> FilteredAssignments =>
+        selectedFilterDate == null
+            ? assignments ?? new()
+            : (assignments ?? new())
+                .Where(a => a.AssignedDates
+                    .Any(d => d.Date.Date == selectedFilterDate.Value.Date));
+
+    // ── Create Vehicle ────────────────────────────────────────────────────────
+    private Vehicle newVehicle = new();
+
+    // ── Create Assignment ─────────────────────────────────────────────────────
+    private VehicleAssignment                    newAssignment              = new();
+    private Dictionary<DateTime, AssignmentDate> newDayDetails              = new();
+    private List<DateTime>                       assignmentEventDays        = new();
+    private List<VehicleAssignment>              existingAssignmentsForForm = new();
+
+    private HashSet<DateTime> AlreadyAssignedDays =>
+        existingAssignmentsForForm
+            .SelectMany(a => a.AssignedDates)
+            .Select(d => d.Date.Date)
+            .ToHashSet();
+
+    // ── Shared State ──────────────────────────────────────────────────────────
+    private bool    isSaving      = false;
+    private string? createSuccess = null;
+    private string? createError   = null;
+
+    // ── Edit Vehicle ──────────────────────────────────────────────────────────
+    private Vehicle? editVehicle = null;
+
+    // ── Edit Assignment ───────────────────────────────────────────────────────
+    private VehicleAssignment?                   editAssignment         = null;
+    private Dictionary<DateTime, AssignmentDate> editDayDetails         = new();
+    private List<DateTime>                       editAssignmentDays     = new();
+    private List<int>                            editAssignmentGroupIds = new();
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        events      = await AreaService.GetAllEventsAsync();
+        users       = await VehicleService.GetAllUsersAsync();
+        vehicles    = await VehicleService.GetAllVehiclesAsync();
+        assignments = await VehicleService.GetAssignmentsByEventAsync(0);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static List<DateTime> GetEventDays(Event ev) =>
+        Enumerable.Range(0, 7)
+                  .Select(i => ev.Date.Date.AddDays(i))
+                  .ToList();
+
+    // ── Tab ───────────────────────────────────────────────────────────────────
+    private void SetTab(Tab tab)
+    {
+        activeTab     = tab;
+        createSuccess = null;
+        createError   = null;
+    }
+
+    // ── Event Filter ──────────────────────────────────────────────────────────
+    private async Task OnEventFilterChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            selectedEventId = id;
+
+        selectedFilterDate = null;
+        assignments = await VehicleService.GetAssignmentsByEventAsync(selectedEventId);
+
+        var ev = events?.FirstOrDefault(x => x.Id == selectedEventId);
+        filterDays = ev != null ? GetEventDays(ev) : new();
+    }
+
+    // ── Event Selected (Zuweisung Formular) ───────────────────────────────────
+    private async Task OnAssignmentEventSelected()
+    {
+        newDayDetails = new();
+        var ev = events?.FirstOrDefault(x => x.Id == newAssignment.EventId);
+        assignmentEventDays = ev != null ? GetEventDays(ev) : new();
+        await LoadExistingAssignmentsForForm();
+    }
+
+    private async Task LoadExistingAssignmentsForForm()
+    {
+        if (newAssignment.VehicleId > 0 && newAssignment.EventId > 0)
+        {
+            var all = await VehicleService.GetAssignmentsByEventAsync(newAssignment.EventId);
+            existingAssignmentsForForm = all.Where(a => a.VehicleId == newAssignment.VehicleId).ToList();
+        }
+        else
+        {
+            existingAssignmentsForForm = new();
+        }
+    }
+
+    // ── Toggle Days ───────────────────────────────────────────────────────────
+    private void ToggleNewDay(DateTime day)
+    {
+        if (AlreadyAssignedDays.Contains(day)) return;
+        if (newDayDetails.ContainsKey(day))
+            newDayDetails.Remove(day);
+        else
+            newDayDetails[day] = new AssignmentDate { Date = day };
+    }
+
+    private void ToggleEditDay(DateTime day)
+    {
+        if (editDayDetails.ContainsKey(day))
+            editDayDetails.Remove(day);
+        else
+            editDayDetails[day] = new AssignmentDate { Date = day };
+    }
+
+    // ── Create Vehicle ────────────────────────────────────────────────────────
+    private async Task CreateVehicle()
+    {
+        isSaving      = true;
+        createSuccess = null;
+        createError   = null;
+
+        try
+        {
+            await VehicleService.CreateVehicleAsync(newVehicle);
+            createSuccess = $"Fahrzeug «{newVehicle.OwnerName}» wurde erfolgreich erfasst.";
+            vehicles      = await VehicleService.GetAllVehiclesAsync();
+            newVehicle    = new Vehicle();
+        }
+        catch (Exception ex)
+        {
+            createError = $"Fehler beim Speichern: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ResetVehicleForm()
+    {
+        newVehicle    = new Vehicle();
+        createSuccess = null;
+        createError   = null;
+        SetTab(Tab.Vehicles);
+    }
+
+    // ── Create Assignment ─────────────────────────────────────────────────────
+    private async Task CreateAssignment()
+    {
+        isSaving      = true;
+        createSuccess = null;
+        createError   = null;
+
+        try
+        {
+            await VehicleService.CreateAssignmentAsync(newAssignment, newDayDetails.Values.ToList());
+            var v = vehicles?.FirstOrDefault(x => x.Id == newAssignment.VehicleId);
+            createSuccess = $"Fahrzeug «{v?.OwnerName}» wurde dem Event zugewiesen.";
+            assignments   = await VehicleService.GetAssignmentsByEventAsync(selectedEventId);
+            ResetAssignmentForm();
+        }
+        catch (Exception ex)
+        {
+            createError = $"Fehler beim Speichern: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ResetAssignmentForm()
+    {
+        newAssignment              = new VehicleAssignment();
+        newDayDetails              = new();
+        assignmentEventDays        = new();
+        existingAssignmentsForForm = new();
+    }
+
+    // ── Edit Vehicle ──────────────────────────────────────────────────────────
+    private void OpenEditVehicle(Vehicle v)
+    {
+        createError = null;
+        editVehicle = new Vehicle
+        {
+            Id           = v.Id,
+            OwnerName    = v.OwnerName,
+            OwnerPhone   = v.OwnerPhone,
+            OwnerContact = v.OwnerContact
+        };
+    }
+
+    private void CloseEditVehicle()
+    {
+        editVehicle = null;
+        createError = null;
+    }
+
+    private async Task SaveEditVehicle()
+    {
+        if (editVehicle == null) return;
+
+        isSaving = true;
+        try
+        {
+            await VehicleService.UpdateVehicleAsync(editVehicle);
+            vehicles = await VehicleService.GetAllVehiclesAsync();
+            CloseEditVehicle();
+        }
+        catch (Exception ex)
+        {
+            createError = $"Fehler beim Speichern: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteVehicle(int id)
+    {
+        await VehicleService.DeleteVehicleAsync(id);
+        vehicles    = await VehicleService.GetAllVehiclesAsync();
+        assignments = await VehicleService.GetAssignmentsByEventAsync(selectedEventId);
+    }
+
+    // ── Edit Assignment ───────────────────────────────────────────────────────
+    private void OpenEditAssignmentGroup(IEnumerable<VehicleAssignment> group)
+    {
+        var list  = group.ToList();
+        var first = list.First();
+        createError    = null;
+        editAssignment = new VehicleAssignment
+        {
+            Id        = first.Id,
+            VehicleId = first.VehicleId,
+            Vehicle   = first.Vehicle,
+            EventId   = first.EventId,
+        };
+        editAssignmentGroupIds = list.Select(a => a.Id).ToList();
+        editDayDetails = list
+            .SelectMany(a => a.AssignedDates)
+            .ToDictionary(
+                d => d.Date.Date,
+                d => new AssignmentDate
+                {
+                    Id           = d.Id,
+                    AssignmentId = d.AssignmentId,
+                    Date         = d.Date.Date,
+                    DriverUserId = d.DriverUserId,
+                    DriverName   = d.DriverName,
+                    DriverPhone  = d.DriverPhone,
+                    HelperUserId = d.HelperUserId,
+                    HelperName   = d.HelperName,
+                    ReadyFrom    = d.ReadyFrom,
+                    PickedUpBy   = d.PickedUpBy,
+                    ReturnedBy   = d.ReturnedBy,
+                });
+        var ev = events?.FirstOrDefault(x => x.Id == first.EventId);
+        editAssignmentDays = ev != null ? GetEventDays(ev) : new();
+    }
+
+    private void CloseEditAssignment()
+    {
+        editAssignment         = null;
+        editDayDetails         = new();
+        editAssignmentDays     = new();
+        editAssignmentGroupIds = new();
+        createError            = null;
+    }
+
+    private async Task SaveEditAssignment()
+    {
+        if (editAssignment == null) return;
+
+        isSaving = true;
+        try
+        {
+            await VehicleService.UpdateAssignmentAsync(editAssignment, editDayDetails.Values.ToList());
+
+            foreach (var id in editAssignmentGroupIds.Where(id => id != editAssignment.Id))
+                await VehicleService.DeleteAssignmentAsync(id);
+
+            assignments = await VehicleService.GetAssignmentsByEventAsync(selectedEventId);
+            CloseEditAssignment();
+        }
+        catch (Exception ex)
+        {
+            createError = $"Fehler beim Speichern: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteAssignmentGroup(IEnumerable<int> ids)
+    {
+        foreach (var id in ids)
+            await VehicleService.DeleteAssignmentAsync(id);
+        assignments = await VehicleService.GetAssignmentsByEventAsync(selectedEventId);
+    }
+
+    private async Task OnNewVehicleSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            newAssignment.VehicleId = id;
+        await LoadExistingAssignmentsForForm();
+    }
+
+    private string GetVehicleLabel(Vehicle v)
+    {
+        return string.IsNullOrEmpty(v.OwnerPhone)
+            ? v.OwnerName
+            : $"{v.OwnerName} – {v.OwnerPhone}";
+    }
+
+    private string? GetDriverDisplay(AssignmentDate d)
+    {
+        if (!string.IsNullOrEmpty(d.DriverName))
+            return d.DriverName;
+        if (!string.IsNullOrEmpty(d.DriverUserId))
+        {
+            var u = users?.FirstOrDefault(u => u.Id == d.DriverUserId);
+            return u != null ? $"{u.FirstName} {u.LastName}" : null;
+        }
+        return null;
+    }
+
+    private string? GetHelperDisplay(AssignmentDate d)
+    {
+        if (!string.IsNullOrEmpty(d.HelperName))
+            return d.HelperName;
+        if (!string.IsNullOrEmpty(d.HelperUserId))
+        {
+            var u = users?.FirstOrDefault(u => u.Id == d.HelperUserId);
+            return u != null ? $"{u.FirstName} {u.LastName}" : null;
+        }
+        return null;
+    }
+}

@@ -18,6 +18,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FurniturePickupRequest> FurniturePickupRequests { get; set; }
     public DbSet<FurniturePickupImage>   FurniturePickupImages   { get; set; }
     public DbSet<FurniturePickupSettings> FurniturePickupSettings { get; set; }
+    public DbSet<Vehicle>           Vehicles           { get; set; }
+    public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
+    public DbSet<AssignmentDate>    AssignmentDates    { get; set; }
 
     // ── NEU ───────────────────────────────────────────────────────────────────
     public DbSet<AreaCategory> AreaCategories { get; set; }
@@ -25,6 +28,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+    // ── Vehicle Settings ──────────────────────
+        modelBuilder.Entity<VehicleAssignment>()
+            .HasOne(a => a.Vehicle)
+            .WithMany(v => v.Assignments)
+            .HasForeignKey(a => a.VehicleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<VehicleAssignment>()
+            .HasOne(a => a.Event)
+            .WithMany()
+            .HasForeignKey(a => a.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AssignmentDate>()
+            .HasOne(d => d.Assignment)
+            .WithMany(a => a.AssignedDates)
+            .HasForeignKey(d => d.AssignmentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── FurniturePickupSettings → Event (optional) ──────────────────────
         modelBuilder.Entity<FurniturePickupSettings>()

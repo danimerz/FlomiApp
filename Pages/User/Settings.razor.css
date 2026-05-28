@@ -6,7 +6,7 @@
     max-width: 1240px;
     margin: 0 auto;
     padding: 2rem 1rem 3rem;
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
@@ -16,7 +16,7 @@
     margin-bottom: 2rem;
     border-radius: 24px;
     background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
-    box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
 
@@ -77,53 +77,13 @@
     line-height: 1.6;
 }
 
-/* ─── State Cards ────────────────────────────────────────────────────────── */
-.state-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1.1rem 1.2rem;
-    border-radius: 18px;
-    border: 1px solid transparent;
-}
-
-.state-card__icon {
-    flex-shrink: 0;
-    font-size: 1.4rem;
-    line-height: 1;
-}
-
-.state-card__content h3 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    font-weight: 800;
-}
-
-.state-card__content p {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.state-card--error {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #b91c1c;
-}
-
-.state-card--success {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-    color: #047857;
-}
-
 /* ─── Tabs ───────────────────────────────────────────────────────────────── */
 .settings-tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.75rem;
     padding: 0.4rem;
-    background: #f1f5f9;
+    background: var(--color-surface-soft);
     border-radius: 18px;
     width: fit-content;
 }
@@ -133,7 +93,7 @@
     border: none;
     border-radius: 14px;
     background: transparent;
-    color: #64748b;
+    color: var(--color-text-lighter);
     font-size: 0.92rem;
     font-weight: 700;
     cursor: pointer;
@@ -142,13 +102,13 @@
 }
 
 .settings-tab:hover {
-    background: #e2e8f0;
-    color: #1e293b;
+    background: var(--color-border-soft);
+    color: var(--color-text-strong);
 }
 
 .settings-tab--active {
-    background: #ffffff;
-    color: #2563eb;
+    background: var(--color-surface-card);
+    color: var(--color-primary);
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
 }
 
@@ -185,12 +145,10 @@
 /* ─── Card ───────────────────────────────────────────────────────────────── */
 .settings-card {
     width: 100%;
-    border: 1px solid #e7edf5;
+    border: 1px solid var(--color-border-card);
     border-radius: 22px;
-    background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
-    box-shadow:
-        0 10px 24px rgba(15, 23, 42, 0.05),
-        0 1px 0 rgba(255, 255, 255, 0.9) inset;
+    background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-soft) 100%);
+    box-shadow: var(--shadow-card);
     overflow: visible;
     min-width: 0;
     box-sizing: border-box;
@@ -198,8 +156,8 @@
 
 /* ─── Danger Card ────────────────────────────────────────────────────────── */
 .settings-card--danger {
-    border-color: #fecaca;
-    background: linear-gradient(180deg, #ffffff 0%, #fff8f8 100%);
+    border-color: var(--color-error-border);
+    background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-error-bg) 100%);
     box-shadow:
         0 10px 24px rgba(220, 38, 38, 0.06),
         0 1px 0 rgba(255, 255, 255, 0.9) inset;
@@ -223,7 +181,7 @@
 
 .settings-card__topline {
     margin-bottom: 0.35rem;
-    color: #2563eb;
+    color: var(--color-primary);
     font-size: 0.78rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -231,14 +189,14 @@
 }
 
 .settings-card__topline--danger {
-    color: #dc2626;
+    color: var(--color-error-text);
 }
 
 .settings-card__header h2 {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--color-text-strong);
     white-space: nowrap;
 }
 
@@ -301,7 +259,7 @@
     margin: 0;
     font-size: 0.92rem;
     font-weight: 700;
-    color: #334155;
+    color: var(--color-text-medium);
 }
 
 /* ─── Form Controls ──────────────────────────────────────────────────────── */
@@ -318,10 +276,10 @@
     min-height: 3.35rem;
     margin: 0;
     padding: 0.95rem 1rem;
-    border: 1px solid #dbe3ef;
+    border: 1px solid var(--color-border-form);
     border-radius: 14px;
-    background: #f8fbff;
-    color: #0f172a;
+    background: var(--color-surface-input);
+    color: var(--color-text-deep);
     font-size: 0.97rem;
     line-height: 1.2;
     box-sizing: border-box;
@@ -339,8 +297,8 @@
 ::deep input.form-control-modern:hover,
 ::deep select.form-control-modern:hover,
 ::deep textarea.form-control-modern:hover {
-    border-color: #b8c7db;
-    background: #ffffff;
+    border-color: var(--color-border-medium);
+    background: var(--color-surface-card);
 }
 
 .form-control-modern:focus,
@@ -349,8 +307,8 @@
 ::deep select.form-control-modern:focus,
 ::deep textarea.form-control-modern:focus {
     outline: none;
-    border-color: #3b82f6;
-    background: #ffffff;
+    border-color: var(--color-primary);
+    background: var(--color-surface-card);
     box-shadow:
         0 0 0 4px rgba(59, 130, 246, 0.12),
         0 8px 20px rgba(37, 99, 235, 0.08);
@@ -370,7 +328,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     padding-right: 3rem;
-    background-color: #f8fbff;
+    background-color: var(--color-surface-input);
     background-image:
         linear-gradient(45deg, transparent 50%, #64748b 50%),
         linear-gradient(135deg, #64748b 50%, transparent 50%);
@@ -385,7 +343,7 @@
     appearance: none;
     -webkit-appearance: none;
     padding-right: 0.75rem;
-    background: #f8fbff;
+    background: var(--color-surface-input);
 }
 
 ::deep input.form-control-modern[type="date"]::-webkit-calendar-picker-indicator {
@@ -396,7 +354,7 @@
 
 ::deep input.form-control-modern::placeholder,
 ::deep textarea.form-control-modern::placeholder {
-    color: #94a3b8;
+    color: var(--color-text-placeholder);
 }
 
 /* ─── Validation ─────────────────────────────────────────────────────────── */
@@ -404,9 +362,9 @@
     margin-bottom: 1rem;
     padding: 0.9rem 1rem;
     border-radius: 14px;
-    background: #fff7ed;
-    border: 1px solid #fdba74;
-    color: #9a3412;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    color: var(--color-warning-text);
 }
 
 /* ─── Form Actions ───────────────────────────────────────────────────────── */
@@ -434,8 +392,8 @@
 }
 
 .primary-btn {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    box-shadow: var(--shadow-btn);
 }
 
 .primary-btn:hover {
@@ -469,66 +427,17 @@
 .danger-btn:disabled,
 .secondary-btn:disabled,
 .primary-btn:disabled {
-    background: #cbd5e1;
-    color: #64748b;
+    background: var(--color-border-medium);
+    color: var(--color-text-lighter);
     box-shadow: none;
     cursor: not-allowed;
     transform: none;
     filter: none;
 }
 
-/* ─── Button Loading State ───────────────────────────────────────────────── */
+/* ─── Button Loading State — Settings overrides global min-width ─────────── */
 .btn-loading {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.75rem 1.1rem;
-    border-radius: 14px;
-    font-size: 0.92rem;
-    font-weight: 700;
-    border: 1px solid transparent;
     min-width: 160px;
-    white-space: nowrap;
-}
-
-/* Blau — für Speichern-Aktionen */
-.btn-loading--primary {
-    background: #eff6ff;
-    color: #2563eb;
-    border-color: #bfdbfe;
-}
-
-/* Rot — für Löschen-Aktionen */
-.btn-loading--danger {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
-}
-
-/* ─── Spinner ────────────────────────────────────────────────────────────── */
-.btn-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    animation: spin 0.7s linear infinite;
-}
-
-/* Blauer Spinner */
-.btn-spinner--white {
-    border: 2.5px solid #bfdbfe;
-    border-top-color: #2563eb;
-}
-
-/* Roter Spinner */
-.btn-spinner--danger {
-    border: 2.5px solid #fecaca;
-    border-top-color: #dc2626;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 /* ─── Member Card — Deleting State ──────────────────────────────────────── */
@@ -553,9 +462,9 @@
     justify-content: space-between;
     gap: 0.85rem;
     padding: 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border-light);
     border-radius: 18px;
-    background: #f8fafc;
+    background: var(--color-surface-input);
     min-width: 0;
     box-sizing: border-box;
     transition: opacity 0.2s ease;
@@ -579,7 +488,7 @@
     margin: 0;
     font-size: 0.98rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--color-text-strong);
     min-width: 0;
     word-break: break-word;
 }
@@ -589,8 +498,8 @@
     align-items: center;
     padding: 0.25rem 0.6rem;
     border-radius: 999px;
-    background: #eef2ff;
-    color: #4338ca;
+    background: var(--color-primary-subtle);
+    color: var(--color-primary-deeper);
     font-size: 0.74rem;
     font-weight: 700;
     white-space: nowrap;
@@ -609,7 +518,7 @@
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.4rem 0;
-    border-bottom: 1px dashed #e5e7eb;
+    border-bottom: 1px dashed var(--color-border-light);
 }
 
 .member-info-item:last-child {
@@ -617,14 +526,14 @@
 }
 
 .member-info-item .label {
-    color: #6b7280;
+    color: var(--color-text-light);
     font-size: 0.82rem;
     font-weight: 600;
     flex-shrink: 0;
 }
 
 .member-info-item .value {
-    color: #111827;
+    color: var(--color-text-strong);
     font-size: 0.85rem;
     font-weight: 700;
     text-align: right;
@@ -657,7 +566,6 @@
     transform: translateY(-1px);
 }
 
-/* Loading im Member-Card Actions — volle Breite */
 .member-card__actions .btn-loading {
     flex: 1;
     justify-content: center;
@@ -671,10 +579,10 @@
 .inline-empty-state {
     margin-top: 1.25rem;
     padding: 1rem 1.1rem;
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--color-border-medium);
     border-radius: 16px;
-    background: #f8fafc;
-    color: #64748b;
+    background: var(--color-surface-input);
+    color: var(--color-text-lighter);
 }
 
 /* ─── Notification Toggle ────────────────────────────────────────────────── */
@@ -684,7 +592,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem 0;
-    border-bottom: 1px solid #e7edf5;
+    border-bottom: 1px solid var(--color-border-card);
     margin-bottom: 1rem;
 }
 
@@ -697,13 +605,13 @@
     margin: 0 0 0.25rem;
     font-size: 0.95rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--color-text-strong);
 }
 
 .notification-toggle__desc {
     margin: 0;
     font-size: 0.83rem;
-    color: #64748b;
+    color: var(--color-text-lighter);
     line-height: 1.5;
 }
 
@@ -727,7 +635,7 @@
     position: absolute;
     cursor: pointer;
     inset: 0;
-    background-color: #cbd5e1;
+    background-color: var(--color-border-medium);
     border-radius: 999px;
     transition: background-color 0.25s ease;
     box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.12);
@@ -740,14 +648,14 @@
     width: 20px;
     left: 4px;
     bottom: 4px;
-    background: #ffffff;
+    background: var(--color-white);
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
     transition: transform 0.25s ease;
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.30);
 }
 
@@ -770,16 +678,16 @@
     gap: 0.4rem;
 }
 
-.toggle-status--on  { color: #059669; }
-.toggle-status--off { color: #94a3b8; }
+.toggle-status--on  { color: var(--color-success-text); }
+.toggle-status--off { color: var(--color-text-placeholder); }
 
 /* ─── Family Form Panel ──────────────────────────────────────────────────── */
 .family-form-panel {
     margin-bottom: 1.5rem;
     padding: 1.25rem;
-    border: 1px solid #dbeafe;
+    border: 1px solid var(--color-info-border);
     border-radius: 18px;
-    background: #f0f7ff;
+    background: var(--color-info-bg);
     animation: fadeIn 0.2s ease;
 }
 
@@ -794,7 +702,7 @@
     margin: 0;
     font-size: 1.05rem;
     font-weight: 800;
-    color: #1e40af;
+    color: var(--color-primary-deeper);
 }
 
 .icon-close-btn {
@@ -805,8 +713,8 @@
     height: 32px;
     border: none;
     border-radius: 50%;
-    background: #e0eaff;
-    color: #3b82f6;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
@@ -815,8 +723,8 @@
 }
 
 .icon-close-btn:hover {
-    background: #bfdbfe;
-    color: #1d4ed8;
+    background: var(--color-info-border);
+    color: var(--color-primary-dark);
 }
 
 .icon-close-btn:disabled {
@@ -832,8 +740,8 @@
     margin-bottom: 1.5rem;
     padding: 1.1rem 1.25rem;
     border-radius: 16px;
-    background: #fff7ed;
-    border: 1px solid #fed7aa;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
 }
 
 .delete-account-warning__icon {
@@ -844,28 +752,28 @@
 
 .delete-account-warning__text {
     font-size: 0.92rem;
-    color: #374151;
+    color: var(--color-text-medium);
     line-height: 1.6;
 }
 
 .delete-account-warning__text strong {
     display: block;
     margin-bottom: 0.35rem;
-    color: #92400e;
+    color: var(--color-warning-text);
     font-size: 0.95rem;
 }
 
 .delete-account-warning__text p {
     margin: 0;
-    color: #6b7280;
+    color: var(--color-text-light);
 }
 
 /* ─── Delete Confirm Panel ───────────────────────────────────────────────── */
 .delete-confirm-panel {
     padding: 1.25rem;
-    border: 1.5px solid #fecaca;
+    border: 1.5px solid var(--color-error-border);
     border-radius: 18px;
-    background: #fff8f8;
+    background: var(--color-error-bg);
     animation: fadeIn 0.2s ease;
 }
 
@@ -886,14 +794,14 @@
     display: block;
     font-size: 1.05rem;
     font-weight: 800;
-    color: #b91c1c;
+    color: var(--color-error-text);
     margin-bottom: 0.3rem;
 }
 
 .delete-confirm-panel__subtitle {
     margin: 0;
     font-size: 0.88rem;
-    color: #6b7280;
+    color: var(--color-text-light);
     line-height: 1.5;
 }
 

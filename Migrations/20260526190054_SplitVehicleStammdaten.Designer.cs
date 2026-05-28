@@ -4,6 +4,7 @@ using FlomiApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlomiApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260526190054_SplitVehicleStammdaten")]
+    partial class SplitVehicleStammdaten
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -239,30 +242,6 @@ namespace FlomiApp.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("DriverName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DriverPhone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DriverUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HelperName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HelperUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PickedUpBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReadyFrom")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReturnedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -507,15 +486,43 @@ namespace FlomiApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("DriverName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DriverPhone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DriverUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("EventId")
                         .HasColumnType("int");
+
+                    b.Property<string>("HelperName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HelperUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PickedUpBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReadyFrom")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReturnedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DriverUserId");
+
                     b.HasIndex("EventId");
+
+                    b.HasIndex("HelperUserId");
 
                     b.HasIndex("VehicleId");
 
@@ -765,11 +772,19 @@ namespace FlomiApp.Migrations
 
             modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>
                 {
+                    b.HasOne("FlomiApp.Data.Models.ApplicationUser", "DriverUser")
+                        .WithMany()
+                        .HasForeignKey("DriverUserId");
+
                     b.HasOne("FlomiApp.Data.Models.Event", "Event")
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("FlomiApp.Data.Models.ApplicationUser", "HelperUser")
+                        .WithMany()
+                        .HasForeignKey("HelperUserId");
 
                     b.HasOne("FlomiApp.Data.Models.Vehicle", "Vehicle")
                         .WithMany("Assignments")
@@ -777,7 +792,11 @@ namespace FlomiApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("DriverUser");
+
                     b.Navigation("Event");
+
+                    b.Navigation("HelperUser");
 
                     b.Navigation("Vehicle");
                 });

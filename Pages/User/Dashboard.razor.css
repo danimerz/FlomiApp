@@ -2,7 +2,7 @@
     max-width: 1240px;
     margin: 0 auto;
     padding: 2rem 1rem 3rem;
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
@@ -12,7 +12,7 @@
     margin-bottom: 2rem;
     border-radius: 24px;
     background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
-    box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
 
@@ -73,46 +73,6 @@
     line-height: 1.6;
 }
 
-/* ── State Cards ──────────────────────────────────────────────────────────── */
-.state-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1.1rem 1.2rem;
-    border-radius: 18px;
-    border: 1px solid transparent;
-}
-
-.state-card__icon {
-    flex-shrink: 0;
-    font-size: 1.4rem;
-    line-height: 1;
-}
-
-.state-card__content h3 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    font-weight: 800;
-}
-
-.state-card__content p {
-    margin: 0;
-    line-height: 1.5;
-}
-
-.state-card--info {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
-}
-
-.state-card--empty {
-    background: #f8fafc;
-    border-color: #e5e7eb;
-    color: #475569;
-}
-
 /* ── Section Header ───────────────────────────────────────────────────────── */
 .appointments-section__header {
     display: flex;
@@ -121,7 +81,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding-left: 0.85rem;
-    border-left: 5px solid #2563eb;
+    border-left: 5px solid var(--color-primary);
 }
 
 .appointments-section__controls {
@@ -134,7 +94,7 @@
     margin: 0;
     font-size: 1.3rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--color-text-deep);
 }
 
 .appointments-section__count {
@@ -142,19 +102,19 @@
     align-items: center;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: var(--color-info-bg);
+    color: var(--color-info-text);
     font-size: 0.82rem;
     font-weight: 700;
     white-space: nowrap;
 }
 
-/* ── Event-Gruppe (Ebene 1) ───────────────────────────────────────────────── */
+/* ── Event-Gruppe ─────────────────────────────────────────────────────────── */
 .group-event {
     margin-bottom: 1rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border-light);
     border-radius: 20px;
-    background: #ffffff;
+    background: var(--color-surface-card);
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
     overflow: hidden;
 }
@@ -203,12 +163,12 @@
     padding: 1rem 1rem 0.5rem;
 }
 
-/* ── Datum-Gruppe (Ebene 2) ───────────────────────────────────────────────── */
+/* ── Datum-Gruppe ─────────────────────────────────────────────────────────── */
 .group-date {
     margin-bottom: 1rem;
-    border: 1px solid #e0e7ff;
+    border: 1px solid var(--color-primary-tint);
     border-radius: 14px;
-    background: #f8faff;
+    background: var(--color-surface);
     overflow: hidden;
 }
 
@@ -219,18 +179,18 @@
     gap: 0.65rem;
     padding: 0.75rem 1rem;
     border: none;
-    background: #eef2ff;
-    color: #3730a3;
+    background: var(--color-primary-subtle);
+    color: var(--color-primary-deeper);
     cursor: pointer;
     text-align: left;
     transition: background 0.18s ease;
 }
 
 .group-date__toggle:hover {
-    background: #e0e7ff;
+    background: var(--color-primary-tint);
 }
 
-/* ── Pickup-Gruppe (Ebene 2 – Variante) ───────────────────────────────────── */
+/* ── Pickup-Gruppe ────────────────────────────────────────────────────────── */
 .group-date--pickup {
     border-color: #fde68a;
     background: #fffbeb;
@@ -291,7 +251,6 @@
     transform: rotate(0deg);
 }
 
-/* Dunkle Variante für Pickup-Gruppe und unassigned */
 .group-chevron--dark {
     background: rgba(146, 64, 14, 0.15);
     color: #92400e;
@@ -309,13 +268,13 @@
 }
 
 .pickup-collapse-btn .group-chevron {
-    background: #eff6ff;
-    color: #2563eb;
-    border: 1px solid #bfdbfe;
+    background: var(--color-info-bg);
+    color: var(--color-primary);
+    border: 1px solid var(--color-info-border);
 }
 
 .pickup-collapse-btn:hover .group-chevron {
-    background: #dbeafe;
+    background: var(--color-primary-tint);
 }
 
 /* ── Appointments Grid ────────────────────────────────────────────────────── */
@@ -329,9 +288,9 @@
 /* ── Appointment Card ─────────────────────────────────────────────────────── */
 .appointment-card {
     height: 100%;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border-light);
     border-radius: 18px;
-    background: #ffffff;
+    background: var(--color-surface-card);
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -339,11 +298,10 @@
 
 .appointment-card:hover {
     transform: translateY(-4px);
-    border-color: #bfdbfe;
+    border-color: var(--color-info-border);
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
 }
 
-/* ── Pickup Card Variante ─────────────────────────────────────────────────── */
 .appointment-card--pickup {
     border-color: #fde68a;
 }
@@ -370,14 +328,13 @@
 
 .appointment-card__topline {
     margin-bottom: 0.35rem;
-    color: #2563eb;
+    color: var(--color-primary);
     font-size: 0.75rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
 
-/* Pickup Topline – Amber-Farbe */
 .appointment-card__topline--pickup {
     color: #d97706;
 }
@@ -386,7 +343,7 @@
     margin: 0;
     font-size: 1.1rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--color-text-strong);
     line-height: 1.35;
 }
 
@@ -410,7 +367,6 @@
     white-space: nowrap;
 }
 
-/* Pickup Status Badge – Amber */
 .status-badge--pickup {
     background: #fef3c7;
     color: #92400e;
@@ -429,17 +385,17 @@
     justify-content: space-between;
     gap: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px dashed #e5e7eb;
+    border-bottom: 1px dashed var(--color-border-light);
 }
 
 .appointment-info-item .label {
-    color: #6b7280;
+    color: var(--color-text-light);
     font-size: 0.9rem;
     font-weight: 600;
 }
 
 .appointment-info-item .value {
-    color: #111827;
+    color: var(--color-text-strong);
     font-size: 0.92rem;
     font-weight: 700;
     text-align: right;
@@ -497,19 +453,18 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    border: 2px solid #2563eb;
+    border: 2px solid var(--color-primary);
     border-radius: 12px;
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--color-info-bg);
+    color: var(--color-primary);
     font-size: 1.3rem;
     cursor: pointer;
-    transition: background 0.18s ease, color 0.18s ease,
-                transform 0.18s ease, box-shadow 0.18s ease;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
     line-height: 1;
 }
 
 .ics-icon-btn:hover {
-    background: #2563eb;
+    background: var(--color-primary);
     color: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
@@ -537,7 +492,7 @@
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc;
+    background-color: var(--color-border-medium);
     transition: .4s;
 }
 
@@ -553,11 +508,11 @@
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 input:checked + .slider:before {
@@ -575,53 +530,14 @@ input:checked + .slider:before {
 .toggle-label {
     margin-left: 10px;
     font-size: 0.9rem;
-    color: #475569;
+    color: var(--color-text-muted);
     font-weight: 600;
     white-space: nowrap;
 }
-/* ─── Button Loading State ───────────────────────────────────────────────── */
+
+/* ── Button Loading State ────────────────────────────────────────────────── */
 .btn-loading {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.7rem 1.1rem;
-    border-radius: 14px;
-    background: #f1f5f9;
-    color: #64748b;
-    font-size: 0.88rem;
-    font-weight: 700;
-    border: 1px solid #e2e8f0;
     min-width: 140px;
-}
-
-.btn-loading--register {
-    background: #eff6ff;
-    color: #2563eb;
-    border-color: #bfdbfe;
-    width: 100%;
-    justify-content: center;
-    padding: 0.85rem 1.1rem;
-}
-
-/* ─── Spinner ────────────────────────────────────────────────────────────── */
-.btn-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2.5px solid #cbd5e1;
-    border-top-color: #64748b;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-}
-
-.btn-spinner--white {
-    border-color: #bfdbfe;
-    border-top-color: #2563eb;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 /* ── Media Queries ────────────────────────────────────────────────────────── */
@@ -662,15 +578,8 @@ input:checked + .slider:before {
         margin-right: auto;
     }
 
-    .toggle-switch {
-        margin-left: 0;
-        order: 1;
-    }
-
-    .toggle-label {
-        margin-left: 0.5rem;
-        order: 2;
-    }
+    .toggle-switch { margin-left: 0; order: 1; }
+    .toggle-label  { margin-left: 0.5rem; order: 2; }
 
     .appointments-grid {
         grid-template-columns: 1fr;

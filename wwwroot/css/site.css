@@ -67,9 +67,619 @@ a, .btn-link {
         content: "An error has occurred."
     }
 
-/* ================================================
-   Flomi Navigation für Identity-Seiten (Razor Pages)
-   ================================================ */
+/* ════════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — Light Mode
+   ════════════════════════════════════════════════════════════════════════════ */
+.app-shell {
+    /* Primary */
+    --color-primary:           #2563eb;
+    --color-primary-dark:      #1d4ed8;
+    --color-primary-deeper:    #1e40af;
+    --color-primary-subtle:    #eff6ff;
+    --color-primary-tint:      #dbeafe;
+
+    /* Text */
+    --color-text:              #1f2937;
+    --color-text-strong:       #111827;
+    --color-text-deep:         #0f172a;
+    --color-text-medium:       #374151;
+    --color-text-muted:        #475569;
+    --color-text-light:        #6b7280;
+    --color-text-lighter:      #64748b;
+    --color-text-placeholder:  #94a3b8;
+
+    /* Surfaces */
+    --color-white:             #ffffff;
+    --color-surface:           #f8fbff;
+    --color-surface-soft:      #f3f7fc;
+    --color-surface-soft-2:    #eef4fb;
+    --color-surface-muted:     #f9fafb;
+    --color-surface-card:      #ffffff;
+    --color-surface-card-soft: #fcfdff;
+    --color-surface-input:     #f8fbff;
+    --color-surface-input-alt: #f9fafb;
+
+    /* Borders */
+    --color-border:            rgba(15, 23, 42, 0.08);
+    --color-border-light:      #e5e7eb;
+    --color-border-card:       #e7edf5;
+    --color-border-form:       #dbe3ef;
+    --color-border-input:      #d1d5db;
+    --color-border-medium:     #cbd5e1;
+    --color-border-soft:       #e2e8f0;
+
+    /* Status — Info */
+    --color-info-bg:           #eff6ff;
+    --color-info-border:       #bfdbfe;
+    --color-info-text:         #1d4ed8;
+
+    /* Status — Success */
+    --color-success-bg:        #ecfdf5;
+    --color-success-border:    #a7f3d0;
+    --color-success-text:      #047857;
+
+    /* Status — Error */
+    --color-error-bg:          #fef2f2;
+    --color-error-border:      #fecaca;
+    --color-error-text:        #b91c1c;
+
+    /* Status — Warning */
+    --color-warning-bg:        #fffbeb;
+    --color-warning-border:    #fde68a;
+    --color-warning-text:      #92400e;
+
+    /* Shadows */
+    --shadow-card:    0 10px 24px rgba(15, 23, 42, 0.05), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+    --shadow-card-sm: 0 4px 16px rgba(15, 23, 42, 0.06);
+    --shadow-btn:     0 8px 18px rgba(37, 99, 235, 0.22);
+    --shadow-hero:    0 20px 45px rgba(15, 98, 254, 0.18);
+
+    /* Sidebar */
+    --color-sidebar-bg-start:    rgba(15, 98, 254, 0.98);
+    --color-sidebar-bg-mid:      rgba(29, 78, 216, 0.98);
+    --color-sidebar-bg-end:      rgba(30, 41, 59, 0.98);
+    --color-sidebar-border:      rgba(255, 255, 255, 0.12);
+    --color-sidebar-text:        #ffffff;
+    --color-sidebar-text-muted:  rgba(255, 255, 255, 0.85);
+    --color-sidebar-label:       rgba(255, 255, 255, 0.58);
+
+    /* Button / Switch */
+    --color-button-soft:         rgba(255, 255, 255, 0.08);
+    --color-button-soft-hover:   rgba(255, 255, 255, 0.14);
+    --color-button-soft-border:  rgba(255, 255, 255, 0.14);
+    --color-switch-track:        rgba(255, 255, 255, 0.14);
+    --color-switch-thumb:        #ffffff;
+    --color-switch-thumb-dark:   #e2e8f0;
+
+    /* Sidebar shadows */
+    --shadow-sidebar: 8px 0 30px rgba(15, 23, 42, 0.08);
+    --shadow-soft:    0 10px 20px rgba(0, 0, 0, 0.12);
+    --shadow-switch:  0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — Dark Mode
+   ════════════════════════════════════════════════════════════════════════════ */
+.app-shell[data-theme="dark"] {
+    --color-primary:           #60a5fa;
+    --color-primary-dark:      #3b82f6;
+    --color-primary-deeper:    #2563eb;
+    --color-primary-subtle:    rgba(59, 130, 246, 0.12);
+    --color-primary-tint:      rgba(59, 130, 246, 0.20);
+
+    --color-text:              #cbd5e1;
+    --color-text-strong:       #e5eef8;
+    --color-text-deep:         #f1f5f9;
+    --color-text-medium:       #94a3b8;
+    --color-text-muted:        #64748b;
+    --color-text-light:        #475569;
+    --color-text-lighter:      #475569;
+    --color-text-placeholder:  #334155;
+
+    --color-white:             #1e293b;
+    --color-surface:           #111827;
+    --color-surface-soft:      #0f1a2d;
+    --color-surface-soft-2:    #0b1220;
+    --color-surface-muted:     #1a2535;
+    --color-surface-card:      #1e293b;
+    --color-surface-card-soft: #172033;
+    --color-surface-input:     #1e2a3b;
+    --color-surface-input-alt: #1a2535;
+
+    --color-border:            rgba(255, 255, 255, 0.08);
+    --color-border-light:      rgba(255, 255, 255, 0.10);
+    --color-border-card:       rgba(255, 255, 255, 0.08);
+    --color-border-form:       rgba(255, 255, 255, 0.12);
+    --color-border-input:      rgba(255, 255, 255, 0.14);
+    --color-border-medium:     rgba(255, 255, 255, 0.08);
+    --color-border-soft:       rgba(255, 255, 255, 0.08);
+
+    --color-info-bg:           rgba(37, 99, 235, 0.15);
+    --color-info-border:       rgba(59, 130, 246, 0.28);
+    --color-info-text:         #60a5fa;
+
+    --color-success-bg:        rgba(5, 150, 105, 0.12);
+    --color-success-border:    rgba(16, 185, 129, 0.28);
+    --color-success-text:      #34d399;
+
+    --color-error-bg:          rgba(185, 28, 28, 0.12);
+    --color-error-border:      rgba(239, 68, 68, 0.28);
+    --color-error-text:        #f87171;
+
+    --color-warning-bg:        rgba(146, 64, 14, 0.12);
+    --color-warning-border:    rgba(245, 158, 11, 0.28);
+    --color-warning-text:      #fbbf24;
+
+    --shadow-card:    0 10px 24px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    --shadow-card-sm: 0 4px 16px rgba(0, 0, 0, 0.22);
+    --shadow-btn:     0 8px 18px rgba(37, 99, 235, 0.35);
+    --shadow-hero:    0 20px 45px rgba(15, 98, 254, 0.30);
+
+    --color-sidebar-bg-start:    rgba(15, 23, 42, 0.98);
+    --color-sidebar-bg-mid:      rgba(30, 41, 59, 0.98);
+    --color-sidebar-bg-end:      rgba(2, 6, 23, 0.98);
+    --color-sidebar-border:      rgba(255, 255, 255, 0.10);
+    --color-sidebar-text:        #f8fafc;
+    --color-sidebar-text-muted:  rgba(248, 250, 252, 0.78);
+    --color-sidebar-label:       rgba(248, 250, 252, 0.58);
+
+    --color-button-soft:         rgba(255, 255, 255, 0.06);
+    --color-button-soft-hover:   rgba(255, 255, 255, 0.12);
+    --color-button-soft-border:  rgba(255, 255, 255, 0.10);
+    --color-switch-track:        rgba(255, 255, 255, 0.10);
+    --color-switch-thumb:        #ffffff;
+    --color-switch-thumb-dark:   #e2e8f0;
+
+    --shadow-sidebar: 8px 0 30px rgba(0, 0, 0, 0.30);
+    --shadow-soft:    0 10px 20px rgba(0, 0, 0, 0.24);
+    --shadow-switch:  0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SHARED COMPONENTS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── State Cards ──────────────────────────────────────────────────────────── */
+.state-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.1rem 1.2rem;
+    border-radius: 18px;
+    border: 1px solid transparent;
+}
+
+.state-card__icon {
+    flex-shrink: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.state-card__content h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.state-card__content p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.state-card--info    { background: var(--color-info-bg);      border-color: var(--color-info-border);    color: var(--color-info-text);    }
+.state-card--success { background: var(--color-success-bg);   border-color: var(--color-success-border); color: var(--color-success-text); }
+.state-card--error   { background: var(--color-error-bg);     border-color: var(--color-error-border);   color: var(--color-error-text);   }
+.state-card--empty   { background: var(--color-surface-muted);border-color: var(--color-border-light);   color: var(--color-text-muted);   }
+
+/* ── Spinner ──────────────────────────────────────────────────────────────── */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: spin 0.7s linear infinite;
+}
+
+.btn-spinner--white,
+.btn-spinner--blue {
+    border: 2.5px solid var(--color-info-border);
+    border-top-color: var(--color-primary);
+}
+
+.btn-spinner--danger {
+    border: 2.5px solid var(--color-error-border);
+    border-top-color: var(--color-error-text);
+}
+
+.btn-spinner--muted {
+    border: 2.5px solid var(--color-border-medium);
+    border-top-color: var(--color-text-lighter);
+}
+
+/* ── Loading Button ───────────────────────────────────────────────────────── */
+.btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.1rem;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    min-width: 140px;
+}
+
+.btn-loading--primary {
+    background: var(--color-info-bg);
+    color: var(--color-primary);
+    border-color: var(--color-info-border);
+}
+
+.btn-loading--register {
+    background: var(--color-info-bg);
+    color: var(--color-primary);
+    border-color: var(--color-info-border);
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.1rem;
+    min-width: unset;
+}
+
+.btn-loading--danger {
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+    border-color: var(--color-error-border);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ADMIN SHARED COMPONENTS
+   Shared across AdminConfig, FurniturePickupAdmin, Vehicles — no Razor changes needed
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.ac-tabs, .afp-tabs, .av-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--color-border-light);
+    padding-bottom: 0;
+}
+
+.ac-tab, .afp-tab, .av-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: -2px;
+    border-radius: 8px 8px 0 0;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.ac-tab:hover, .afp-tab:hover, .av-tab:hover {
+    color: var(--color-primary);
+    background: var(--color-primary-subtle);
+}
+
+.ac-tab--active, .afp-tab--active, .av-tab--active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: var(--color-primary-subtle);
+}
+
+.ac-tab__badge, .afp-tab__badge, .av-tab__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.ac-tab--active .ac-tab__badge,
+.afp-tab--active .afp-tab__badge,
+.av-tab--active .av-tab__badge {
+    background: var(--color-primary-dark);
+}
+
+/* ── Form Card (blue-header card) ────────────────────────────────────────── */
+.ac-form-card, .av-form-card, .afp-block {
+    border: 1px solid var(--color-border-light);
+    border-radius: 20px;
+    background: var(--color-surface-card);
+    box-shadow: var(--shadow-card-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.ac-form-card__header, .av-form-card__header, .afp-block__header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--color-primary-deeper) 0%, var(--color-primary) 100%);
+    color: #ffffff;
+}
+
+.ac-form-card__header h3, .av-form-card__header h3, .afp-block__header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ac-form-card__body, .av-form-card__body, .afp-block__body {
+    padding: 1.5rem;
+    background: var(--color-surface-card);
+}
+
+/* ── Field ────────────────────────────────────────────────────────────────── */
+.ac-field, .av-field, .afp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ac-field label, .av-field label, .afp-field label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-medium);
+}
+
+/* ── Input ────────────────────────────────────────────────────────────────── */
+.ac-input, .av-input, .afp-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--color-border-input);
+    border-radius: 10px;
+    background: var(--color-surface-input-alt);
+    color: var(--color-text-strong);
+    font-size: 0.95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.ac-input:focus, .av-input:focus, .afp-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-surface-card);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.ac-textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+/* ── Validation ───────────────────────────────────────────────────────────── */
+.ac-validation, .av-validation {
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--color-error-text);
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Submit Button ────────────────────────────────────────────────────────── */
+.ac-submit-btn, .av-submit-btn, .afp-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: var(--shadow-btn);
+    transition: transform 0.18s, filter 0.18s, box-shadow 0.18s;
+}
+
+.ac-submit-btn:hover:not(:disabled),
+.av-submit-btn:hover:not(:disabled),
+.afp-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.30);
+}
+
+.ac-submit-btn:active:not(:disabled),
+.av-submit-btn:active:not(:disabled),
+.afp-submit-btn:active:not(:disabled) { transform: translateY(0); }
+
+.ac-submit-btn:disabled, .av-submit-btn:disabled, .afp-submit-btn:disabled {
+    background: var(--color-border-medium);
+    color: var(--color-text-lighter);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* ── Cancel / Delete Button ───────────────────────────────────────────────── */
+.ac-cancel-btn, .av-cancel-btn, .afp-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.25rem;
+    border: 2px solid var(--color-error-border);
+    border-radius: 14px;
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+.ac-cancel-btn:hover, .av-cancel-btn:hover, .afp-delete-btn:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    transform: translateY(-1px);
+}
+
+.ac-cancel-btn:active, .av-cancel-btn:active, .afp-delete-btn:active { transform: translateY(0); }
+
+/* ── State Cards (Admin variant) ──────────────────────────────────────────── */
+.ac-state-card, .av-state-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1.25rem;
+    border: 1px solid transparent;
+}
+
+.ac-state-card__icon, .av-state-card__icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.ac-state-card__content h3, .av-state-card__content h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-strong);
+}
+
+.ac-state-card__content p, .av-state-card__content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+.ac-state-card--info,    .av-state-card--info    { background: var(--color-info-bg);      border-color: var(--color-info-border);    }
+.ac-state-card--empty,   .av-state-card--empty   { background: var(--color-surface-muted); border-color: var(--color-border-light);  }
+.ac-state-card--success, .av-state-card--success { background: var(--color-success-bg);   border-color: var(--color-success-border); }
+.ac-state-card--error,   .av-state-card--error   { background: var(--color-error-bg);     border-color: var(--color-error-border);   }
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+.ac-table, .av-table {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card-sm);
+    border: 1px solid var(--color-border-light);
+    background: var(--color-surface-card);
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.ac-table thead tr, .av-table thead tr {
+    background: linear-gradient(135deg, var(--color-primary-deeper) 0%, var(--color-primary) 100%);
+}
+
+.ac-table thead th, .av-table thead th {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.03em;
+    padding: 0.9rem 1rem;
+    border: none;
+    text-align: left;
+}
+
+.ac-table tbody tr, .av-table tbody tr { transition: background 0.15s; }
+
+.ac-table tbody tr:hover, .av-table tbody tr:hover { background: var(--color-primary-subtle); }
+
+.ac-table tbody td, .av-table tbody td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+    font-size: 0.92rem;
+    color: var(--color-text-medium);
+    border: none;
+    border-bottom: 1px solid var(--color-surface-soft);
+}
+
+.ac-table tbody tr:last-child td, .av-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.ac-badge, .av-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.ac-badge--active, .av-badge--driver  { background: var(--color-success-bg);   color: var(--color-success-text); border-color: var(--color-success-border); }
+.ac-badge--inactive                   { background: var(--color-error-bg);     color: var(--color-error-text);   border-color: var(--color-error-border);   }
+.ac-badge--category                   { background: var(--color-info-bg);      color: var(--color-info-text);    border-color: var(--color-info-border);    }
+.ac-badge--unlimited                  { background: var(--color-success-bg);   color: var(--color-success-text); border-color: var(--color-success-border); }
+.av-badge--helper                     { background: var(--color-warning-bg);   color: var(--color-warning-text); border-color: var(--color-warning-border); }
+.av-badge--none                       { background: var(--color-surface-muted);color: var(--color-text-placeholder); border-color: var(--color-border-light); }
+
+/* ── Event Pill ───────────────────────────────────────────────────────────── */
+.ac-event-pill, .av-event-pill, .afp-event-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: var(--color-info-bg);
+    color: var(--color-info-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid var(--color-info-border);
+}
+
+.ac-event-pill--none, .av-event-pill--none, .afp-event-pill--none {
+    background: var(--color-surface-muted);
+    color: var(--color-text-placeholder);
+    border-color: var(--color-border-light);
+}
+
+/* ── Modal Backdrop ───────────────────────────────────────────────────────── */
+.afp-modal-backdrop, .av-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   IDENTITY NAVIGATION (für Razor Pages, nicht Blazor-Seiten)
+   ════════════════════════════════════════════════════════════════════════════ */
 
 .flomi-nav {
     background: #fff;
@@ -120,7 +730,6 @@ a, .btn-link {
     text-decoration: none;
 }
 
-/* Logout-Button wie ein Link */
 .flomi-nav__link--btn {
     background: none;
     border: none;
