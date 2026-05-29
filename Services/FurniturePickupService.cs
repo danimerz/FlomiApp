@@ -254,7 +254,8 @@ public class FurniturePickupService : IFurniturePickupService
         return await _context.FurniturePickupRequests
             .Where(r => r.EventId == eventId
                      && r.PickupDate.Date == date.Date
-                     && r.Status != PickupRequestStatus.Deleted)
+                     && (r.Status == PickupRequestStatus.Pending
+                      || r.Status == PickupRequestStatus.Accepted))
             .CountAsync();
     }
 }
