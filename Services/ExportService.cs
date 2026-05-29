@@ -16,7 +16,7 @@ namespace FlomiApp.Services
         }
 
         // ── Appointments ──────────────────────────────────────────────────────
-     public async Task<byte[]> ExportAppointmentsAsync(int? eventId = null)
+    public async Task<byte[]> ExportAppointmentsAsync(int? eventId = null)
     {
         var query = _db.Appointments
             .Include(a => a.User)
@@ -26,11 +26,13 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.AreaTemplate)
                     .ThenInclude(t => t!.AreaCategory)
+            .Where(a => a.Area.AreaTemplate != null
+                     && a.Area.AreaTemplate.AreaCategory != null
+                     && a.Area.AreaTemplate.AreaCategory.Name.ToLower() == "verkauf")
             .AsQueryable();
 
         if (eventId.HasValue)
             query = query.Where(a => a.Area.EventId == eventId.Value);
-            query = query.Where(a => a.Area.AreaTemplate!.AreaCategory!.Name.ToLower() == "verkauf");
 
         var data = await query
             .Where(a => a.Status != AppointmentStatus.Cancelled)
@@ -143,7 +145,7 @@ namespace FlomiApp.Services
     }
 
 // ── Appointments ──────────────────────────────────────────────────────
-     public async Task<byte[]> ExportGastroAppointmentsAsync(int? eventId = null)
+    public async Task<byte[]> ExportGastroAppointmentsAsync(int? eventId = null)
     {
         var query = _db.Appointments
             .Include(a => a.User)
@@ -153,11 +155,13 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.AreaTemplate)
                     .ThenInclude(t => t!.AreaCategory)
+            .Where(a => a.Area.AreaTemplate != null
+                     && a.Area.AreaTemplate.AreaCategory != null
+                     && a.Area.AreaTemplate.AreaCategory.Name.ToLower() == "gastro")
             .AsQueryable();
 
         if (eventId.HasValue)
             query = query.Where(a => a.Area.EventId == eventId.Value);
-            query = query.Where(a => a.Area.AreaTemplate!.AreaCategory!.Name.ToLower() == "gastro");
 
         var data = await query
             .Where(a => a.Status != AppointmentStatus.Cancelled)
