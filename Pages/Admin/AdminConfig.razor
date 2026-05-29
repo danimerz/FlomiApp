@@ -292,6 +292,7 @@
                         <th class="ac-th-sort" @onclick='() => SortTemplateBy("Standort")'>
                             Standort <span class="ac-sort-icon">@TemplateSortIcon("Standort")</span>
                         </th>
+                        <th>Pflicht-Stufen</th>
                         <th class="ac-th-sort" @onclick='() => SortTemplateBy("Zuweisungen")'>
                             Zuweisungen <span class="ac-sort-icon">@TemplateSortIcon("Zuweisungen")</span>
                         </th>
@@ -310,6 +311,19 @@
                             </td>
                             <td>@t.MinAge</td>
                             <td>@t.Location</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(t.MandatoryStufen))
+                                {
+                                    @foreach (var s in t.MandatoryStufen.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                    {
+                                        <span class="ac-badge ac-badge--inactive" style="margin:.1rem .15rem">@s</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="color:var(--color-text-placeholder);font-size:.82rem">–</span>
+                                }
+                            </td>
                             <td>
                                 <span class="ac-badge ac-badge--category">
                                     @t.Areas.Count
