@@ -6,6 +6,37 @@
     margin-bottom: 1.25rem;
 }
 
+/* ── Filter Bar (Zuweisungen) ─────────────────────────────────────────────── */
+.ac-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+    padding: .85rem 1rem;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 14px;
+    background: var(--color-surface-card-soft);
+}
+
+/* ── Sortierbare Spalten-Header ───────────────────────────────────────────── */
+.ac-th-sort {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.ac-th-sort:hover {
+    color: #ffffff;
+    opacity: .85;
+}
+
+.ac-sort-icon {
+    font-size: .7rem;
+    opacity: .6;
+    margin-left: .25rem;
+}
+
 /* ── Toolbar ──────────────────────────────────────────────────────────────── */
 .ac-toolbar {
     display: flex;
