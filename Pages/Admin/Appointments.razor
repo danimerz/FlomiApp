@@ -1,0 +1,295 @@
+@page "/admin/appointments"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
+@inject IAreaService AreaService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Anmeldungen – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Anmeldungen</h1>
+            <p>Übersicht aller Anmeldungen, Belegungen und offenen Plätze pro Bereich.</p>
+        </div>
+    </section>
+
+    <!-- ── Filter ── -->
+    <div class="appt-filter-bar">
+        <div class="appt-filter-group">
+            <label>Event</label>
+            <select class="appt-select" @bind="selectedEventId" @bind:after="LoadAreas">
+                <option value="0" disabled>– Bitte wählen –</option>
+                @foreach (var ev in events)
+                {
+                    <option value="@ev.Id">@ev.Name (@ev.Date.ToShortDateString())</option>
+                }
+            </select>
+        </div>
+        <div class="appt-filter-group">
+            <label>Kategorie</label>
+            <select class="appt-select" @bind="filterCategoryId">
+                <option value="0">Alle Kategorien</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat.Id">@cat.Name</option>
+                }
+            </select>
+        </div>
+        <div class="appt-filter-group">
+            <label>Anzeigen</label>
+            <select class="appt-select" @bind="filterMode">
+                <option value="all">Alle Bereiche</option>
+                <option value="open">Nur offene Plätze</option>
+                <option value="full">Nur volle Bereiche</option>
+            </select>
+        </div>
+    </div>
+
+    @if (selectedEventId == 0)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">ℹ️</div>
+            <div class="state-card__content">
+                <h3>Bitte Event auswählen</h3>
+                <p>Wähle ein Event um die Anmeldungen anzuzeigen.</p>
+            </div>
+        </div>
+    }
+    else if (isLoading)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content"><h3>Wird geladen...</h3></div>
+        </div>
+    }
+    else
+    {
+        <!-- ── KPI Chips ── -->
+        <div class="appt-kpi-bar">
+            <div class="appt-kpi appt-kpi--total">
+                <span class="appt-kpi__num">@TotalRegistered</span>
+                <span class="appt-kpi__label">Angemeldet</span>
+            </div>
+            <div class="appt-kpi appt-kpi--open">
+                <span class="appt-kpi__num">@TotalOpen</span>
+                <span class="appt-kpi__label">Offene Plätze</span>
+            </div>
+            <div class="appt-kpi appt-kpi--areas">
+                <span class="appt-kpi__num">@DisplayedAreas.Count()</span>
+                <span class="appt-kpi__label">Bereiche</span>
+            </div>
+            <div class="appt-kpi appt-kpi--cancelled">
+                <span class="appt-kpi__num">@TotalCancelled</span>
+                <span class="appt-kpi__label">Abgesagt</span>
+            </div>
+        </div>
+
+        @if (!DisplayedAreas.Any())
+        {
+            <div class="state-card state-card--empty">
+                <div class="state-card__icon">📭</div>
+                <div class="state-card__content">
+                    <h3>Keine Bereiche gefunden</h3>
+                    <p>Für die gewählten Filter gibt es keine Einträge.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var area in DisplayedAreas)
+            {
+                var registered  = area.Appointments.Count(a => a.Status == AppointmentStatus.Registered);
+                var cancelled   = area.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled);
+                var open        = area.MaxCapacity - registered;
+                var pct         = area.MaxCapacity > 0 ? (double)registered / area.MaxCapacity * 100 : 0;
+                var isOpen      = open > 0;
+                var isExpanded  = expandedAreas.Contains(area.Id);
+
+                <div class="appt-accordion @(isOpen ? "appt-accordion--open-slots" : "appt-accordion--full")">
+                    <button class="appt-accordion__header" @onclick="() => ToggleArea(area.Id)">
+                        <div class="appt-accordion__title">
+                            <span class="appt-accordion__chevron @(isExpanded ? "appt-accordion__chevron--open" : "")">▾</span>
+                            <span class="appt-accordion__name">@area.AreaTemplate?.Name</span>
+                            <span class="appt-accordion__date">
+                                @area.Date.ToString("ddd dd.MM.yyyy", new CultureInfo("de-CH"))
+                                @if (!string.IsNullOrEmpty(area.TimeSlot))
+                                {
+                                    <span class="appt-accordion__time">@area.TimeSlot</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="appt-accordion__right">
+                            <span class="appt-cat-badge">@(area.AreaTemplate?.AreaCategory?.Name ?? "–")</span>
+                            @if (isOpen)
+                            {
+                                <span class="appt-open-badge">⚠️ @open offen</span>
+                            }
+                            else
+                            {
+                                <span class="appt-full-badge">✅ voll</span>
+                            }
+                            <div class="appt-capacity">
+                                <div class="appt-capacity__bar">
+                                    <div class="appt-capacity__fill @(pct >= 100 ? "appt-capacity__fill--full" : pct >= 75 ? "appt-capacity__fill--warn" : "")"
+                                         style="width: @Math.Min(pct, 100).ToString("F0")%"></div>
+                                </div>
+                                <span class="appt-capacity__label">@registered / @area.MaxCapacity</span>
+                            </div>
+                        </div>
+                    </button>
+
+                    @if (isExpanded)
+                    {
+                        <div class="appt-accordion__body">
+                            @{
+                                var regAppointments = area.Appointments
+                                    .Where(a => a.Status == AppointmentStatus.Registered)
+                                    .ToList();
+                            }
+                            @if (!regAppointments.Any())
+                            {
+                                <p class="appt-empty-msg">Noch keine Anmeldungen für diesen Bereich.</p>
+                            }
+                            else
+                            {
+                                <table class="appt-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Person</th>
+                                            <th>Pfadiname</th>
+                                            <th>Kommentar</th>
+                                            <th>Angemeldet am</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ap in regAppointments)
+                                        {
+                                            var vorname    = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
+                                            var nachname   = ap.FamilyMember?.LastName  ?? ap.User?.LastName  ?? "";
+                                            var pfadi      = ap.FamilyMember?.Pfadiname ?? ap.User?.Pfadiname ?? "–";
+                                            <tr>
+                                                <td><strong>@vorname @nachname</strong></td>
+                                                <td>@pfadi</td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(ap.Comment))
+                                                    {
+                                                        <span class="appt-comment">@ap.Comment</span>
+                                                    }
+                                                    else { <span class="appt-no-comment">–</span> }
+                                                </td>
+                                                <td>@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+
+                            @if (open > 0)
+                            {
+                                <div class="appt-open-slots">
+                                    @for (int i = 0; i < open; i++)
+                                    {
+                                        <span class="appt-open-slot">
+                                            ○ Platz @(regAppointments.Count + i + 1) frei
+                                        </span>
+                                    }
+                                </div>
+                            }
+
+                            @if (cancelled > 0)
+                            {
+                                <details class="appt-cancelled-details">
+                                    <summary>@cancelled abgesagte Anmeldung(en) anzeigen</summary>
+                                    <table class="appt-table appt-table--cancelled">
+                                        <tbody>
+                                            @foreach (var ap in area.Appointments.Where(a => a.Status == AppointmentStatus.Cancelled))
+                                            {
+                                                var vorname  = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
+                                                var nachname = ap.FamilyMember?.LastName  ?? ap.User?.LastName  ?? "";
+                                                <tr>
+                                                    <td>❌ @vorname @nachname</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </details>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    }
+
+</div>
+
+@code {
+    private List<Event>        events     = new();
+    private List<AreaCategory> categories = new();
+    private List<Area>         areas      = new();
+    private HashSet<int>       expandedAreas = new();
+
+    private int    selectedEventId  = 0;
+    private int    filterCategoryId = 0;
+    private string filterMode       = "all";
+    private bool   isLoading        = false;
+
+    private IEnumerable<Area> DisplayedAreas
+    {
+        get
+        {
+            var result = areas.AsEnumerable();
+            if (filterCategoryId > 0)
+                result = result.Where(a => a.AreaTemplate?.AreaCategoryId == filterCategoryId);
+            result = filterMode switch
+            {
+                "open" => result.Where(a =>
+                    a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered) > 0),
+                "full" => result.Where(a =>
+                    a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered) >= a.MaxCapacity),
+                _      => result
+            };
+            return result;
+        }
+    }
+
+    private int TotalRegistered => areas.Sum(a => a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered));
+    private int TotalCancelled  => areas.Sum(a => a.Appointments.Count(ap => ap.Status == AppointmentStatus.Cancelled));
+    private int TotalOpen       => areas.Sum(a => Math.Max(0,
+        a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        events     = await AreaService.GetAllEventsAsync();
+        categories = await AreaService.GetAllCategoriesAsync();
+
+        if (events.Any())
+        {
+            selectedEventId = events[0].Id;
+            await LoadAreas();
+        }
+    }
+
+    private async Task LoadAreas()
+    {
+        if (selectedEventId == 0) return;
+        isLoading = true;
+        StateHasChanged();
+        areas         = await AreaService.GetAreasWithAppointmentsAsync(selectedEventId);
+        expandedAreas = areas
+            .Where(a => a.Appointments.Any(ap => ap.Status == AppointmentStatus.Registered))
+            .Select(a => a.Id)
+            .ToHashSet();
+        isLoading = false;
+    }
+
+    private void ToggleArea(int areaId)
+    {
+        if (!expandedAreas.Remove(areaId))
+            expandedAreas.Add(areaId);
+    }
+}

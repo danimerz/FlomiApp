@@ -104,6 +104,21 @@ public class AreaService : IAreaService
             .ToListAsync();
     }
 
+    public async Task<List<Area>> GetAreasWithAppointmentsAsync(int eventId)
+    {
+        return await _context.Areas
+            .Include(a => a.AreaTemplate).ThenInclude(t => t!.AreaCategory)
+            .Include(a => a.Appointments)
+                .ThenInclude(ap => ap.User)
+            .Include(a => a.Appointments)
+                .ThenInclude(ap => ap.FamilyMember)
+            .Where(a => a.EventId == eventId)
+            .OrderBy(a => a.Date)
+            .ThenBy(a => a.AreaTemplate!.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<List<Area>> GetAreasByEventAsync(int eventId)
     {
         return await _context.Areas
