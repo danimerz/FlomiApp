@@ -18,5 +18,6 @@ public interface IVehicleService
     Task                          DeleteAssignmentAsync(int id);
 
     // Users
-    Task<List<ApplicationUser>> GetAllUsersAsync();
+    Task<List<ApplicationUser>>                         GetAllUsersAsync();
+    Task<Dictionary<DateTime, List<ApplicationUser>>>   GetDriverUsersByDateForEventAsync(int eventId);
 }

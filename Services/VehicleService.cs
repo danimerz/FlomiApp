@@ -165,4 +165,43 @@ public class VehicleService : IVehicleService
             .ThenBy(u => u.FirstName)
             .ToListAsync();
     }
+
+    public async Task<Dictionary<DateTime, List<ApplicationUser>>> GetDriverUsersByDateForEventAsync(int eventId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        // Get userId + date for all registered appointments in Fahrer-category areas for this event
+        var entries = await db.Appointments
+            .Include(a => a.Area)
+                .ThenInclude(ar => ar.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
+            .Where(a => a.Area.EventId == eventId
+                     && a.Status == AppointmentStatus.Registered
+                     && a.Area.AreaTemplate != null
+                     && a.Area.AreaTemplate.AreaCategory != null
+                     && a.Area.AreaTemplate.AreaCategory.Name == "Fahrer")
+            .Select(a => new { a.UserId, Date = a.Area.Date.Date })
+            .Distinct()
+            .ToListAsync();
+
+        var userIds = entries.Select(e => e.UserId).Distinct().ToList();
+        var users   = await _userManager.Users
+            .Where(u => userIds.Contains(u.Id))
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName)
+            .ToListAsync();
+
+        var userDict = users.ToDictionary(u => u.Id);
+
+        return entries
+            .GroupBy(e => e.Date)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.UserId)
+                       .Distinct()
+                       .Where(id => userDict.ContainsKey(id))
+                       .Select(id => userDict[id])
+                       .ToList()
+            );
+    }
 }

@@ -346,7 +346,7 @@
                             <td>
                                 <div class="av-actions">
                                     <button class="av-btn av-btn--edit"
-                                            @onclick="() => OpenEditAssignmentGroup(group)">
+                                            @onclick="async () => await OpenEditAssignmentGroup(group)">
                                         ✏️ Edit
                                     </button>
                                     <button class="av-btn av-btn--delete"
@@ -511,7 +511,7 @@
                                             <label>Fahrer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.DriverUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in users ?? new())
+                                                @foreach (var u in DriverUsersForDate(date, false))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -532,7 +532,7 @@
                                             <label>Helfer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.HelperUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in users ?? new())
+                                                @foreach (var u in DriverUsersForDate(date, false))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -741,7 +741,7 @@
                                             <label>Fahrer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.DriverUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in users ?? new())
+                                                @foreach (var u in DriverUsersForDate(date, true))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -762,7 +762,7 @@
                                             <label>Helfer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.HelperUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in users ?? new())
+                                                @foreach (var u in DriverUsersForDate(date, true))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -827,6 +827,8 @@
     private Dictionary<DateTime, AssignmentDate> newDayDetails              = new();
     private List<DateTime>                       assignmentEventDays        = new();
     private List<VehicleAssignment>              existingAssignmentsForForm = new();
+    private Dictionary<DateTime, List<ApplicationUser>> newDriverUsersByDate  = new();
+    private Dictionary<DateTime, List<ApplicationUser>> editDriverUsersByDate = new();
 
     private HashSet<DateTime> AlreadyAssignedDays =>
         existingAssignmentsForForm
@@ -951,6 +953,10 @@
         var ev = events?.FirstOrDefault(x => x.Id == newAssignment.EventId);
         assignmentEventDays = ev != null ? GetEventDays(ev) : new();
         await LoadExistingAssignmentsForForm();
+        if (newAssignment.EventId > 0)
+            newDriverUsersByDate = await VehicleService.GetDriverUsersByDateForEventAsync(newAssignment.EventId);
+        else
+            newDriverUsersByDate = new();
     }
 
     private async Task LoadExistingAssignmentsForForm()
@@ -1098,7 +1104,7 @@
     }
 
     // ── Edit Assignment ───────────────────────────────────────────────────────
-    private void OpenEditAssignmentGroup(IEnumerable<VehicleAssignment> group)
+    private async Task OpenEditAssignmentGroup(IEnumerable<VehicleAssignment> group)
     {
         var list  = group.ToList();
         var first = list.First();
@@ -1130,7 +1136,8 @@
                     ReturnedBy   = d.ReturnedBy,
                 });
         var ev = events?.FirstOrDefault(x => x.Id == first.EventId);
-        editAssignmentDays = ev != null ? GetEventDays(ev) : new();
+        editAssignmentDays  = ev != null ? GetEventDays(ev) : new();
+        editDriverUsersByDate = await VehicleService.GetDriverUsersByDateForEventAsync(first.EventId);
     }
 
     private void CloseEditAssignment()
@@ -1179,6 +1186,12 @@
         if (int.TryParse(e.Value?.ToString(), out var id))
             newAssignment.VehicleId = id;
         await LoadExistingAssignmentsForForm();
+    }
+
+    private List<ApplicationUser> DriverUsersForDate(DateTime date, bool isEdit)
+    {
+        var dict = isEdit ? editDriverUsersByDate : newDriverUsersByDate;
+        return dict.TryGetValue(date.Date, out var list) ? list : new();
     }
 
     private string GetVehicleLabel(Vehicle v)
