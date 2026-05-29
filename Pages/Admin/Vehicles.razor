@@ -40,10 +40,6 @@
                 </span>
             }
         </button>
-        <button class="av-tab @(activeTab == Tab.AddVehicle ? "av-tab--active" : "")"
-                @onclick="() => SetTab(Tab.AddVehicle)">
-            ➕ Fahrzeug erfassen
-        </button>
         <button class="av-tab @(activeTab == Tab.AddAssignment ? "av-tab--active" : "")"
                 @onclick="() => SetTab(Tab.AddAssignment)">
             📌 Zuweisung erfassen
@@ -55,6 +51,75 @@
     ════════════════════════════════════════════════════════════════════════ -->
     @if (activeTab == Tab.Vehicles)
     {
+        <div class="av-toolbar">
+            <button class="av-submit-btn" @onclick="() => { showVehicleForm = !showVehicleForm; createSuccess = null; createError = null; }">
+                ＋ Neues Fahrzeug
+            </button>
+        </div>
+
+        @if (showVehicleForm)
+        {
+            <div class="av-form-card">
+                <div class="av-form-card__header">
+                    <h3>🚗 Neues Fahrzeug erfassen</h3>
+                </div>
+                <div class="av-form-card__body">
+                    <EditForm Model="newVehicle" OnValidSubmit="CreateVehicle">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="av-validation" />
+
+                        <div class="av-form-grid">
+                            <div class="av-field">
+                                <label>Name *</label>
+                                <InputText @bind-Value="newVehicle.OwnerName"
+                                           class="av-input"
+                                           placeholder="z.B. Max Mustermann" />
+                            </div>
+                            <div class="av-field">
+                                <label>Telefon</label>
+                                <input type="text"
+                                       class="av-input"
+                                       placeholder="+41 79 000 00 00"
+                                       value="@newVehicle.OwnerPhone"
+                                       @onchange="e => newVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
+                            </div>
+                            <div class="av-field">
+                                <label>Kontakt / Bemerkung</label>
+                                <InputText @bind-Value="newVehicle.OwnerContact"
+                                           class="av-input"
+                                           placeholder="z.B. Transporter, 8 Plätze" />
+                            </div>
+                        </div>
+
+                        @if (createSuccess != null)
+                        {
+                            <div class="av-state-card av-state-card--success" style="margin-top:1rem">
+                                <div class="av-state-card__icon">✅</div>
+                                <div class="av-state-card__content"><p>@createSuccess</p></div>
+                            </div>
+                        }
+                        @if (createError != null)
+                        {
+                            <div class="av-state-card av-state-card--error" style="margin-top:1rem">
+                                <div class="av-state-card__icon">⚠️</div>
+                                <div class="av-state-card__content"><p>@createError</p></div>
+                            </div>
+                        }
+
+                        <div class="av-form-actions">
+                            <button type="submit" class="av-submit-btn" disabled="@isSaving">
+                                @if (isSaving) { <span>⏳ Wird gespeichert...</span> }
+                                else           { <span>✅ Fahrzeug erfassen</span> }
+                            </button>
+                            <button type="button" class="av-cancel-btn" @onclick="ResetVehicleForm">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
         @if (vehicles == null)
         {
             <div class="av-state-card av-state-card--info">
@@ -70,7 +135,7 @@
                 <div class="av-state-card__icon">🚗</div>
                 <div class="av-state-card__content">
                     <h3>Keine Fahrzeuge vorhanden</h3>
-                    <p>Erfasse ein neues Fahrzeug über den Tab «Fahrzeug erfassen».</p>
+                    <p>Erfasse ein neues Fahrzeug mit dem Button oben.</p>
                 </div>
             </div>
         }
@@ -297,85 +362,7 @@
         }
     }
 
-    <!-- ════════════════════════════════════════════════════════════════════
-         TAB: FAHRZEUG ERFASSEN
-    ════════════════════════════════════════════════════════════════════════ -->
-    @if (activeTab == Tab.AddVehicle)
-    {
-        <div class="av-form-card">
-            <div class="av-form-card__header">
-                <h3>🚗 Neues Fahrzeug erfassen</h3>
-            </div>
-            <div class="av-form-card__body">
-                <EditForm Model="newVehicle" OnValidSubmit="CreateVehicle">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary class="av-validation" />
 
-                    <div class="av-section-title">🚗 Fahrzeughalter</div>
-                    <div class="av-form-grid">
-                        <div class="av-field">
-                            <label>Name *</label>
-                            <InputText @bind-Value="newVehicle.OwnerName"
-                                       class="av-input"
-                                       placeholder="z.B. Max Mustermann" />
-                        </div>
-                        <div class="av-field">
-                            <label>Telefon</label>
-                            <input type="text"
-                                   class="av-input"
-                                   placeholder="+41 79 000 00 00"
-                                   value="@newVehicle.OwnerPhone"
-                                   @onchange="e => newVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
-                        </div>
-                        <div class="av-field">
-                            <label>Kontakt / Bemerkung</label>
-                            <InputText @bind-Value="newVehicle.OwnerContact"
-                                       class="av-input"
-                                       placeholder="z.B. Transporter, 8 Plätze" />
-                        </div>
-                    </div>
-
-                    <div class="av-form-actions">
-                        <button type="submit" class="av-submit-btn" disabled="@isSaving">
-                            @if (isSaving)
-                            {
-                                <span>⏳ Wird gespeichert...</span>
-                            }
-                            else
-                            {
-                                <span>✅ Fahrzeug erfassen</span>
-                            }
-                        </button>
-                        <button type="button" class="av-cancel-btn" @onclick="ResetVehicleForm">
-                            Abbrechen
-                        </button>
-                    </div>
-
-                </EditForm>
-            </div>
-        </div>
-
-        @if (createSuccess != null)
-        {
-            <div class="av-state-card av-state-card--success">
-                <div class="av-state-card__icon">✅</div>
-                <div class="av-state-card__content">
-                    <h3>Gespeichert!</h3>
-                    <p>@createSuccess</p>
-                </div>
-            </div>
-        }
-        @if (createError != null)
-        {
-            <div class="av-state-card av-state-card--error">
-                <div class="av-state-card__icon">⚠️</div>
-                <div class="av-state-card__content">
-                    <h3>Fehler</h3>
-                    <p>@createError</p>
-                </div>
-            </div>
-        }
-    }
 
     <!-- ════════════════════════════════════════════════════════════════════
          TAB: ZUWEISUNG ERFASSEN
@@ -810,7 +797,7 @@
 
 @code {
     // ── Enums ─────────────────────────────────────────────────────────────────
-    private enum Tab { Vehicles, Assignments, AddVehicle, AddAssignment }
+    private enum Tab { Vehicles, Assignments, AddAssignment }
     private Tab activeTab = Tab.Vehicles;
 
     // ── Data ──────────────────────────────────────────────────────────────────
@@ -832,7 +819,8 @@
                     .Any(d => d.Date.Date == selectedFilterDate.Value.Date));
 
     // ── Create Vehicle ────────────────────────────────────────────────────────
-    private Vehicle newVehicle = new();
+    private bool    showVehicleForm = false;
+    private Vehicle newVehicle      = new();
 
     // ── Create Assignment ─────────────────────────────────────────────────────
     private VehicleAssignment                    newAssignment              = new();
@@ -937,9 +925,10 @@
     // ── Tab ───────────────────────────────────────────────────────────────────
     private void SetTab(Tab tab)
     {
-        activeTab     = tab;
-        createSuccess = null;
-        createError   = null;
+        activeTab       = tab;
+        createSuccess   = null;
+        createError     = null;
+        showVehicleForm = false;
     }
 
     // ── Event Filter ──────────────────────────────────────────────────────────
@@ -1005,9 +994,10 @@
         try
         {
             await VehicleService.CreateVehicleAsync(newVehicle);
-            createSuccess = $"Fahrzeug «{newVehicle.OwnerName}» wurde erfolgreich erfasst.";
-            vehicles      = await VehicleService.GetAllVehiclesAsync();
-            newVehicle    = new Vehicle();
+            createSuccess   = $"Fahrzeug «{newVehicle.OwnerName}» wurde erfolgreich erfasst.";
+            vehicles        = await VehicleService.GetAllVehiclesAsync();
+            newVehicle      = new Vehicle();
+            showVehicleForm = false;
         }
         catch (Exception ex)
         {
@@ -1021,10 +1011,10 @@
 
     private void ResetVehicleForm()
     {
-        newVehicle    = new Vehicle();
-        createSuccess = null;
-        createError   = null;
-        SetTab(Tab.Vehicles);
+        newVehicle      = new Vehicle();
+        createSuccess   = null;
+        createError     = null;
+        showVehicleForm = false;
     }
 
     // ── Create Assignment ─────────────────────────────────────────────────────
