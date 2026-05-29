@@ -1,3 +1,20 @@
+/* ── Sortierbare Spalten-Header ───────────────────────────────────────────── */
+.av-th-sort {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.av-th-sort:hover {
+    opacity: .85;
+}
+
+.av-sort-icon {
+    font-size: .7rem;
+    opacity: .6;
+    margin-left: .25rem;
+}
+
 /* ── Toolbar ──────────────────────────────────────────────────────────────── */
 .av-toolbar {
     display: flex;

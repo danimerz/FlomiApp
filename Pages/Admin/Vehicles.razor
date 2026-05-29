@@ -78,15 +78,21 @@
             <table class="av-table">
                 <thead>
                     <tr>
-                        <th>Fahrzeughalter</th>
+                        <th class="av-th-sort" @onclick='() => SortVehicleBy("Name")'>
+                            Fahrzeughalter <span class="av-sort-icon">@VehicleSortIcon("Name")</span>
+                        </th>
                         <th>Telefon</th>
-                        <th>Kontakt / Bemerkung</th>
-                        <th>Zuweisungen</th>
+                        <th class="av-th-sort" @onclick='() => SortVehicleBy("Kontakt")'>
+                            Kontakt / Bemerkung <span class="av-sort-icon">@VehicleSortIcon("Kontakt")</span>
+                        </th>
+                        <th class="av-th-sort" @onclick='() => SortVehicleBy("Zuweisungen")'>
+                            Zuweisungen <span class="av-sort-icon">@VehicleSortIcon("Zuweisungen")</span>
+                        </th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var v in vehicles)
+                    @foreach (var v in DisplayedVehicles)
                     {
                         <tr>
                             <td><strong>@v.OwnerName</strong></td>
@@ -200,17 +206,18 @@
         }
         else
         {
-            var grouped = FilteredAssignments
-                .GroupBy(a => (a.VehicleId, a.EventId))
-                .OrderBy(g => g.First().Vehicle.OwnerName)
-                .ToList();
+            var grouped = SortedAssignmentGroups;
             <table class="av-table">
                 <thead>
                     <tr>
-                        <th>Fahrzeughalter</th>
+                        <th class="av-th-sort" @onclick='() => SortAssignmentBy("Fahrzeughalter")'>
+                            Fahrzeughalter <span class="av-sort-icon">@AssignmentSortIcon("Fahrzeughalter")</span>
+                        </th>
                         <th>Kontakt</th>
                         <th>Einsatztage</th>
-                        <th>Event</th>
+                        <th class="av-th-sort" @onclick='() => SortAssignmentBy("Event")'>
+                            Event <span class="av-sort-icon">@AssignmentSortIcon("Event")</span>
+                        </th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
@@ -843,6 +850,65 @@
         vehicles    = await VehicleService.GetAllVehiclesAsync();
         assignments = await VehicleService.GetAssignmentsByEventAsync(0);
     }
+
+    // ── Sort: Fahrzeuge ───────────────────────────────────────────────────────
+    private string vehicleSortColumn = "Name";
+    private bool   vehicleSortAsc    = true;
+
+    private IEnumerable<Vehicle> DisplayedVehicles
+    {
+        get
+        {
+            var result = (vehicles ?? new()).AsEnumerable();
+            result = vehicleSortColumn switch
+            {
+                "Kontakt"      => vehicleSortAsc ? result.OrderBy(v => v.OwnerContact) : result.OrderByDescending(v => v.OwnerContact),
+                "Zuweisungen"  => vehicleSortAsc ? result.OrderBy(v => v.Assignments.Select(a => a.EventId).Distinct().Count()) : result.OrderByDescending(v => v.Assignments.Select(a => a.EventId).Distinct().Count()),
+                _              => vehicleSortAsc ? result.OrderBy(v => v.OwnerName)    : result.OrderByDescending(v => v.OwnerName),
+            };
+            return result;
+        }
+    }
+
+    private void SortVehicleBy(string column)
+    {
+        if (vehicleSortColumn == column) vehicleSortAsc = !vehicleSortAsc;
+        else { vehicleSortColumn = column; vehicleSortAsc = true; }
+    }
+
+    private string VehicleSortIcon(string col) =>
+        vehicleSortColumn != col ? "⇅" : vehicleSortAsc ? "▲" : "▼";
+
+    // ── Sort: Zuweisungen ─────────────────────────────────────────────────────
+    private string assignmentSortColumn = "Fahrzeughalter";
+    private bool   assignmentSortAsc    = true;
+
+    private IEnumerable<IGrouping<(int, int), VehicleAssignment>> SortedAssignmentGroups
+    {
+        get
+        {
+            var grouped = FilteredAssignments
+                .GroupBy(a => (a.VehicleId, a.EventId));
+            return assignmentSortColumn switch
+            {
+                "Event" => assignmentSortAsc
+                    ? grouped.OrderBy(g => events?.FirstOrDefault(e => e.Id == g.First().EventId)?.Name).ThenBy(g => g.First().Vehicle.OwnerName)
+                    : grouped.OrderByDescending(g => events?.FirstOrDefault(e => e.Id == g.First().EventId)?.Name).ThenByDescending(g => g.First().Vehicle.OwnerName),
+                _ => assignmentSortAsc
+                    ? grouped.OrderBy(g => g.First().Vehicle.OwnerName)
+                    : grouped.OrderByDescending(g => g.First().Vehicle.OwnerName),
+            };
+        }
+    }
+
+    private void SortAssignmentBy(string column)
+    {
+        if (assignmentSortColumn == column) assignmentSortAsc = !assignmentSortAsc;
+        else { assignmentSortColumn = column; assignmentSortAsc = true; }
+    }
+
+    private string AssignmentSortIcon(string col) =>
+        assignmentSortColumn != col ? "⇅" : assignmentSortAsc ? "▲" : "▼";
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     private static List<DateTime> GetEventDays(Event ev) =>
