@@ -270,16 +270,26 @@
             <table class="ac-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Kategorie</th>
-                        <th>Min. Alter</th>
-                        <th>Standort</th>
-                        <th>Zuweisungen</th>
+                        <th class="ac-th-sort" @onclick='() => SortTemplateBy("Name")'>
+                            Name <span class="ac-sort-icon">@TemplateSortIcon("Name")</span>
+                        </th>
+                        <th class="ac-th-sort" @onclick='() => SortTemplateBy("Kategorie")'>
+                            Kategorie <span class="ac-sort-icon">@TemplateSortIcon("Kategorie")</span>
+                        </th>
+                        <th class="ac-th-sort" @onclick='() => SortTemplateBy("MinAlter")'>
+                            Min. Alter <span class="ac-sort-icon">@TemplateSortIcon("MinAlter")</span>
+                        </th>
+                        <th class="ac-th-sort" @onclick='() => SortTemplateBy("Standort")'>
+                            Standort <span class="ac-sort-icon">@TemplateSortIcon("Standort")</span>
+                        </th>
+                        <th class="ac-th-sort" @onclick='() => SortTemplateBy("Zuweisungen")'>
+                            Zuweisungen <span class="ac-sort-icon">@TemplateSortIcon("Zuweisungen")</span>
+                        </th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var t in templates)
+                    @foreach (var t in DisplayedTemplates)
                     {
                         <tr>
                             <td><strong>@t.Name</strong></td>
@@ -730,6 +740,41 @@
     private Area currentArea   = new();
     private bool showAreaForm  = false;
     private bool isEditingArea = false;
+
+    // ── Sort (Vorlagen) ───────────────────────────────────────────────────────
+    private string templateSortColumn = "Name";
+    private bool   templateSortAsc    = true;
+
+    private IEnumerable<AreaTemplate> DisplayedTemplates
+    {
+        get
+        {
+            var result = (templates ?? new()).AsEnumerable();
+            result = templateSortColumn switch
+            {
+                "Kategorie"    => templateSortAsc ? result.OrderBy(t => t.AreaCategory?.Name)  : result.OrderByDescending(t => t.AreaCategory?.Name),
+                "MinAlter"     => templateSortAsc ? result.OrderBy(t => t.MinAge)              : result.OrderByDescending(t => t.MinAge),
+                "Standort"     => templateSortAsc ? result.OrderBy(t => t.Location)            : result.OrderByDescending(t => t.Location),
+                "Zuweisungen"  => templateSortAsc ? result.OrderBy(t => t.Areas.Count)         : result.OrderByDescending(t => t.Areas.Count),
+                _              => templateSortAsc ? result.OrderBy(t => t.Name)                : result.OrderByDescending(t => t.Name),
+            };
+            return result;
+        }
+    }
+
+    private void SortTemplateBy(string column)
+    {
+        if (templateSortColumn == column)
+            templateSortAsc = !templateSortAsc;
+        else
+        {
+            templateSortColumn = column;
+            templateSortAsc    = true;
+        }
+    }
+
+    private string TemplateSortIcon(string column) =>
+        templateSortColumn != column ? "⇅" : templateSortAsc ? "▲" : "▼";
 
     // ── Filter & Sort (Zuweisungen) ───────────────────────────────────────────
     private int    areaFilterEventId    = 0;
