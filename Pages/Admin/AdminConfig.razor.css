@@ -19,6 +19,16 @@
     background: var(--color-surface-card-soft);
 }
 
+.ac-filter-bar .ac-field {
+    flex: 0 1 auto;
+    width: auto;
+}
+
+.ac-filter-bar .ac-input {
+    width: auto;
+    min-width: 180px;
+}
+
 /* ── Sortierbare Spalten-Header ───────────────────────────────────────────── */
 .ac-th-sort {
     cursor: pointer;
