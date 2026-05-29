@@ -83,11 +83,13 @@ public class AreaService : IAreaService
         {
             _context.Areas.Add(new Area
             {
-                AreaTemplateId = src.AreaTemplateId,
-                EventId        = targetEventId,
-                Date           = targetEvent.Date,
-                TimeSlot       = src.TimeSlot,
-                MaxCapacity    = src.MaxCapacity,
+                AreaTemplateId         = src.AreaTemplateId,
+                EventId                = targetEventId,
+                Date                   = targetEvent.Date,
+                TimeSlot               = src.TimeSlot,
+                MaxCapacity            = src.MaxCapacity,
+                AlternativeTimeSlot    = src.AlternativeTimeSlot,
+                AlternativeMaxCapacity = src.AlternativeMaxCapacity,
             });
         }
 
