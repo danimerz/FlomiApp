@@ -56,15 +56,19 @@
                     <span class="cal-view-toggle" title="Kalenderansicht">
                         <span class="cal-view-toggle__icon">📅</span>
                         <label class="toggle-switch">
-                            <input type="checkbox" @bind="showCalendarView" />
+                            <input type="checkbox"
+                                   checked="@showCalendarView"
+                                   @onchange="ToggleCalendarView" />
                             <span class="slider round"></span>
                         </label>
                     </span>
                 </div>
             </div>
 
-            @foreach (var eventKey in AllEventKeys)
+            @if (!showCalendarView)
             {
+                @foreach (var eventKey in AllEventKeys)
+                {
                 var eventOpen = IsEventOpen(eventKey);
 
                 var dateGroups = GroupedAppointments.ContainsKey(eventKey)
@@ -268,7 +272,82 @@
                 </div>
             }
 
-            @if (showCalendarView)
+                @if (UnassignedPickups.Any())
+                {
+                    <section class="appointments-section" style="margin-top:1.5rem">
+                        <div class="appointments-section__header">
+                            <h2>🛋️ Weitere Abholungen</h2>
+                            <div class="appointments-section__controls">
+                                <span class="appointments-section__count">@UnassignedPickups.Count Anfrage(n)</span>
+                                <button class="pickup-collapse-btn" @onclick="ToggleUnassignedPickup">
+                                    <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">▾</span>
+                                </button>
+                            </div>
+                        </div>
+                        @if (unassignedPickupOpen)
+                        {
+                            <div class="appointments-grid">
+                                @foreach (var req in UnassignedPickups)
+                                {
+                                    <article class="appointment-card appointment-card--pickup">
+                                        <div class="appointment-card__body">
+                                            <div class="appointment-card__header">
+                                                <div>
+                                                    <div class="appointment-card__topline appointment-card__topline--pickup">Abholung</div>
+                                                    <h3>Auftrag #@req.OrderNumber</h3>
+                                                </div>
+                                                <span class="status-badge status-badge--pickup">@StatusLabel(req.Status)</span>
+                                            </div>
+                                            <div class="appointment-info-list">
+                                                <div class="appointment-info-item">
+                                                    <span class="label">Adresse</span>
+                                                    <span class="value">@req.Street, @req.PostalCode @req.City</span>
+                                                </div>
+                                                <div class="appointment-info-item">
+                                                    <span class="label">Abholdatum</span>
+                                                    <span class="value">@req.PickupDate.ToShortDateString()</span>
+                                                </div>
+                                                <div class="appointment-info-item">
+                                                    <span class="label">Eingereicht</span>
+                                                    <span class="value">@req.CreatedAt.ToShortDateString()</span>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(req.AdminNote))
+                                                {
+                                                    <div class="appointment-info-item">
+                                                        <span class="label">Notiz</span>
+                                                        <span class="value">@req.AdminNote</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                            @if (req.Status == PickupRequestStatus.Pending)
+                                            {
+                                                <div class="appointment-actions">
+                                                    @if (deletingPickupId == req.Id)
+                                                    {
+                                                        <div class="btn-loading">
+                                                            <span class="btn-spinner"></span>
+                                                            <span>Wird gelöscht...</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="cancel-btn"
+                                                                disabled="@(deletingPickupId.HasValue)"
+                                                                @onclick="() => DeletePickupRequest(req.Id)">
+                                                            🗑️ Löschen
+                                                        </button>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </section>
+                }
+            }
+            else
             {
                 <!-- ── Kalenderansicht ── -->
                 <div class="cal-nav">
@@ -304,82 +383,6 @@
                         </div>
                     }
                 </div>
-            }
-
-            @if (UnassignedPickups.Any())
-            {
-                <section class="appointments-section" style="margin-top:1.5rem">
-                    <div class="appointments-section__header">
-                        <h2>🛋️ Weitere Abholungen</h2>
-                        <div class="appointments-section__controls">
-                            <span class="appointments-section__count">@UnassignedPickups.Count Anfrage(n)</span>
-                            <button class="pickup-collapse-btn" @onclick="ToggleUnassignedPickup">
-                                <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">▾</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    @if (unassignedPickupOpen)
-                    {
-                        <div class="appointments-grid">
-                            @foreach (var req in UnassignedPickups)
-                            {
-                                <article class="appointment-card appointment-card--pickup">
-                                    <div class="appointment-card__body">
-                                        <div class="appointment-card__header">
-                                            <div>
-                                                <div class="appointment-card__topline appointment-card__topline--pickup">Abholung</div>
-                                                <h3>Auftrag #@req.OrderNumber</h3>
-                                            </div>
-                                            <span class="status-badge status-badge--pickup">@StatusLabel(req.Status)</span>
-                                        </div>
-                                        <div class="appointment-info-list">
-                                            <div class="appointment-info-item">
-                                                <span class="label">Adresse</span>
-                                                <span class="value">@req.Street, @req.PostalCode @req.City</span>
-                                            </div>
-                                            <div class="appointment-info-item">
-                                                <span class="label">Abholdatum</span>
-                                                <span class="value">@req.PickupDate.ToShortDateString()</span>
-                                            </div>
-                                            <div class="appointment-info-item">
-                                                <span class="label">Eingereicht</span>
-                                                <span class="value">@req.CreatedAt.ToShortDateString()</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(req.AdminNote))
-                                            {
-                                                <div class="appointment-info-item">
-                                                    <span class="label">Notiz</span>
-                                                    <span class="value">@req.AdminNote</span>
-                                                </div>
-                                            }
-                                        </div>
-                                        @if (req.Status == PickupRequestStatus.Pending)
-                                        {
-                                            <div class="appointment-actions">
-                                                @if (deletingPickupId == req.Id)
-                                                {
-                                                    <div class="btn-loading">
-                                                        <span class="btn-spinner"></span>
-                                                        <span>Wird gelöscht...</span>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <button class="cancel-btn"
-                                                            disabled="@(deletingPickupId.HasValue)"
-                                                            @onclick="() => DeletePickupRequest(req.Id)">
-                                                        🗑️ Löschen
-                                                    </button>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                </article>
-                            }
-                        </div>
-                    }
-                </section>
             }
 
         </section>
@@ -435,6 +438,33 @@
 
     private void CalPrev() { if (--calMonth < 1) { calMonth = 12; calYear--; } }
     private void CalNext() { if (++calMonth > 12) { calMonth = 1; calYear++; } }
+
+    private void ToggleCalendarView()
+    {
+        showCalendarView = !showCalendarView;
+        if (showCalendarView)
+        {
+            // Springe zum Monat des frühesten Termins
+            var firstDate = FilteredAppointments
+                .Where(a => a.Area?.Date != null)
+                .Select(a => a.Area!.Date.Date)
+                .Concat(pickupRequests.Select(r => r.PickupDate.Date))
+                .Where(d => d >= DateTime.Today)
+                .OrderBy(d => d)
+                .FirstOrDefault();
+
+            if (firstDate != default)
+            {
+                calMonth = firstDate.Month;
+                calYear  = firstDate.Year;
+            }
+            else
+            {
+                calMonth = DateTime.Today.Month;
+                calYear  = DateTime.Today.Year;
+            }
+        }
+    }
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? cancellingId    = null;
