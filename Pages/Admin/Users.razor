@@ -5,6 +5,8 @@
 @using Microsoft.EntityFrameworkCore
 @inject UserManager<ApplicationUser>  UserManager
 @inject RoleManager<IdentityRole>     RoleManager
+@inject IMailService                  MailService
+@inject NavigationManager             Navigation
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Benutzerverwaltung – Admin</PageTitle>
@@ -129,6 +131,10 @@
                             <button class="usr-btn usr-btn--pw" @onclick="() => OpenPwReset(u)">
                                 🔑 PW
                             </button>
+                            <button class="usr-btn usr-btn--mail" @onclick="() => SendPasswordResetEmail(u)"
+                                    title="Passwort-Reset-Link per E-Mail senden">
+                                ✉️ PW-Mail
+                            </button>
                             @if (isLocked)
                             {
                                 <button class="usr-btn usr-btn--unlock" @onclick="() => ToggleLock(u)">
@@ -141,6 +147,11 @@
                                     🚫 Sperren
                                 </button>
                             }
+                            <button class="usr-btn usr-btn--delete"
+                                    @onclick="() => confirmDeleteUser = u"
+                                    title="Benutzer löschen">
+                                🗑️
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -253,6 +264,38 @@
     </div>
 }
 
+<!-- ════════════════════════════════════════════════════
+     LÖSCHEN BESTÄTIGUNG
+════════════════════════════════════════════════════ -->
+@if (confirmDeleteUser != null)
+{
+    <div class="usr-modal-backdrop" @onclick="() => confirmDeleteUser = null">
+        <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
+            <div class="usr-modal__header" style="background:linear-gradient(135deg,#991b1b,#dc2626)">
+                <h3>🗑️ Benutzer löschen</h3>
+                <button class="usr-modal__close" @onclick="() => confirmDeleteUser = null">✕</button>
+            </div>
+            <div class="usr-modal__body">
+                <p style="margin:0;font-size:.95rem">
+                    Soll der Benutzer <strong>@confirmDeleteUser.FirstName @confirmDeleteUser.LastName</strong>
+                    (@confirmDeleteUser.Email) wirklich <strong>unwiderruflich</strong> gelöscht werden?
+                </p>
+                <p style="margin:.75rem 0 0;font-size:.85rem;color:var(--color-error-text)">
+                    ⚠️ Anmeldungen und Abholungsanfragen des Benutzers bleiben erhalten.
+                </p>
+            </div>
+            <div class="usr-modal__footer">
+                <button class="usr-submit-btn"
+                        style="background:linear-gradient(135deg,#991b1b,#dc2626)"
+                        @onclick="DeleteUser" disabled="@isSaving">
+                    @(isSaving ? "⏳ Wird gelöscht..." : "🗑️ Ja, löschen")
+                </button>
+                <button class="usr-cancel-btn" @onclick="() => confirmDeleteUser = null">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private enum Tab { All, Admins, Locked }
     private Tab activeTab = Tab.All;
@@ -272,6 +315,9 @@
     // ── Edit ──────────────────────────────────────────────────────────────────
     private ApplicationUser? editUser    = null;
     private bool             editIsAdmin = false;
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    private ApplicationUser? confirmDeleteUser = null;
 
     // ── PW-Reset ──────────────────────────────────────────────────────────────
     private ApplicationUser? pwUser      = null;
@@ -476,6 +522,50 @@
         {
             isSaving = false;
         }
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    private async Task DeleteUser()
+    {
+        if (confirmDeleteUser == null) return;
+        isSaving = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(confirmDeleteUser.Id);
+            if (user != null)
+            {
+                var result = await UserManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                {
+                    errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                    return;
+                }
+                successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde gelöscht.";
+            }
+            confirmDeleteUser = null;
+            await LoadUsers();
+        }
+        catch (Exception ex) { errorMessage = ex.Message; }
+        finally { isSaving = false; }
+    }
+
+    // ── PW-Reset per E-Mail ───────────────────────────────────────────────────
+    private async Task SendPasswordResetEmail(ApplicationUser u)
+    {
+        try
+        {
+            var user  = await UserManager.FindByIdAsync(u.Id);
+            if (user?.Email == null) return;
+
+            var token     = await UserManager.GeneratePasswordResetTokenAsync(user);
+            var encoded   = Uri.EscapeDataString(token);
+            var resetLink = Navigation.ToAbsoluteUri(
+                $"/Identity/Account/ResetPassword?userId={user.Id}&code={encoded}").ToString();
+
+            await MailService.SendPasswordResetAsync(user.Email, $"{user.FirstName} {user.LastName}", resetLink);
+            successMessage = $"PW-Reset-Mail wurde an {user.Email} gesendet.";
+        }
+        catch (Exception ex) { errorMessage = $"Mail konnte nicht gesendet werden: {ex.Message}"; }
     }
 
     // ── Lock / Unlock ─────────────────────────────────────────────────────────

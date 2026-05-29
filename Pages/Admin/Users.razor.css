@@ -200,6 +200,8 @@
 .usr-btn--pw     { background: var(--color-info-bg);    color: var(--color-info-text);    border: 1px solid var(--color-info-border); }
 .usr-btn--lock   { background: var(--color-error-bg);   color: var(--color-error-text);   border: 1px solid var(--color-error-border); }
 .usr-btn--unlock { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
+.usr-btn--mail   { background: var(--color-info-bg);    color: var(--color-info-text);    border: 1px solid var(--color-info-border); }
+.usr-btn--delete { background: var(--color-error-bg);   color: var(--color-error-text);   border: 1px solid var(--color-error-border); padding: .35rem .6rem; }
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
 .usr-modal-backdrop {
