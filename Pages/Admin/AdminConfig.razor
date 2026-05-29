@@ -326,6 +326,11 @@
                     disabled="@(events == null || !events.Any() || templates == null || !templates.Any())">
                 ＋ Neue Zuweisung
             </button>
+            <button class="ac-submit-btn" style="background:var(--color-success-bg);color:var(--color-success-text);border:1px solid var(--color-success-border)"
+                    @onclick="() => showCopyForm = !showCopyForm"
+                    disabled="@(events == null || events.Count < 2)">
+                📋 Bereiche kopieren
+            </button>
             @if (events != null && !events.Any())
             {
                 <span class="ac-toolbar__hint">⚠️ Bitte erst ein Event anlegen.</span>
@@ -335,6 +340,59 @@
                 <span class="ac-toolbar__hint">⚠️ Bitte erst eine Bereich-Vorlage anlegen.</span>
             }
         </div>
+
+        @if (showCopyForm && events != null && events.Count >= 2)
+        {
+            <div class="ac-form-card" style="border-left:4px solid var(--color-success-border)">
+                <div class="ac-form-card__header" style="background:linear-gradient(135deg,#166534,#15803d)">
+                    <h3>📋 Bereiche von Event kopieren</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <p style="margin:0 0 1rem;font-size:.9rem;color:var(--color-text-medium)">
+                        Alle Zuweisungen des Quell-Events werden ins Ziel-Event kopiert.
+                        Datum wird auf das Ziel-Event-Datum gesetzt, alles andere bleibt gleich.
+                    </p>
+                    <div class="ac-form-grid">
+                        <div class="ac-field">
+                            <label>Quell-Event (von)</label>
+                            <select class="ac-input" @bind="copySourceEventId">
+                                <option value="0" disabled>– Bitte wählen –</option>
+                                @foreach (var evt in events!)
+                                {
+                                    <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="ac-field">
+                            <label>Ziel-Event (nach)</label>
+                            <select class="ac-input" @bind="copyTargetEventId">
+                                <option value="0" disabled>– Bitte wählen –</option>
+                                @foreach (var evt in events!)
+                                {
+                                    <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(copyMessage))
+                    {
+                        <div class="ac-state-card @(copySuccess ? "ac-state-card--success" : "ac-state-card--error")" style="margin-top:.75rem">
+                            <div class="ac-state-card__icon">@(copySuccess ? "✅" : "⚠️")</div>
+                            <div class="ac-state-card__content"><p>@copyMessage</p></div>
+                        </div>
+                    }
+                    <div class="ac-form-actions" style="margin-top:1rem">
+                        <button class="ac-submit-btn" @onclick="ExecuteCopy"
+                                disabled="@(copySourceEventId == 0 || copyTargetEventId == 0 || copySourceEventId == copyTargetEventId || isCopying)">
+                            @(isCopying ? "⏳ Wird kopiert..." : "📋 Jetzt kopieren")
+                        </button>
+                        <button class="ac-cancel-btn" @onclick="() => { showCopyForm = false; copyMessage = null; }">
+                            Schliessen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
 
         @if (showAreaForm && events != null && events.Any() && templates != null && templates.Any())
         {
@@ -362,7 +420,9 @@
                             </div>
                             <div class="ac-field">
                                 <label>Event *</label>
-                                <InputSelect @bind-Value="currentArea.EventId" class="ac-input">
+                                <InputSelect @bind-Value="currentArea.EventId"
+                                             @bind-Value:after="SyncAreaDateToEvent"
+                                             class="ac-input">
                                     <option value="0" disabled>– Bitte wählen –</option>
                                     @foreach (var evt in events!)
                                     {
@@ -613,6 +673,14 @@
     private bool showAreaForm  = false;
     private bool isEditingArea = false;
 
+    // ── Copy ──────────────────────────────────────────────────────────────────
+    private bool    showCopyForm      = false;
+    private int     copySourceEventId = 0;
+    private int     copyTargetEventId = 0;
+    private string? copyMessage       = null;
+    private bool    copySuccess       = false;
+    private bool    isCopying         = false;
+
     // ── Categories ────────────────────────────────────────────────────────────
     private AreaCategory currentCategory   = new();
     private bool         showCategoryForm  = false;
@@ -634,6 +702,8 @@
         showTemplateForm = false;
         showAreaForm     = false;
         showCategoryForm = false;
+        showCopyForm     = false;
+        copyMessage      = null;
     }
 
     // ── Events CRUD ───────────────────────────────────────────────────────────
@@ -740,16 +810,53 @@
     }
 
     // ── Areas CRUD ────────────────────────────────────────────────────────────
+    private async Task ExecuteCopy()
+    {
+        if (copySourceEventId == 0 || copyTargetEventId == 0 || copySourceEventId == copyTargetEventId)
+            return;
+
+        isCopying   = true;
+        copyMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var count = await AreaService.CopyAreasToEventAsync(copySourceEventId, copyTargetEventId);
+            areas       = await AreaService.GetAllAreasAsync();
+            templates   = await AreaService.GetAllAreaTemplatesAsync();
+            copySuccess = true;
+            var targetName = events?.FirstOrDefault(e => e.Id == copyTargetEventId)?.Name ?? "";
+            copyMessage = $"{count} Zuweisung(en) erfolgreich nach «{targetName}» kopiert.";
+        }
+        catch (Exception ex)
+        {
+            copySuccess = false;
+            copyMessage = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            isCopying = false;
+        }
+    }
+
     private void ShowCreateAreaForm()
     {
         showAreaForm  = true;
         isEditingArea = false;
+        var firstEvent = events?.FirstOrDefault();
         currentArea   = new Area
         {
-            Date           = DateTime.Today,
-            EventId        = events?.FirstOrDefault()?.Id ?? 0,
+            Date           = firstEvent?.Date ?? DateTime.Today,
+            EventId        = firstEvent?.Id ?? 0,
             AreaTemplateId = templates?.FirstOrDefault()?.Id ?? 0
         };
+    }
+
+    private void SyncAreaDateToEvent()
+    {
+        var ev = events?.FirstOrDefault(e => e.Id == currentArea.EventId);
+        if (ev != null)
+            currentArea.Date = ev.Date;
     }
 
     private void CancelAreaEdit()

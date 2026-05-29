@@ -12,6 +12,7 @@ public interface IAreaService
     Task                     DeleteAreaTemplateAsync(int id);
 
     // ── Areas (Zuweisungen) ───────────────────────────────────────────────────
+    Task<int>        CopyAreasToEventAsync(int sourceEventId, int targetEventId);
     Task<List<Area>> GetAllAreasAsync();
     Task<List<Area>> GetAreasByEventAsync(int eventId);
     Task<Area>       GetAreaByIdAsync(int id);

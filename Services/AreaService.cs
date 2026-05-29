@@ -68,6 +68,32 @@ public class AreaService : IAreaService
     // AREAS (Zuweisungen)
     // ══════════════════════════════════════════════════════════════════════════
 
+    public async Task<int> CopyAreasToEventAsync(int sourceEventId, int targetEventId)
+    {
+        var targetEvent = await _context.Events.FindAsync(targetEventId);
+        if (targetEvent == null) return 0;
+
+        var sourceAreas = await _context.Areas
+            .Where(a => a.EventId == sourceEventId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        foreach (var src in sourceAreas)
+        {
+            _context.Areas.Add(new Area
+            {
+                AreaTemplateId = src.AreaTemplateId,
+                EventId        = targetEventId,
+                Date           = targetEvent.Date,
+                TimeSlot       = src.TimeSlot,
+                MaxCapacity    = src.MaxCapacity,
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        return sourceAreas.Count;
+    }
+
     public async Task<List<Area>> GetAllAreasAsync()
     {
         return await _context.Areas
