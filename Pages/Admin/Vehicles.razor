@@ -920,7 +920,7 @@
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     private static List<DateTime> GetEventDays(Event ev) =>
-        Enumerable.Range(0, 7)
+        Enumerable.Range(-8, 9)          // 8 Tage vor Event bis Eventtag
                   .Select(i => ev.Date.Date.AddDays(i))
                   .ToList();
 

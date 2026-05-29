@@ -540,10 +540,22 @@
     // ── Settings – Event Dropdown ─────────────────────────────────────────────
     private void OnEventChanged(FurniturePickupSettings s, ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var id))
+        if (int.TryParse(e.Value?.ToString(), out var id) && id > 0)
+        {
             s.EventId = id;
+            var ev = availableEvents?.FirstOrDefault(x => x.Id == id);
+            if (ev != null)
+            {
+                s.PickupDateFrom = ev.Date.AddDays(-8);
+                s.PickupDateTo   = ev.Date.AddDays(-1);
+            }
+        }
         else
-            s.EventId = null;
+        {
+            s.EventId        = null;
+            s.PickupDateFrom = null;
+            s.PickupDateTo   = null;
+        }
     }
 
     // ── Settings – Datum ──────────────────────────────────────────────────────
