@@ -532,7 +532,7 @@
                                             <label>Helfer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.HelperUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in DriverUsersForDate(date, false))
+                                                @foreach (var u in HelperUsersForDate(date, false))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -762,7 +762,7 @@
                                             <label>Helfer (Benutzer)</label>
                                             <select class="av-input" @bind="detail.HelperUserId">
                                                 <option value="">– Kein Benutzer –</option>
-                                                @foreach (var u in DriverUsersForDate(date, true))
+                                                @foreach (var u in HelperUsersForDate(date, true))
                                                 {
                                                     <option value="@u.Id">@u.FirstName @u.LastName</option>
                                                 }
@@ -828,7 +828,9 @@
     private List<DateTime>                       assignmentEventDays        = new();
     private List<VehicleAssignment>              existingAssignmentsForForm = new();
     private Dictionary<DateTime, List<ApplicationUser>> newDriverUsersByDate  = new();
+    private Dictionary<DateTime, List<ApplicationUser>> newHelperUsersByDate  = new();
     private Dictionary<DateTime, List<ApplicationUser>> editDriverUsersByDate = new();
+    private Dictionary<DateTime, List<ApplicationUser>> editHelperUsersByDate = new();
 
     private HashSet<DateTime> AlreadyAssignedDays =>
         existingAssignmentsForForm
@@ -954,9 +956,15 @@
         assignmentEventDays = ev != null ? GetEventDays(ev) : new();
         await LoadExistingAssignmentsForForm();
         if (newAssignment.EventId > 0)
-            newDriverUsersByDate = await VehicleService.GetDriverUsersByDateForEventAsync(newAssignment.EventId);
+        {
+            newDriverUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Fahrer");
+            newHelperUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Beifahrer");
+        }
         else
+        {
             newDriverUsersByDate = new();
+            newHelperUsersByDate = new();
+        }
     }
 
     private async Task LoadExistingAssignmentsForForm()
@@ -1136,8 +1144,9 @@
                     ReturnedBy   = d.ReturnedBy,
                 });
         var ev = events?.FirstOrDefault(x => x.Id == first.EventId);
-        editAssignmentDays  = ev != null ? GetEventDays(ev) : new();
-        editDriverUsersByDate = await VehicleService.GetDriverUsersByDateForEventAsync(first.EventId);
+        editAssignmentDays    = ev != null ? GetEventDays(ev) : new();
+        editDriverUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Fahrer");
+        editHelperUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Beifahrer");
     }
 
     private void CloseEditAssignment()
@@ -1191,6 +1200,12 @@
     private List<ApplicationUser> DriverUsersForDate(DateTime date, bool isEdit)
     {
         var dict = isEdit ? editDriverUsersByDate : newDriverUsersByDate;
+        return dict.TryGetValue(date.Date, out var list) ? list : new();
+    }
+
+    private List<ApplicationUser> HelperUsersForDate(DateTime date, bool isEdit)
+    {
+        var dict = isEdit ? editHelperUsersByDate : newHelperUsersByDate;
         return dict.TryGetValue(date.Date, out var list) ? list : new();
     }
 

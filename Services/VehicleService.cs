@@ -166,20 +166,17 @@ public class VehicleService : IVehicleService
             .ToListAsync();
     }
 
-    public async Task<Dictionary<DateTime, List<ApplicationUser>>> GetDriverUsersByDateForEventAsync(int eventId)
+    public async Task<Dictionary<DateTime, List<ApplicationUser>>> GetUsersByAreaNameAndEventAsync(int eventId, string areaTemplateName)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
-        // Get userId + date for all registered appointments in Fahrer-category areas for this event
         var entries = await db.Appointments
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.AreaTemplate)
-                    .ThenInclude(t => t!.AreaCategory)
             .Where(a => a.Area.EventId == eventId
                      && a.Status == AppointmentStatus.Registered
                      && a.Area.AreaTemplate != null
-                     && a.Area.AreaTemplate.AreaCategory != null
-                     && a.Area.AreaTemplate.AreaCategory.Name == "Fahrer")
+                     && a.Area.AreaTemplate.Name == areaTemplateName)
             .Select(a => new { a.UserId, Date = a.Area.Date.Date })
             .Distinct()
             .ToListAsync();
