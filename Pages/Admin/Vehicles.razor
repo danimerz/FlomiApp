@@ -827,10 +827,12 @@
     private Dictionary<DateTime, AssignmentDate> newDayDetails              = new();
     private List<DateTime>                       assignmentEventDays        = new();
     private List<VehicleAssignment>              existingAssignmentsForForm = new();
-    private Dictionary<DateTime, List<ApplicationUser>> newDriverUsersByDate  = new();
-    private Dictionary<DateTime, List<ApplicationUser>> newHelperUsersByDate  = new();
-    private Dictionary<DateTime, List<ApplicationUser>> editDriverUsersByDate = new();
-    private Dictionary<DateTime, List<ApplicationUser>> editHelperUsersByDate = new();
+    private Dictionary<DateTime, List<ApplicationUser>>  newDriverUsersByDate     = new();
+    private Dictionary<DateTime, List<ApplicationUser>>  newHelperUsersByDate     = new();
+    private Dictionary<DateTime, List<ApplicationUser>>  editDriverUsersByDate    = new();
+    private Dictionary<DateTime, List<ApplicationUser>>  editHelperUsersByDate    = new();
+    private Dictionary<DateTime, HashSet<string>>        newAlreadyAssignedByDate = new();
+    private Dictionary<DateTime, HashSet<string>>        editAlreadyAssignedByDate= new();
 
     private HashSet<DateTime> AlreadyAssignedDays =>
         existingAssignmentsForForm
@@ -957,13 +959,15 @@
         await LoadExistingAssignmentsForForm();
         if (newAssignment.EventId > 0)
         {
-            newDriverUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Fahrer");
-            newHelperUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Beifahrer");
+            newDriverUsersByDate     = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Fahrer");
+            newHelperUsersByDate     = await VehicleService.GetUsersByAreaNameAndEventAsync(newAssignment.EventId, "Beifahrer");
+            newAlreadyAssignedByDate = await VehicleService.GetAlreadyAssignedUserIdsByDateAsync(newAssignment.EventId, Enumerable.Empty<int>());
         }
         else
         {
-            newDriverUsersByDate = new();
-            newHelperUsersByDate = new();
+            newDriverUsersByDate     = new();
+            newHelperUsersByDate     = new();
+            newAlreadyAssignedByDate = new();
         }
     }
 
@@ -1144,9 +1148,12 @@
                     ReturnedBy   = d.ReturnedBy,
                 });
         var ev = events?.FirstOrDefault(x => x.Id == first.EventId);
-        editAssignmentDays    = ev != null ? GetEventDays(ev) : new();
-        editDriverUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Fahrer");
-        editHelperUsersByDate = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Beifahrer");
+        editAssignmentDays     = ev != null ? GetEventDays(ev) : new();
+        editDriverUsersByDate  = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Fahrer");
+        editHelperUsersByDate  = await VehicleService.GetUsersByAreaNameAndEventAsync(first.EventId, "Beifahrer");
+        // Beim Edit: aktuelle Gruppe aus der Konfliktprüfung ausschliessen
+        editAlreadyAssignedByDate = await VehicleService.GetAlreadyAssignedUserIdsByDateAsync(
+            first.EventId, editAssignmentGroupIds);
     }
 
     private void CloseEditAssignment()
@@ -1199,14 +1206,20 @@
 
     private List<ApplicationUser> DriverUsersForDate(DateTime date, bool isEdit)
     {
-        var dict = isEdit ? editDriverUsersByDate : newDriverUsersByDate;
-        return dict.TryGetValue(date.Date, out var list) ? list : new();
+        var users    = (isEdit ? editDriverUsersByDate    : newDriverUsersByDate)
+                       .TryGetValue(date.Date, out var l) ? l : new();
+        var assigned = (isEdit ? editAlreadyAssignedByDate : newAlreadyAssignedByDate)
+                       .TryGetValue(date.Date, out var ids) ? ids : new HashSet<string>();
+        return users.Where(u => !assigned.Contains(u.Id)).ToList();
     }
 
     private List<ApplicationUser> HelperUsersForDate(DateTime date, bool isEdit)
     {
-        var dict = isEdit ? editHelperUsersByDate : newHelperUsersByDate;
-        return dict.TryGetValue(date.Date, out var list) ? list : new();
+        var users    = (isEdit ? editHelperUsersByDate    : newHelperUsersByDate)
+                       .TryGetValue(date.Date, out var l) ? l : new();
+        var assigned = (isEdit ? editAlreadyAssignedByDate : newAlreadyAssignedByDate)
+                       .TryGetValue(date.Date, out var ids) ? ids : new HashSet<string>();
+        return users.Where(u => !assigned.Contains(u.Id)).ToList();
     }
 
     private string GetVehicleLabel(Vehicle v)

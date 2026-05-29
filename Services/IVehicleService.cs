@@ -21,4 +21,5 @@ public interface IVehicleService
     Task<List<ApplicationUser>>                         GetAllUsersAsync();
     Task<Dictionary<DateTime, List<ApplicationUser>>>   GetUsersByAreaNameAndEventAsync(int eventId, string areaTemplateName);
     Task<List<AssignmentDate>>                          GetVehicleAssignmentsForUserAsync(string userId);
+    Task<Dictionary<DateTime, HashSet<string>>>         GetAlreadyAssignedUserIdsByDateAsync(int eventId, IEnumerable<int> excludeAssignmentIds);
 }

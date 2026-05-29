@@ -157,6 +157,27 @@ public class VehicleService : IVehicleService
     }
 
     // ── Users ─────────────────────────────────────────────────────────────────
+    public async Task<Dictionary<DateTime, HashSet<string>>> GetAlreadyAssignedUserIdsByDateAsync(int eventId, IEnumerable<int> excludeAssignmentIds)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var exclude = excludeAssignmentIds.ToHashSet();
+
+        var dates = await db.AssignmentDates
+            .Include(d => d.Assignment)
+            .Where(d => d.Assignment.EventId == eventId && !exclude.Contains(d.AssignmentId))
+            .AsNoTracking()
+            .ToListAsync();
+
+        return dates
+            .GroupBy(d => d.Date.Date)
+            .ToDictionary(
+                g => g.Key,
+                g => g.SelectMany(d => new[] { d.DriverUserId, d.HelperUserId }
+                         .Where(id => id != null).Select(id => id!))
+                     .ToHashSet()
+            );
+    }
+
     public async Task<List<AssignmentDate>> GetVehicleAssignmentsForUserAsync(string userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
