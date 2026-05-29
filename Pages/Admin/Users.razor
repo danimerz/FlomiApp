@@ -3,6 +3,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Text
 @inject UserManager<ApplicationUser>  UserManager
 @inject RoleManager<IdentityRole>     RoleManager
 @inject IMailService                  MailService
@@ -558,7 +560,7 @@
             if (user?.Email == null) return;
 
             var token     = await UserManager.GeneratePasswordResetTokenAsync(user);
-            var encoded   = Uri.EscapeDataString(token);
+            var encoded   = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             var resetLink = Navigation.ToAbsoluteUri(
                 $"/Identity/Account/ResetPassword?userId={user.Id}&code={encoded}").ToString();
 
