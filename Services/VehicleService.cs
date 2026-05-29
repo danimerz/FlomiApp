@@ -157,6 +157,20 @@ public class VehicleService : IVehicleService
     }
 
     // ── Users ─────────────────────────────────────────────────────────────────
+    public async Task<List<AssignmentDate>> GetVehicleAssignmentsForUserAsync(string userId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        return await db.AssignmentDates
+            .Include(d => d.Assignment)
+                .ThenInclude(a => a.Vehicle)
+            .Include(d => d.Assignment)
+                .ThenInclude(a => a.Event)
+            .Where(d => d.DriverUserId == userId || d.HelperUserId == userId)
+            .OrderBy(d => d.Date)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<List<ApplicationUser>> GetAllUsersAsync()
     {
         return await _userManager.Users

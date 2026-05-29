@@ -5,6 +5,8 @@
 @inject IAppointmentService AppointmentService
 @inject IJSRuntime JS
 @inject IFurniturePickupService FurniturePickupService
+@inject IVehicleService VehicleService
+@using FlomiApp.Data.Models
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -395,6 +397,71 @@
         </section>
     }
 
+    @* ── Fahrzeug-Zuweisungen ── *@
+    @if (vehicleAssignments.Any())
+    {
+        <section class="appointments-section" style="margin-top:1.5rem">
+            <div class="appointments-section__header">
+                <h2>🚗 Meine Fahrzeug-Einsätze</h2>
+                <span class="appointments-section__count">
+                    @vehicleAssignments.Count Einsatz/Einsätze
+                </span>
+            </div>
+
+            <div class="vehicle-assignment-list">
+                @foreach (var d in vehicleAssignments.OrderBy(d => d.Date))
+                {
+                    var role = d.DriverUserId == userId ? "Fahrer" : "Beifahrer";
+                    var roleIcon = role == "Fahrer" ? "🧑‍✈️" : "🙋";
+                    <article class="va-card">
+                        <div class="va-card__role-badge va-card__role-badge--@role.ToLower()">
+                            @roleIcon @role
+                        </div>
+                        <div class="va-card__body">
+                            <div class="va-card__vehicle">
+                                🚗 @d.Assignment.Vehicle.OwnerName
+                            </div>
+                            <div class="va-card__info">
+                                <div class="va-card__info-item">
+                                    <span class="va-label">Event</span>
+                                    <span class="va-value">@d.Assignment.Event.Name</span>
+                                </div>
+                                <div class="va-card__info-item">
+                                    <span class="va-label">Datum</span>
+                                    <span class="va-value">
+                                        @d.Date.ToString("dddd, dd.MM.yyyy",
+                                            new System.Globalization.CultureInfo("de-CH"))
+                                    </span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(d.ReadyFrom))
+                                {
+                                    <div class="va-card__info-item">
+                                        <span class="va-label">Bereit ab</span>
+                                        <span class="va-value">@d.ReadyFrom Uhr</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(d.Assignment.Vehicle.OwnerPhone))
+                                {
+                                    <div class="va-card__info-item">
+                                        <span class="va-label">Fahrzeug-Tel.</span>
+                                        <span class="va-value">📞 @d.Assignment.Vehicle.OwnerPhone</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(d.Assignment.Vehicle.OwnerContact))
+                                {
+                                    <div class="va-card__info-item">
+                                        <span class="va-label">Kontakt</span>
+                                        <span class="va-value">@d.Assignment.Vehicle.OwnerContact</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+
 </div>
 
 @code {
@@ -476,6 +543,9 @@
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? cancellingId    = null;
     private int? deletingPickupId = null;
+
+    // ── Vehicle Assignments ───────────────────────────────────────────────────
+    private List<AssignmentDate> vehicleAssignments = new();
 
     // ── Pickup ────────────────────────────────────────────────────────────────
     private List<FurniturePickupRequest> pickupRequests = new();
@@ -579,7 +649,8 @@
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                      ?? string.Empty;
 
-            pickupRequests = await FurniturePickupService.GetUserRequestsAsync(userId);
+            pickupRequests      = await FurniturePickupService.GetUserRequestsAsync(userId);
+            vehicleAssignments  = await VehicleService.GetVehicleAssignmentsForUserAsync(userId);
             await LoadAppointments();
         }
     }
