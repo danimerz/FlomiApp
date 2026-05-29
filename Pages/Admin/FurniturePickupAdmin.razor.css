@@ -1,3 +1,133 @@
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.afp-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--color-border-soft);
+    padding-bottom: 0;
+}
+
+.afp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .6rem 1.1rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: var(--color-text-medium);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: color .15s, border-color .15s, background .15s;
+    margin-bottom: -2px;
+}
+
+.afp-tab:hover {
+    color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.afp-tab--active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.afp-tab__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+.afp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    background: var(--color-surface-card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+.afp-table thead tr {
+    background: linear-gradient(135deg, var(--color-primary-deeper) 0%, var(--color-primary) 100%);
+}
+
+.afp-table thead th {
+    padding: .85rem 1rem;
+    text-align: left;
+    font-size: .82rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.afp-table tbody tr {
+    border-bottom: 1px solid var(--color-border-soft);
+    transition: background .12s;
+}
+
+.afp-table tbody tr:last-child { border-bottom: none; }
+
+.afp-table tbody tr:hover { background: var(--color-surface-card-soft); }
+
+.afp-table tbody td {
+    padding: .85rem 1rem;
+    color: var(--color-text);
+    vertical-align: middle;
+}
+
+/* ── Sortierbare Header ───────────────────────────────────────────────────── */
+.afp-th-sort {
+    cursor: pointer;
+    user-select: none;
+}
+
+.afp-th-sort:hover { opacity: .8; }
+
+.afp-sort-icon {
+    font-size: .7rem;
+    opacity: .65;
+    margin-left: .25rem;
+}
+
+/* ── Table Buttons ────────────────────────────────────────────────────────── */
+.afp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .4rem .85rem;
+    border: none;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, filter .15s;
+    white-space: nowrap;
+}
+
+.afp-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+.afp-btn--detail {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border: 1px solid var(--color-warning-border);
+}
+
 /* ── Filter Row ───────────────────────────────────────────────────────────── */
 .afp-filter-row {
     display: flex;

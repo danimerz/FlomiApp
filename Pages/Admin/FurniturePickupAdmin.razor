@@ -74,21 +74,33 @@
                 }
             </div>
 
-            <table class="table">
+            <table class="afp-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Name</th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("#")'>
+                            # <span class="afp-sort-icon">@SortIcon("#")</span>
+                        </th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("Name")'>
+                            Name <span class="afp-sort-icon">@SortIcon("Name")</span>
+                        </th>
                         <th>Adresse</th>
-                        <th>Abholdatum</th>
-                        <th>Event</th>
-                        <th>Status</th>
-                        <th>Bilder</th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("Datum")'>
+                            Abholdatum <span class="afp-sort-icon">@SortIcon("Datum")</span>
+                        </th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("Event")'>
+                            Event <span class="afp-sort-icon">@SortIcon("Event")</span>
+                        </th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("Status")'>
+                            Status <span class="afp-sort-icon">@SortIcon("Status")</span>
+                        </th>
+                        <th class="afp-th-sort" @onclick='() => SortBy("Bilder")'>
+                            Bilder <span class="afp-sort-icon">@SortIcon("Bilder")</span>
+                        </th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var req in FilteredRequests)
+                    @foreach (var req in SortedRequests)
                     {
                         <tr>
                             <td><strong>#@req.OrderNumber</strong></td>
@@ -116,9 +128,9 @@
                             </td>
                             <td>@req.Images.Count Bild(er)</td>
                             <td>
-                                <button class="btn btn-warning"
+                                <button class="afp-btn afp-btn--detail"
                                         @onclick="() => OpenDetail(req)">
-                                    Details
+                                    ✏️ Details
                                 </button>
                             </td>
                         </tr>
@@ -445,6 +457,37 @@
         filterStatus == null
             ? requests!
             : requests!.Where(r => r.Status == filterStatus).ToList();
+
+    // ── Sort ──────────────────────────────────────────────────────────────────
+    private string sortColumn = "Datum";
+    private bool   sortAsc    = true;
+
+    private IEnumerable<FurniturePickupRequest> SortedRequests
+    {
+        get
+        {
+            var r = FilteredRequests.AsEnumerable();
+            return sortColumn switch
+            {
+                "#"      => sortAsc ? r.OrderBy(x => x.OrderNumber)      : r.OrderByDescending(x => x.OrderNumber),
+                "Name"   => sortAsc ? r.OrderBy(x => x.LastName)         : r.OrderByDescending(x => x.LastName),
+                "Datum"  => sortAsc ? r.OrderBy(x => x.PickupDate)       : r.OrderByDescending(x => x.PickupDate),
+                "Event"  => sortAsc ? r.OrderBy(x => x.EventId)          : r.OrderByDescending(x => x.EventId),
+                "Status" => sortAsc ? r.OrderBy(x => x.Status)           : r.OrderByDescending(x => x.Status),
+                "Bilder" => sortAsc ? r.OrderBy(x => x.Images.Count)     : r.OrderByDescending(x => x.Images.Count),
+                _        => r
+            };
+        }
+    }
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column) sortAsc = !sortAsc;
+        else { sortColumn = column; sortAsc = true; }
+    }
+
+    private string SortIcon(string col) =>
+        sortColumn != col ? "⇅" : sortAsc ? "▲" : "▼";
 
     // ── Einstellungen ────────────────────────────────────────────────────────
     private List<FurniturePickupSettings>? settingsList;
