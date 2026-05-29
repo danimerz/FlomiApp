@@ -70,10 +70,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         // ── Seed: AreaCategories ──────────────────────────────────────────────
         modelBuilder.Entity<AreaCategory>().HasData(
-            new AreaCategory { Id = 1, Name = "Sammeln"   },
-            new AreaCategory { Id = 2, Name = "Sortieren" },
-            new AreaCategory { Id = 3, Name = "Verkauf"   },
-            new AreaCategory { Id = 4, Name = "Sonstiges" }
+            new AreaCategory { Id = 1, Name = "Sammeln",   SortOrder = 1 },
+            new AreaCategory { Id = 2, Name = "Sortieren", SortOrder = 2 },
+            new AreaCategory { Id = 3, Name = "Verkauf",   SortOrder = 3 },
+            new AreaCategory { Id = 4, Name = "Sonstiges", SortOrder = 4 }
         );
 
         // ── Seed: FurniturePickupSettings ─────────────────────────────────────

@@ -686,9 +686,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var cat in categories)
+                    @{ var catList = (categories ?? new()).ToList(); }
+                    @foreach (var cat in catList)
                     {
                         var templateCount = templates?.Count(t => t.AreaCategoryId == cat.Id) ?? 0;
+                        var catIdx        = catList.IndexOf(cat);
                         <tr>
                             <td><strong>@cat.Name</strong></td>
                             <td>
@@ -698,6 +700,16 @@
                             </td>
                             <td>
                                 <div class="ac-actions">
+                                    <button class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
+                                            @onclick="() => MoveCategory(cat.Id, -1)"
+                                            disabled="@(catIdx == 0)" title="Nach oben">
+                                        ▲
+                                    </button>
+                                    <button class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
+                                            @onclick="() => MoveCategory(cat.Id, 1)"
+                                            disabled="@(catIdx == catList.Count - 1)" title="Nach unten">
+                                        ▼
+                                    </button>
                                     <button class="ac-btn ac-btn--edit"
                                             @onclick="() => EditCategory(cat)">
                                         ✏️ Edit
@@ -1090,5 +1102,11 @@
         await AreaService.DeleteCategoryAsync(id);
         categories = await AreaService.GetAllCategoriesAsync();
         templates  = await AreaService.GetAllAreaTemplatesAsync();
+    }
+
+    private async Task MoveCategory(int id, int direction)
+    {
+        await AreaService.MoveCategoryAsync(id, direction);
+        categories = await AreaService.GetAllCategoriesAsync();
     }
 }

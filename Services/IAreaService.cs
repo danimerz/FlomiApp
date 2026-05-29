@@ -35,4 +35,5 @@ public interface IAreaService
     Task                     CreateCategoryAsync(AreaCategory category);
     Task                     UpdateCategoryAsync(AreaCategory category);
     Task                     DeleteCategoryAsync(int id);
+    Task                     MoveCategoryAsync(int id, int direction); // -1 = up, +1 = down
 }

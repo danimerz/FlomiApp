@@ -127,7 +127,8 @@
             }
 
             @foreach (var group in areas
-                .OrderBy(a => a.AreaTemplate?.AreaCategory?.Name)
+                .OrderBy(a => a.AreaTemplate?.AreaCategory?.SortOrder ?? 999)
+                .ThenBy(a => a.AreaTemplate?.AreaCategory?.Name)
                 .GroupBy(a => a.AreaTemplate?.AreaCategory?.Name ?? "Sonstiges"))
             {
                 var categoryKey = group.Key;

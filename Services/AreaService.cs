@@ -238,9 +238,23 @@ public class AreaService : IAreaService
     public async Task<List<AreaCategory>> GetAllCategoriesAsync()
     {
         return await _context.AreaCategories
-            .OrderBy(c => c.Name)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task MoveCategoryAsync(int id, int direction)
+    {
+        var all = await _context.AreaCategories.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
+        var idx = all.FindIndex(c => c.Id == id);
+        if (idx < 0) return;
+
+        var swapIdx = idx + direction;
+        if (swapIdx < 0 || swapIdx >= all.Count) return;
+
+        (all[idx].SortOrder, all[swapIdx].SortOrder) = (all[swapIdx].SortOrder, all[idx].SortOrder);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<AreaCategory> GetCategoryByIdAsync(int id)
