@@ -337,9 +337,10 @@
     private async Task ConfirmRegistration()
     {
         if (confirmArea == null) return;
-        var areaId = confirmArea.Id;
+        var areaId  = confirmArea.Id;
+        var comment = confirmComment;   // Kommentar sichern bevor Modal schliesst
         CloseConfirmModal();
-        await RegisterAppointment(areaId, confirmComment);
+        await RegisterAppointment(areaId, comment);
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
