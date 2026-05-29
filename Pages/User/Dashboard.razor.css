@@ -527,25 +527,16 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
-/* ── View-Toggle Button ───────────────────────────────────────────────────── */
-.cal-view-btn {
+/* ── View-Toggle Switch ───────────────────────────────────────────────────── */
+.cal-view-toggle {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border: 1.5px solid var(--color-border-input);
-    border-radius: 8px;
-    background: var(--color-surface-input-alt);
-    font-size: 1rem;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
+    gap: .4rem;
 }
 
-.cal-view-btn:hover,
-.cal-view-btn--active {
-    border-color: var(--color-primary);
-    background: var(--color-primary-tint);
+.cal-view-toggle__icon {
+    font-size: 1rem;
+    line-height: 1;
 }
 
 /* ── Calendar Nav ─────────────────────────────────────────────────────────── */

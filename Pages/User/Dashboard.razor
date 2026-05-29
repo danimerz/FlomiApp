@@ -53,11 +53,13 @@
                         <input type="checkbox" @bind="showCancelledAppointments" />
                         <span class="slider round"></span>
                     </label>
-                    <button class="cal-view-btn @(showCalendarView ? "cal-view-btn--active" : "")"
-                            title="@(showCalendarView ? "Listenansicht" : "Kalenderansicht")"
-                            @onclick="() => showCalendarView = !showCalendarView">
-                        @(showCalendarView ? "☰" : "📅")
-                    </button>
+                    <span class="cal-view-toggle" title="Kalenderansicht">
+                        <span class="cal-view-toggle__icon">📅</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="showCalendarView" />
+                            <span class="slider round"></span>
+                        </label>
+                    </span>
                 </div>
             </div>
 
