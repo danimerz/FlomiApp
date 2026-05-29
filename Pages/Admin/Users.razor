@@ -1,0 +1,501 @@
+@page "/admin/users"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser>  UserManager
+@inject RoleManager<IdentityRole>     RoleManager
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Benutzerverwaltung – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Benutzerverwaltung</h1>
+            <p>Benutzer anzeigen, bearbeiten, Rollen zuweisen und Passwörter zurücksetzen.</p>
+        </div>
+    </section>
+
+    <!-- ── Tabs ── -->
+    <div class="usr-tabs">
+        <button class="usr-tab @(activeTab == Tab.All ? "usr-tab--active" : "")"
+                @onclick="() => activeTab = Tab.All">
+            👥 Alle
+            <span class="usr-tab__badge">@users.Count</span>
+        </button>
+        <button class="usr-tab @(activeTab == Tab.Admins ? "usr-tab--active" : "")"
+                @onclick="() => activeTab = Tab.Admins">
+            🔴 Admins
+            <span class="usr-tab__badge">@adminIds.Count</span>
+        </button>
+        <button class="usr-tab @(activeTab == Tab.Locked ? "usr-tab--active" : "")"
+                @onclick="() => activeTab = Tab.Locked">
+            🚫 Gesperrt
+            <span class="usr-tab__badge">@users.Count(u => u.LockoutEnd > DateTimeOffset.UtcNow)</span>
+        </button>
+    </div>
+
+    <!-- ── Filter ── -->
+    <div class="usr-filter-bar">
+        <input type="text"
+               class="usr-search"
+               placeholder="🔍 Name oder E-Mail suchen..."
+               @bind="searchText"
+               @bind:event="oninput" />
+        <select class="usr-filter-select" @bind="filterStufe">
+            <option value="">Alle Stufen</option>
+            @foreach (var s in AllStufen)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+        <span class="usr-count">@DisplayedUsers.Count() Benutzer</span>
+    </div>
+
+    @if (successMessage != null)
+    {
+        <div class="state-card state-card--success" style="margin-bottom:1rem">
+            <div class="state-card__icon">✅</div>
+            <div class="state-card__content"><p>@successMessage</p></div>
+        </div>
+    }
+    @if (errorMessage != null)
+    {
+        <div class="state-card state-card--error" style="margin-bottom:1rem">
+            <div class="state-card__icon">⚠️</div>
+            <div class="state-card__content"><p>@errorMessage</p></div>
+        </div>
+    }
+
+    <!-- ── Tabelle ── -->
+    <table class="usr-table">
+        <thead>
+            <tr>
+                <th class="usr-th-sort" @onclick='() => SortBy("Name")'>
+                    Name <span class="usr-sort-icon">@SortIcon("Name")</span>
+                </th>
+                <th class="usr-th-sort" @onclick='() => SortBy("Email")'>
+                    E-Mail <span class="usr-sort-icon">@SortIcon("Email")</span>
+                </th>
+                <th>Pfadiname</th>
+                <th class="usr-th-sort" @onclick='() => SortBy("Stufe")'>
+                    Stufe <span class="usr-sort-icon">@SortIcon("Stufe")</span>
+                </th>
+                <th>Rolle</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in DisplayedUsers)
+            {
+                var isAdmin  = adminIds.Contains(u.Id);
+                var isLocked = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow;
+                <tr class="@(isLocked ? "usr-row--locked" : "")">
+                    <td>
+                        <strong>@u.LastName @u.FirstName</strong>
+                    </td>
+                    <td class="usr-email">@u.Email</td>
+                    <td>@(u.Pfadiname ?? "–")</td>
+                    <td>@(u.Stufe ?? "–")</td>
+                    <td>
+                        @if (isAdmin)
+                        {
+                            <span class="usr-badge usr-badge--admin">🔴 Admin</span>
+                        }
+                        else
+                        {
+                            <span class="usr-badge usr-badge--user">Benutzer</span>
+                        }
+                    </td>
+                    <td>
+                        @if (isLocked)
+                        {
+                            <span class="usr-badge usr-badge--locked">🚫 Gesperrt</span>
+                        }
+                        else
+                        {
+                            <span class="usr-badge usr-badge--active">✅ Aktiv</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="usr-actions">
+                            <button class="usr-btn usr-btn--edit" @onclick="() => OpenEdit(u)">
+                                ✏️ Edit
+                            </button>
+                            <button class="usr-btn usr-btn--pw" @onclick="() => OpenPwReset(u)">
+                                🔑 PW
+                            </button>
+                            @if (isLocked)
+                            {
+                                <button class="usr-btn usr-btn--unlock" @onclick="() => ToggleLock(u)">
+                                    🔓 Entsperren
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="usr-btn usr-btn--lock" @onclick="() => ToggleLock(u)">
+                                    🚫 Sperren
+                                </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     EDIT MODAL
+════════════════════════════════════════════════════ -->
+@if (editUser != null)
+{
+    <div class="usr-modal-backdrop" @onclick="CloseEdit">
+        <div class="usr-modal" @onclick:stopPropagation="true">
+            <div class="usr-modal__header">
+                <h3>✏️ Benutzer bearbeiten</h3>
+                <button class="usr-modal__close" @onclick="CloseEdit">✕</button>
+            </div>
+            <div class="usr-modal__body">
+                <div class="usr-form-grid">
+                    <div class="usr-field">
+                        <label>Vorname</label>
+                        <input class="usr-input" @bind="editUser.FirstName" />
+                    </div>
+                    <div class="usr-field">
+                        <label>Nachname</label>
+                        <input class="usr-input" @bind="editUser.LastName" />
+                    </div>
+                    <div class="usr-field">
+                        <label>Pfadiname</label>
+                        <input class="usr-input" @bind="editUser.Pfadiname" placeholder="–" />
+                    </div>
+                    <div class="usr-field">
+                        <label>Stufe</label>
+                        <input class="usr-input" @bind="editUser.Stufe" placeholder="z.B. Rover" />
+                    </div>
+                    <div class="usr-field">
+                        <label>Telefon</label>
+                        <input class="usr-input" @bind="editUser.PhoneNumber" placeholder="+41 79 000 00 00" />
+                    </div>
+                    <div class="usr-field">
+                        <label>E-Mail</label>
+                        <input class="usr-input" @bind="editUser.Email" type="email" />
+                    </div>
+                </div>
+                <div class="usr-role-toggle">
+                    <label class="usr-role-label">
+                        <input type="checkbox" @bind="editIsAdmin" />
+                        <span>Admin-Rolle</span>
+                    </label>
+                    <small>Admins haben Zugriff auf alle Verwaltungsfunktionen.</small>
+                </div>
+            </div>
+            <div class="usr-modal__footer">
+                <button class="usr-submit-btn" @onclick="SaveEdit" disabled="@isSaving">
+                    @(isSaving ? "⏳ Wird gespeichert..." : "💾 Speichern")
+                </button>
+                <button class="usr-cancel-btn" @onclick="CloseEdit">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ════════════════════════════════════════════════════
+     PW-RESET MODAL
+════════════════════════════════════════════════════ -->
+@if (pwUser != null)
+{
+    <div class="usr-modal-backdrop" @onclick="ClosePwReset">
+        <div class="usr-modal" @onclick:stopPropagation="true">
+            <div class="usr-modal__header">
+                <h3>🔑 Passwort zurücksetzen</h3>
+                <button class="usr-modal__close" @onclick="ClosePwReset">✕</button>
+            </div>
+            <div class="usr-modal__body">
+                <p class="usr-pw-hint">
+                    Benutzer: <strong>@pwUser.FirstName @pwUser.LastName</strong> (@pwUser.Email)
+                </p>
+                <div class="usr-field" style="margin-top:1rem">
+                    <label>Neues Passwort</label>
+                    <div class="usr-pw-row">
+                        <input class="usr-input"
+                               type="@(showPw ? "text" : "password")"
+                               @bind="newPassword"
+                               placeholder="Mindestens 6 Zeichen" />
+                        <button type="button" class="usr-pw-toggle" @onclick="() => showPw = !showPw">
+                            @(showPw ? "🙈" : "👁️")
+                        </button>
+                        <button type="button" class="usr-pw-generate" @onclick="GeneratePassword"
+                                title="Zufälliges Passwort generieren">
+                            🎲
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(newPassword))
+                    {
+                        <small class="usr-pw-strength @PwStrengthClass">@PwStrengthLabel</small>
+                    }
+                </div>
+            </div>
+            <div class="usr-modal__footer">
+                <button class="usr-submit-btn" @onclick="SavePwReset"
+                        disabled="@(isSaving || string.IsNullOrWhiteSpace(newPassword))">
+                    @(isSaving ? "⏳ Wird gesetzt..." : "🔑 Passwort setzen")
+                </button>
+                <button class="usr-cancel-btn" @onclick="ClosePwReset">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private enum Tab { All, Admins, Locked }
+    private Tab activeTab = Tab.All;
+
+    private List<ApplicationUser> users    = new();
+    private HashSet<string>       adminIds = new();
+
+    private string searchText  = string.Empty;
+    private string filterStufe = string.Empty;
+    private string sortColumn  = "Name";
+    private bool   sortAsc     = true;
+
+    private string? successMessage = null;
+    private string? errorMessage   = null;
+    private bool    isSaving       = false;
+
+    // ── Edit ──────────────────────────────────────────────────────────────────
+    private ApplicationUser? editUser    = null;
+    private bool             editIsAdmin = false;
+
+    // ── PW-Reset ──────────────────────────────────────────────────────────────
+    private ApplicationUser? pwUser      = null;
+    private string           newPassword = string.Empty;
+    private bool             showPw      = false;
+
+    private IEnumerable<string> AllStufen =>
+        users.Select(u => u.Stufe).Where(s => !string.IsNullOrEmpty(s))
+             .Distinct().OrderBy(s => s)!;
+
+    private IEnumerable<ApplicationUser> DisplayedUsers
+    {
+        get
+        {
+            var result = users.AsEnumerable();
+
+            result = activeTab switch
+            {
+                Tab.Admins => result.Where(u => adminIds.Contains(u.Id)),
+                Tab.Locked => result.Where(u => u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow),
+                _          => result
+            };
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var q = searchText.Trim().ToLower();
+                result = result.Where(u =>
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(q) ||
+                    (u.Email?.ToLower().Contains(q) ?? false) ||
+                    (u.Pfadiname?.ToLower().Contains(q) ?? false));
+            }
+
+            if (!string.IsNullOrEmpty(filterStufe))
+                result = result.Where(u => u.Stufe == filterStufe);
+
+            result = sortColumn switch
+            {
+                "Email" => sortAsc ? result.OrderBy(u => u.Email)  : result.OrderByDescending(u => u.Email),
+                "Stufe" => sortAsc ? result.OrderBy(u => u.Stufe)  : result.OrderByDescending(u => u.Stufe),
+                _       => sortAsc ? result.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
+                                   : result.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
+            };
+
+            return result;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        users    = await UserManager.Users.OrderBy(u => u.LastName).ThenBy(u => u.FirstName).ToListAsync();
+        adminIds = new HashSet<string>();
+        foreach (var u in users)
+        {
+            if (await UserManager.IsInRoleAsync(u, "Admin"))
+                adminIds.Add(u.Id);
+        }
+    }
+
+    // ── Sort ──────────────────────────────────────────────────────────────────
+    private void SortBy(string col)
+    {
+        if (sortColumn == col) sortAsc = !sortAsc;
+        else { sortColumn = col; sortAsc = true; }
+    }
+
+    private string SortIcon(string col) =>
+        sortColumn != col ? "⇅" : sortAsc ? "▲" : "▼";
+
+    // ── Edit ──────────────────────────────────────────────────────────────────
+    private void OpenEdit(ApplicationUser u)
+    {
+        editUser = new ApplicationUser
+        {
+            Id          = u.Id,
+            FirstName   = u.FirstName,
+            LastName    = u.LastName,
+            Pfadiname   = u.Pfadiname,
+            Stufe       = u.Stufe,
+            PhoneNumber = u.PhoneNumber,
+            Email       = u.Email,
+            UserName    = u.UserName
+        };
+        editIsAdmin    = adminIds.Contains(u.Id);
+        successMessage = null;
+        errorMessage   = null;
+    }
+
+    private void CloseEdit() { editUser = null; }
+
+    private async Task SaveEdit()
+    {
+        if (editUser == null) return;
+        isSaving = true;
+
+        try
+        {
+            var existing = await UserManager.FindByIdAsync(editUser.Id);
+            if (existing == null) return;
+
+            existing.FirstName   = editUser.FirstName;
+            existing.LastName    = editUser.LastName;
+            existing.Pfadiname   = editUser.Pfadiname;
+            existing.Stufe       = editUser.Stufe;
+            existing.PhoneNumber = editUser.PhoneNumber;
+
+            if (existing.Email != editUser.Email)
+            {
+                existing.Email    = editUser.Email;
+                existing.UserName = editUser.Email;
+                existing.NormalizedEmail    = editUser.Email?.ToUpper();
+                existing.NormalizedUserName = editUser.Email?.ToUpper();
+            }
+
+            var result = await UserManager.UpdateAsync(existing);
+            if (!result.Succeeded)
+            {
+                errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                return;
+            }
+
+            // Rolle anpassen
+            var isCurrentlyAdmin = await UserManager.IsInRoleAsync(existing, "Admin");
+            if (editIsAdmin && !isCurrentlyAdmin)
+                await UserManager.AddToRoleAsync(existing, "Admin");
+            else if (!editIsAdmin && isCurrentlyAdmin)
+                await UserManager.RemoveFromRoleAsync(existing, "Admin");
+
+            await LoadUsers();
+            successMessage = $"Benutzer «{existing.FirstName} {existing.LastName}» wurde gespeichert.";
+            CloseEdit();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── PW Reset ──────────────────────────────────────────────────────────────
+    private void OpenPwReset(ApplicationUser u)
+    {
+        pwUser         = u;
+        newPassword    = string.Empty;
+        showPw         = false;
+        successMessage = null;
+        errorMessage   = null;
+    }
+
+    private void ClosePwReset() { pwUser = null; newPassword = string.Empty; }
+
+    private void GeneratePassword()
+    {
+        const string chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#";
+        var rnd = new Random();
+        newPassword = new string(Enumerable.Range(0, 12).Select(_ => chars[rnd.Next(chars.Length)]).ToArray());
+        showPw = true;
+    }
+
+    private string PwStrengthClass =>
+        newPassword.Length < 6  ? "usr-pw-weak" :
+        newPassword.Length < 10 ? "usr-pw-medium" : "usr-pw-strong";
+
+    private string PwStrengthLabel =>
+        newPassword.Length < 6  ? "⚠️ Zu kurz (min. 6 Zeichen)" :
+        newPassword.Length < 10 ? "OK – ausreichend" : "✅ Sicher";
+
+    private async Task SavePwReset()
+    {
+        if (pwUser == null || string.IsNullOrWhiteSpace(newPassword)) return;
+        isSaving = true;
+
+        try
+        {
+            var user   = await UserManager.FindByIdAsync(pwUser.Id);
+            if (user == null) return;
+
+            var token  = await UserManager.GeneratePasswordResetTokenAsync(user);
+            var result = await UserManager.ResetPasswordAsync(user, token, newPassword);
+
+            if (!result.Succeeded)
+            {
+                errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                return;
+            }
+
+            successMessage = $"Passwort für «{user.FirstName} {user.LastName}» wurde zurückgesetzt.";
+            ClosePwReset();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Lock / Unlock ─────────────────────────────────────────────────────────
+    private async Task ToggleLock(ApplicationUser u)
+    {
+        var user = await UserManager.FindByIdAsync(u.Id);
+        if (user == null) return;
+
+        var isLocked = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow;
+        if (isLocked)
+        {
+            await UserManager.SetLockoutEndDateAsync(user, null);
+            successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde entsperrt.";
+        }
+        else
+        {
+            await UserManager.SetLockoutEnabledAsync(user, true);
+            await UserManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+            successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde gesperrt.";
+        }
+        await LoadUsers();
+    }
+}
