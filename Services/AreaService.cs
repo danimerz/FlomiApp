@@ -247,6 +247,16 @@ public class AreaService : IAreaService
     public async Task MoveCategoryAsync(int id, int direction)
     {
         var all = await _context.AreaCategories.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync();
+
+        // Duplikate normalisieren: einmalig 1,2,3,... vergeben
+        bool hasDuplicates = all.GroupBy(c => c.SortOrder).Any(g => g.Count() > 1);
+        if (hasDuplicates)
+        {
+            for (int i = 0; i < all.Count; i++)
+                all[i].SortOrder = i + 1;
+            await _context.SaveChangesAsync();
+        }
+
         var idx = all.FindIndex(c => c.Id == id);
         if (idx < 0) return;
 
@@ -267,6 +277,10 @@ public class AreaService : IAreaService
 
     public async Task CreateCategoryAsync(AreaCategory category)
     {
+        var maxOrder = await _context.AreaCategories
+            .Select(c => (int?)c.SortOrder)
+            .MaxAsync() ?? 0;
+        category.SortOrder = maxOrder + 1;
         _context.AreaCategories.Add(category);
         await _context.SaveChangesAsync();
     }
