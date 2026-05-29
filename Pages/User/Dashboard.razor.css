@@ -527,6 +527,153 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
+/* ── View-Toggle Button ───────────────────────────────────────────────────── */
+.cal-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1.5px solid var(--color-border-input);
+    border-radius: 8px;
+    background: var(--color-surface-input-alt);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+}
+
+.cal-view-btn:hover,
+.cal-view-btn--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+/* ── Calendar Nav ─────────────────────────────────────────────────────────── */
+.cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cal-nav-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-text-deep);
+    min-width: 180px;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.cal-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1.5px solid var(--color-border-input);
+    border-radius: 8px;
+    background: var(--color-surface-card);
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--color-primary);
+    transition: background .15s, border-color .15s;
+}
+
+.cal-nav-btn:hover {
+    background: var(--color-primary-tint);
+    border-color: var(--color-primary);
+}
+
+/* ── Calendar Grid ────────────────────────────────────────────────────────── */
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    background: var(--color-border-soft);
+    border: 1px solid var(--color-border-soft);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.cal-dow {
+    padding: .5rem 0;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 800;
+    color: var(--color-text-medium);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    background: var(--color-surface-card);
+}
+
+/* ── Calendar Cell ────────────────────────────────────────────────────────── */
+.cal-cell {
+    min-height: 80px;
+    padding: .4rem .5rem;
+    background: var(--color-surface-card);
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.cal-cell--other {
+    background: var(--color-surface-card-soft);
+    opacity: .55;
+}
+
+.cal-cell--today .cal-cell__day {
+    background: var(--color-primary);
+    color: #ffffff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.cal-cell__day {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--color-text-medium);
+    margin-bottom: .15rem;
+    line-height: 1;
+}
+
+/* ── Calendar Chips ───────────────────────────────────────────────────────── */
+.cal-chip {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .15rem .4rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
+}
+
+.cal-chip--apt {
+    background: var(--color-info-bg);
+    color: var(--color-info-text);
+    border: 1px solid var(--color-info-border);
+}
+
+.cal-chip--pickup {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border: 1px solid var(--color-warning-border);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .cal-cell { min-height: 60px; padding: .3rem .25rem; }
+    .cal-chip  { font-size: .65rem; }
+    .cal-nav-title { min-width: 140px; font-size: .92rem; }
+}
+
 .toggle-label {
     margin-left: 10px;
     font-size: 0.9rem;

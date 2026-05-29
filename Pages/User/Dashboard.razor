@@ -53,6 +53,11 @@
                         <input type="checkbox" @bind="showCancelledAppointments" />
                         <span class="slider round"></span>
                     </label>
+                    <button class="cal-view-btn @(showCalendarView ? "cal-view-btn--active" : "")"
+                            title="@(showCalendarView ? "Listenansicht" : "Kalenderansicht")"
+                            @onclick="() => showCalendarView = !showCalendarView">
+                        @(showCalendarView ? "☰" : "📅")
+                    </button>
                 </div>
             </div>
 
@@ -261,6 +266,44 @@
                 </div>
             }
 
+            @if (showCalendarView)
+            {
+                <!-- ── Kalenderansicht ── -->
+                <div class="cal-nav">
+                    <button class="cal-nav-btn" @onclick="CalPrev">‹</button>
+                    <span class="cal-nav-title">
+                        @(new DateTime(calYear, calMonth, 1)
+                            .ToString("MMMM yyyy", new System.Globalization.CultureInfo("de-CH")))
+                    </span>
+                    <button class="cal-nav-btn" @onclick="CalNext">›</button>
+                </div>
+
+                <div class="cal-grid">
+                    @foreach (var d in new[] { "Mo","Di","Mi","Do","Fr","Sa","So" })
+                    {
+                        <div class="cal-dow">@d</div>
+                    }
+                    @foreach (var cell in CalendarCells)
+                    {
+                        <div class="cal-cell @(cell.IsCurrentMonth ? "" : "cal-cell--other") @(cell.IsToday ? "cal-cell--today" : "")">
+                            <span class="cal-cell__day">@cell.Date.Day</span>
+                            @foreach (var apt in cell.Appointments)
+                            {
+                                <div class="cal-chip cal-chip--apt" title="@apt.Area?.AreaTemplate?.Name @apt.Area?.TimeSlot">
+                                    @apt.Area?.AreaTemplate?.Name
+                                </div>
+                            }
+                            @foreach (var req in cell.Pickups)
+                            {
+                                <div class="cal-chip cal-chip--pickup" title="Abholung #@req.OrderNumber">
+                                    🛋️ #@req.OrderNumber
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
             @if (UnassignedPickups.Any())
             {
                 <section class="appointments-section" style="margin-top:1.5rem">
@@ -346,6 +389,50 @@
     private List<Appointment> appointments = new();
     private string userId = string.Empty;
     private bool showCancelledAppointments = false;
+    private bool showCalendarView          = false;
+
+    // ── Kalender ──────────────────────────────────────────────────────────────
+    private int calMonth = DateTime.Today.Month;
+    private int calYear  = DateTime.Today.Year;
+
+    private record CalCell(
+        DateTime Date, bool IsCurrentMonth, bool IsToday,
+        List<Appointment> Appointments, List<FurniturePickupRequest> Pickups);
+
+    private List<CalCell> CalendarCells
+    {
+        get
+        {
+            var first   = new DateTime(calYear, calMonth, 1);
+            // Monday-based: 0=Mon..6=Sun
+            var startOffset = ((int)first.DayOfWeek + 6) % 7;
+            var cellStart   = first.AddDays(-startOffset);
+            // always 6 weeks = 42 cells
+            var cells = new List<CalCell>(42);
+            var today = DateTime.Today;
+
+            for (int i = 0; i < 42; i++)
+            {
+                var d = cellStart.AddDays(i);
+                var apts = FilteredAppointments
+                    .Where(a => a.Area?.Date.Date == d && a.Status != AppointmentStatus.Cancelled)
+                    .ToList();
+                var picks = pickupRequests
+                    .Where(r => r.PickupDate.Date == d)
+                    .ToList();
+                cells.Add(new CalCell(d, d.Month == calMonth, d == today, apts, picks));
+            }
+
+            // trim trailing empty weeks
+            while (cells.Count > 7 && cells.TakeLast(7).All(c => !c.Appointments.Any() && !c.Pickups.Any() && !c.IsCurrentMonth))
+                cells.RemoveRange(cells.Count - 7, 7);
+
+            return cells;
+        }
+    }
+
+    private void CalPrev() { if (--calMonth < 1) { calMonth = 12; calYear--; } }
+    private void CalNext() { if (++calMonth > 12) { calMonth = 1; calYear++; } }
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? cancellingId    = null;
