@@ -448,8 +448,10 @@
                             </div>
                             <div class="ac-field">
                                 <label>Zeitslot</label>
-                                <InputText @bind-Value="currentArea.TimeSlot" class="ac-input"
-                                           placeholder="z.B. 0830-1530" />
+                                <input type="text" class="ac-input"
+                                       placeholder="z.B. 08:30-15:30"
+                                       value="@currentArea.TimeSlot"
+                                       @onchange="e => currentArea.TimeSlot = FlomiApp.Helpers.InputHelper.FormatTimeSlot(e.Value?.ToString()) ?? string.Empty" />
                             </div>
                             <div class="ac-field">
                                 <label>Max. Kapazität</label>
