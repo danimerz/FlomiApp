@@ -127,8 +127,8 @@
             }
 
             @foreach (var group in areas
-                .OrderBy(a => a.AreaCategory?.Name)
-                .GroupBy(a => a.AreaCategory?.Name ?? "Sonstiges"))
+                .OrderBy(a => a.AreaTemplate?.AreaCategory?.Name)
+                .GroupBy(a => a.AreaTemplate?.AreaCategory?.Name ?? "Sonstiges"))
             {
                 var categoryKey = group.Key;
                 var isCollapsed = collapsedCategories.Contains(categoryKey);
@@ -156,9 +156,9 @@
                                         <article class="area-card">
                                             <div class="area-card__body">
                                                 <div class="area-card__header">
-                                                    <h4>@area.Name</h4>
+                                                    <h4>@area.AreaTemplate?.Name</h4>
                                                     <span class="area-category">
-                                                        @(area.AreaCategory?.Name ?? "–")
+                                                        @(area.AreaTemplate?.AreaCategory?.Name ?? "–")
                                                     </span>
                                                 </div>
 
@@ -179,18 +179,18 @@
                                                             </span>
                                                         </span>
                                                     </div>
-                                                    @if (area.MinAge > 0)
+                                                    @if ((area.AreaTemplate?.MinAge ?? 0) > 0)
                                                     {
                                                         <div class="area-info-item">
                                                             <span class="label">Mindestalter</span>
-                                                            <span class="value">@area.MinAge Jahre</span>
+                                                            <span class="value">@area.AreaTemplate!.MinAge Jahre</span>
                                                         </div>
                                                     }
-                                                    @if (!string.IsNullOrEmpty(area.Location))
+                                                    @if (!string.IsNullOrEmpty(area.AreaTemplate?.Location))
                                                     {
                                                         <div class="area-info-item">
                                                             <span class="label">Standort</span>
-                                                            <span class="value">@area.Location</span>
+                                                            <span class="value">@area.AreaTemplate!.Location</span>
                                                         </div>
                                                     }
                                                 </div>
@@ -340,7 +340,7 @@
         }
 
         collapsedCategories = areas
-            .Select(a => a.AreaCategory?.Name ?? "Sonstiges")
+            .Select(a => a.AreaTemplate?.AreaCategory?.Name ?? "Sonstiges")
             .ToHashSet();
     }
 
@@ -407,10 +407,11 @@
         if (canRegister.TryGetValue(area.Id, out var can) && can)
             return string.Empty;
 
-        if (area.MinAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < area.MinAge)
-            return $"Mindestalter {area.MinAge} Jahre erforderlich.";
+        var minAge = area.AreaTemplate?.MinAge ?? 0;
+        if (minAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < minAge)
+            return $"Mindestalter {minAge} Jahre erforderlich.";
 
-        if (area.AreaCategory?.Name == "Verkauf")
+        if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
             return "Nur eine Verkauf-Registrierung ist möglich.";
 
         if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)

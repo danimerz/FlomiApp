@@ -4,7 +4,14 @@ namespace FlomiApp.Services;
 
 public interface IAreaService
 {
-    // ── Areas ─────────────────────────────────────────────────────────────────
+    // ── Area Templates (Stammdaten) ───────────────────────────────────────────
+    Task<List<AreaTemplate>> GetAllAreaTemplatesAsync();
+    Task<AreaTemplate?>      GetAreaTemplateByIdAsync(int id);
+    Task                     CreateAreaTemplateAsync(AreaTemplate template);
+    Task                     UpdateAreaTemplateAsync(AreaTemplate template);
+    Task                     DeleteAreaTemplateAsync(int id);
+
+    // ── Areas (Zuweisungen) ───────────────────────────────────────────────────
     Task<List<Area>> GetAllAreasAsync();
     Task<List<Area>> GetAreasByEventAsync(int eventId);
     Task<Area>       GetAreaByIdAsync(int id);

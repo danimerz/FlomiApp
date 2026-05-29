@@ -29,7 +29,8 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Area)
                 .ThenInclude(area => area.Event)
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)
+                .ThenInclude(area => area.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .Include(a => a.User)
             .Include(a => a.FamilyMember)
             .Where(a => a.UserId == userId)
@@ -79,9 +80,8 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    // ── Hilfsmethode: prüft ob eine Area die Kategorie "Verkauf" hat ──────────
     private bool IsVerkauf(Area area)
-        => area.AreaCategory?.Name == "Verkauf";
+        => area.AreaTemplate?.AreaCategory?.Name == "Verkauf";
 
     public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null)
     {
@@ -89,9 +89,10 @@ public class AppointmentService : IAppointmentService
         if (area == null)
             throw new InvalidOperationException("Area not found.");
 
-        if (area.MinAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, area.MinAge))
+        var minAge = area.AreaTemplate?.MinAge ?? 0;
+        if (minAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, minAge))
             throw new InvalidOperationException(
-                $"Person erfüllt das Mindestalter von {area.MinAge} Jahren nicht.");
+                $"Person erfüllt das Mindestalter von {minAge} Jahren nicht.");
 
         if (!await CanRegisterAsync(userId, areaId, familyMemberId))
         {
@@ -120,7 +121,6 @@ public class AppointmentService : IAppointmentService
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
 
-        // ── Mails senden ──────────────────────────────────────────────────────
         await SendRegistrationMailsAsync(userId, familyMemberId, area);
     }
 
@@ -129,6 +129,8 @@ public class AppointmentService : IAppointmentService
         var appointment = await _context.Appointments
             .Include(a => a.Area)
                 .ThenInclude(a => a.Event)
+            .Include(a => a.Area)
+                .ThenInclude(a => a.AreaTemplate)
             .FirstOrDefaultAsync(a => a.Id == appointmentId && a.UserId == userId);
 
         if (appointment == null) return;
@@ -136,43 +138,37 @@ public class AppointmentService : IAppointmentService
         appointment.Status = AppointmentStatus.Cancelled;
         await _context.SaveChangesAsync();
 
-        // ── Storno-Mail senden ────────────────────────────────────────────────
         await SendCancellationMailAsync(userId, appointment);
     }
 
     public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
-        if (area == null)
-            return false;
+        if (area == null) return false;
 
-        if (area.MinAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, area.MinAge))
+        var minAge = area.AreaTemplate?.MinAge ?? 0;
+        if (minAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, minAge))
             return false;
 
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
-        if (current >= area.MaxCapacity)
-            return false;
+        if (current >= area.MaxCapacity) return false;
 
         if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, area.TimeSlot))
             return false;
 
-        // Verkauf-Regel: nur eine Verkauf-Area pro Event erlaubt
         if (IsVerkauf(area))
             return !await PersonHasRegisteredSaleAreaAsync(userId, familyMemberId, area.EventId);
 
         return true;
     }
 
-    // Overload ohne familyMemberId (für Rückwärtskompatibilität)
     public async Task<bool> CanRegisterAsync(string userId, int areaId)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
-        if (area == null)
-            return false;
+        if (area == null) return false;
 
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
-        if (current >= area.MaxCapacity)
-            return false;
+        if (current >= area.MaxCapacity) return false;
 
         if (await UserHasConflictingRegistrationAsync(userId, area.Date, area.TimeSlot))
             return false;
@@ -183,8 +179,6 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    // ── Mail-Hilfsmethoden ────────────────────────────────────────────────────
-
     private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area)
     {
         try
@@ -192,25 +186,24 @@ public class AppointmentService : IAppointmentService
             var user = await _context.Users.FindAsync(userId);
             if (user?.Email == null) return;
 
-            var userName  = $"{user.FirstName} {user.LastName}";
-            var eventName = area.Event?.Name ?? "";
-            var forPerson = await GetPersonNameAsync(userId, familyMemberId);
+            var userName   = $"{user.FirstName} {user.LastName}";
+            var eventName  = area.Event?.Name ?? "";
+            var areaName   = area.AreaTemplate?.Name ?? "";
+            var forPerson  = await GetPersonNameAsync(userId, familyMemberId);
 
-            // ✅ User-Mail nur senden wenn aktiviert
             if (user.EmailNotificationsEnabled)
             {
                 await _mailService.SendRegistrationConfirmationAsync(
                     user.Email,
                     userName,
-                    area.Name,
+                    areaName,
                     eventName,
                     area.Date,
                     area.TimeSlot);
             }
 
-            // ✅ Admin-Mail IMMER senden
             await _mailService.SendAdminNewRegistrationAsync(
-                area.Name,
+                areaName,
                 eventName,
                 forPerson ?? userName,
                 area.Date,
@@ -230,12 +223,11 @@ public class AppointmentService : IAppointmentService
             if (user?.Email == null) return;
 
             var userName  = $"{user.FirstName} {user.LastName}";
-            var areaName  = appointment.Area?.Name ?? "";
+            var areaName  = appointment.Area?.AreaTemplate?.Name ?? "";
             var eventName = appointment.Area?.Event?.Name ?? "";
             var date      = appointment.Area?.Date ?? DateTime.MinValue;
             var timeSlot  = appointment.Area?.TimeSlot ?? "";
 
-            // ✅ User-Mail nur senden wenn aktiviert
             if (user.EmailNotificationsEnabled)
             {
                 await _mailService.SendCancellationConfirmationAsync(
@@ -247,7 +239,6 @@ public class AppointmentService : IAppointmentService
                     timeSlot);
             }
 
-            // ✅ Admin-Mail IMMER senden
             await _mailService.SendAdminCancellationAsync(
                 areaName,
                 eventName,
@@ -271,8 +262,6 @@ public class AppointmentService : IAppointmentService
 
         return member != null ? $"{member.FirstName} {member.LastName}" : null;
     }
-
-    // ── Bestehende Hilfsmethoden ──────────────────────────────────────────────
 
     private async Task<bool> PersonHasConflictingRegistrationAsync(
         string userId, int? familyMemberId, DateTime date, string timeSlot)
@@ -332,15 +321,17 @@ public class AppointmentService : IAppointmentService
     {
         return await _context.Appointments
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)
+                .ThenInclude(area => area.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .Where(a => a.UserId == userId
                      && a.Status == AppointmentStatus.Registered
                      && a.Area.EventId == eventId)
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null)
-            .AnyAsync(a => a.Area.AreaCategory != null
-                        && a.Area.AreaCategory.Name == "Verkauf");
+            .AnyAsync(a => a.Area.AreaTemplate != null
+                        && a.Area.AreaTemplate.AreaCategory != null
+                        && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
     }
 
     private async Task<bool> UserHasConflictingRegistrationAsync(
@@ -396,11 +387,13 @@ public class AppointmentService : IAppointmentService
     {
         return await _context.Appointments
             .Include(a => a.Area)
-                .ThenInclude(area => area.AreaCategory)
+                .ThenInclude(area => area.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .Where(a => a.UserId == userId
                      && a.Status == AppointmentStatus.Registered
                      && a.Area.EventId == eventId)
-            .AnyAsync(a => a.Area.AreaCategory != null
-                        && a.Area.AreaCategory.Name == "Verkauf");
+            .AnyAsync(a => a.Area.AreaTemplate != null
+                        && a.Area.AreaTemplate.AreaCategory != null
+                        && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using FlomiApp.Data.Models;
 
@@ -12,6 +12,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<Area>                   Areas                   { get; set; }
+    public DbSet<AreaTemplate>           AreaTemplates           { get; set; }
+    public DbSet<AreaCategory>           AreaCategories          { get; set; }
     public DbSet<Appointment>            Appointments            { get; set; }
     public DbSet<Event>                  Events                  { get; set; }
     public DbSet<FamilyMember>           FamilyMembers           { get; set; }
@@ -22,14 +24,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
     public DbSet<AssignmentDate>    AssignmentDates    { get; set; }
 
-    // ── NEU ───────────────────────────────────────────────────────────────────
-    public DbSet<AreaCategory> AreaCategories { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-    // ── Vehicle Settings ──────────────────────
+        // ── Vehicle Settings ──────────────────────────────────────────────────
         modelBuilder.Entity<VehicleAssignment>()
             .HasOne(a => a.Vehicle)
             .WithMany(v => v.Assignments)
@@ -48,21 +47,28 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(d => d.AssignmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── FurniturePickupSettings → Event (optional) ──────────────────────
+        // ── FurniturePickupSettings → Event (optional) ────────────────────────
         modelBuilder.Entity<FurniturePickupSettings>()
             .HasOne(s => s.Event)
             .WithMany()
             .HasForeignKey(s => s.EventId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // ── AreaCategory → Area (Cascade) ────────────────────────────────────
-        modelBuilder.Entity<Area>()
-            .HasOne(a => a.AreaCategory)
-            .WithMany(c => c.Areas)
-            .HasForeignKey(a => a.AreaCategoryId)
-            .OnDelete(DeleteBehavior.Restrict); // 👈 kein versehentliches Löschen
+        // ── AreaTemplate → AreaCategory ───────────────────────────────────────
+        modelBuilder.Entity<AreaTemplate>()
+            .HasOne(t => t.AreaCategory)
+            .WithMany(c => c.AreaTemplates)
+            .HasForeignKey(t => t.AreaCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // ── Seed: AreaCategories ─────────────────────────────────────────────
+        // ── Area (Zuweisung) → AreaTemplate ──────────────────────────────────
+        modelBuilder.Entity<Area>()
+            .HasOne(a => a.AreaTemplate)
+            .WithMany(t => t.Areas)
+            .HasForeignKey(a => a.AreaTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Seed: AreaCategories ──────────────────────────────────────────────
         modelBuilder.Entity<AreaCategory>().HasData(
             new AreaCategory { Id = 1, Name = "Sammeln"   },
             new AreaCategory { Id = 2, Name = "Sortieren" },
@@ -70,7 +76,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             new AreaCategory { Id = 4, Name = "Sonstiges" }
         );
 
-        // ── Seed: FurniturePickupSettings ────────────────────────────────────
+        // ── Seed: FurniturePickupSettings ─────────────────────────────────────
         modelBuilder.Entity<FurniturePickupSettings>().HasData(
             new FurniturePickupSettings
             {

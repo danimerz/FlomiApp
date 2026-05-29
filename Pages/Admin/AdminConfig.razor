@@ -27,9 +27,17 @@
                 <span class="ac-tab__badge">@events.Count</span>
             }
         </button>
+        <button class="ac-tab @(activeTab == Tab.Templates ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Templates)">
+            📋 Bereich-Vorlagen
+            @if (templates != null)
+            {
+                <span class="ac-tab__badge">@templates.Count</span>
+            }
+        </button>
         <button class="ac-tab @(activeTab == Tab.Areas ? "ac-tab--active" : "")"
                 @onclick="() => SetTab(Tab.Areas)">
-            📋 Bereiche
+            📌 Bereich-Zuweisungen
             @if (areas != null)
             {
                 <span class="ac-tab__badge">@areas.Count</span>
@@ -176,27 +184,163 @@
     }
 
     <!-- ══════════════════════════════════════════════════
-         TAB: BEREICHE
+         TAB: BEREICH-VORLAGEN (Stammdaten)
+    ══════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Templates)
+    {
+        <div class="ac-toolbar">
+            <button class="ac-submit-btn" @onclick="ShowCreateTemplateForm">
+                ＋ Neue Vorlage
+            </button>
+        </div>
+
+        @if (showTemplateForm)
+        {
+            <div class="ac-form-card">
+                <div class="ac-form-card__header">
+                    <h3>@(isEditingTemplate ? "✏️ Vorlage bearbeiten" : "➕ Neue Bereich-Vorlage erstellen")</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <EditForm Model="currentTemplate" OnValidSubmit="SubmitTemplateForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="ac-validation" />
+
+                        <div class="ac-form-grid">
+                            <div class="ac-field">
+                                <label>Name *</label>
+                                <InputText @bind-Value="currentTemplate.Name" class="ac-input"
+                                           placeholder="z.B. Geschirr" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Kategorie</label>
+                                <InputSelect @bind-Value="currentTemplate.AreaCategoryId" class="ac-input">
+                                    <option value="0" disabled>– Bitte wählen –</option>
+                                    @foreach (var cat in categories ?? new())
+                                    {
+                                        <option value="@cat.Id">@cat.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="ac-field">
+                                <label>Mindestalter</label>
+                                <InputNumber @bind-Value="currentTemplate.MinAge" class="ac-input" />
+                            </div>
+                            <div class="ac-field">
+                                <label>Standort</label>
+                                <InputText @bind-Value="currentTemplate.Location" class="ac-input"
+                                           placeholder="z.B. Ägerihalle" />
+                            </div>
+                        </div>
+
+                        <div class="ac-form-actions">
+                            <button type="submit" class="ac-submit-btn">
+                                @(isEditingTemplate ? "💾 Aktualisieren" : "✅ Erstellen")
+                            </button>
+                            <button type="button" class="ac-cancel-btn"
+                                    @onclick="CancelTemplateEdit">
+                                Abbrechen
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (templates == null)
+        {
+            <div class="ac-state-card ac-state-card--info">
+                <div class="ac-state-card__icon">⏳</div>
+                <div class="ac-state-card__content">
+                    <h3>Vorlagen werden geladen...</h3>
+                </div>
+            </div>
+        }
+        else if (!templates.Any())
+        {
+            <div class="ac-state-card ac-state-card--empty">
+                <div class="ac-state-card__icon">📭</div>
+                <div class="ac-state-card__content">
+                    <h3>Keine Vorlagen vorhanden</h3>
+                    <p>Erstelle eine Bereich-Vorlage mit dem Button oben.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Kategorie</th>
+                        <th>Min. Alter</th>
+                        <th>Standort</th>
+                        <th>Zuweisungen</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in templates)
+                    {
+                        <tr>
+                            <td><strong>@t.Name</strong></td>
+                            <td>
+                                <span class="ac-badge ac-badge--category">
+                                    @(t.AreaCategory?.Name ?? "–")
+                                </span>
+                            </td>
+                            <td>@t.MinAge</td>
+                            <td>@t.Location</td>
+                            <td>
+                                <span class="ac-badge ac-badge--category">
+                                    @t.Areas.Count
+                                </span>
+                            </td>
+                            <td>
+                                <div class="ac-actions">
+                                    <button class="ac-btn ac-btn--edit"
+                                            @onclick="() => EditTemplate(t)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="ac-btn ac-btn--delete"
+                                            @onclick="() => DeleteTemplate(t.Id)"
+                                            disabled="@(t.Areas.Any())">
+                                        🗑️ Löschen
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         TAB: BEREICH-ZUWEISUNGEN
     ══════════════════════════════════════════════════ -->
     @if (activeTab == Tab.Areas)
     {
         <div class="ac-toolbar">
             <button class="ac-submit-btn"
                     @onclick="ShowCreateAreaForm"
-                    disabled="@(events == null || !events.Any())">
-                ＋ Neuer Bereich
+                    disabled="@(events == null || !events.Any() || templates == null || !templates.Any())">
+                ＋ Neue Zuweisung
             </button>
             @if (events != null && !events.Any())
             {
                 <span class="ac-toolbar__hint">⚠️ Bitte erst ein Event anlegen.</span>
             }
+            @if (templates != null && !templates.Any())
+            {
+                <span class="ac-toolbar__hint">⚠️ Bitte erst eine Bereich-Vorlage anlegen.</span>
+            }
         </div>
 
-        @if (showAreaForm && events != null && events.Any())
+        @if (showAreaForm && events != null && events.Any() && templates != null && templates.Any())
         {
             <div class="ac-form-card">
                 <div class="ac-form-card__header">
-                    <h3>@(isEditingArea ? "✏️ Bereich bearbeiten" : "➕ Neuen Bereich erstellen")</h3>
+                    <h3>@(isEditingArea ? "✏️ Zuweisung bearbeiten" : "➕ Neue Bereich-Zuweisung erstellen")</h3>
                 </div>
                 <div class="ac-form-card__body">
                     <EditForm Model="currentArea" OnValidSubmit="SubmitAreaForm">
@@ -205,29 +349,28 @@
 
                         <div class="ac-form-grid">
                             <div class="ac-field">
-                                <label>Name</label>
-                                <InputText @bind-Value="currentArea.Name" class="ac-input" />
-                            </div>
-
-                            <!-- ── Kategorie: dynamisch aus DB ── -->
-                            <div class="ac-field">
-                                <label>Kategorie</label>
-                                <InputSelect @bind-Value="currentArea.AreaCategoryId" class="ac-input">
+                                <label>Bereich-Vorlage *</label>
+                                <InputSelect @bind-Value="currentArea.AreaTemplateId" class="ac-input">
                                     <option value="0" disabled>– Bitte wählen –</option>
-                                    @foreach (var cat in categories ?? new())
+                                    @foreach (var tmpl in templates!)
                                     {
-                                        <option value="@cat.Id">@cat.Name</option>
+                                        <option value="@tmpl.Id">
+                                            @tmpl.Name (@(tmpl.AreaCategory?.Name ?? "–"))
+                                        </option>
                                     }
                                 </InputSelect>
                             </div>
-
                             <div class="ac-field">
-                                <label>Mindestalter</label>
-                                <InputNumber @bind-Value="currentArea.MinAge" class="ac-input" />
-                            </div>
-                            <div class="ac-field">
-                                <label>Max. Kapazität</label>
-                                <InputNumber @bind-Value="currentArea.MaxCapacity" class="ac-input" />
+                                <label>Event *</label>
+                                <InputSelect @bind-Value="currentArea.EventId" class="ac-input">
+                                    <option value="0" disabled>– Bitte wählen –</option>
+                                    @foreach (var evt in events!)
+                                    {
+                                        <option value="@evt.Id">
+                                            @evt.Name (@evt.Date.ToShortDateString())
+                                        </option>
+                                    }
+                                </InputSelect>
                             </div>
                             <div class="ac-field">
                                 <label>Datum</label>
@@ -239,19 +382,8 @@
                                            placeholder="z.B. 0830-1530" />
                             </div>
                             <div class="ac-field">
-                                <label>Standort</label>
-                                <InputText @bind-Value="currentArea.Location" class="ac-input" />
-                            </div>
-                            <div class="ac-field">
-                                <label>Event</label>
-                                <InputSelect @bind-Value="currentArea.EventId" class="ac-input">
-                                    @foreach (var evt in events!)
-                                    {
-                                        <option value="@evt.Id">
-                                            @evt.Name (@evt.Date.ToShortDateString())
-                                        </option>
-                                    }
-                                </InputSelect>
+                                <label>Max. Kapazität</label>
+                                <InputNumber @bind-Value="currentArea.MaxCapacity" class="ac-input" />
                             </div>
                         </div>
 
@@ -274,7 +406,7 @@
             <div class="ac-state-card ac-state-card--info">
                 <div class="ac-state-card__icon">⏳</div>
                 <div class="ac-state-card__content">
-                    <h3>Bereiche werden geladen...</h3>
+                    <h3>Zuweisungen werden geladen...</h3>
                 </div>
             </div>
         }
@@ -283,8 +415,8 @@
             <div class="ac-state-card ac-state-card--empty">
                 <div class="ac-state-card__icon">📭</div>
                 <div class="ac-state-card__content">
-                    <h3>Keine Bereiche vorhanden</h3>
-                    <p>Erstelle einen neuen Bereich mit dem Button oben.</p>
+                    <h3>Keine Zuweisungen vorhanden</h3>
+                    <p>Weise eine Bereich-Vorlage einem Event zu.</p>
                 </div>
             </div>
         }
@@ -293,7 +425,7 @@
             <table class="ac-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>Bereich</th>
                         <th>Kategorie</th>
                         <th>Min. Alter</th>
                         <th>Kapazität</th>
@@ -308,13 +440,13 @@
                     @foreach (var area in areas)
                     {
                         <tr>
-                            <td><strong>@area.Name</strong></td>
+                            <td><strong>@(area.AreaTemplate?.Name ?? "–")</strong></td>
                             <td>
                                 <span class="ac-badge ac-badge--category">
-                                    @(area.AreaCategory?.Name ?? "–")
+                                    @(area.AreaTemplate?.AreaCategory?.Name ?? "–")
                                 </span>
                             </td>
-                            <td>@area.MinAge</td>
+                            <td>@(area.AreaTemplate?.MinAge ?? 0)</td>
                             <td>
                                 @if (area.MaxCapacity >= 999)
                                 {
@@ -330,7 +462,7 @@
                             <td>
                                 <span class="ac-event-pill">🎪 @area.Event?.Name</span>
                             </td>
-                            <td>@area.Location</td>
+                            <td>@(area.AreaTemplate?.Location ?? "–")</td>
                             <td>
                                 <div class="ac-actions">
                                     <button class="ac-btn ac-btn--edit"
@@ -419,18 +551,19 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Bereiche</th>
+                        <th>Vorlagen</th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var cat in categories)
                     {
+                        var templateCount = templates?.Count(t => t.AreaCategoryId == cat.Id) ?? 0;
                         <tr>
                             <td><strong>@cat.Name</strong></td>
                             <td>
                                 <span class="ac-badge ac-badge--category">
-                                    @(areas?.Count(a => a.AreaCategoryId == cat.Id) ?? 0) Bereiche
+                                    @templateCount Vorlagen
                                 </span>
                             </td>
                             <td>
@@ -441,7 +574,7 @@
                                     </button>
                                     <button class="ac-btn ac-btn--delete"
                                             @onclick="() => DeleteCategory(cat.Id)"
-                                            disabled="@(areas?.Any(a => a.AreaCategoryId == cat.Id) ?? false)">
+                                            disabled="@(templateCount > 0)">
                                         🗑️ Löschen
                                     </button>
                                 </div>
@@ -456,18 +589,24 @@
 </div>
 
 @code {
-    private enum Tab { Events, Areas, Categories }
+    private enum Tab { Events, Templates, Areas, Categories }
     private Tab activeTab = Tab.Events;
 
     // ── Data ──────────────────────────────────────────────────────────────────
-    private List<Event>        events     = new();
-    private List<Area>         areas      = new();
-    private List<AreaCategory> categories = new();
+    private List<Event>?        events     = new();
+    private List<AreaTemplate>? templates  = new();
+    private List<Area>?         areas      = new();
+    private List<AreaCategory>? categories = new();
 
     // ── Events ────────────────────────────────────────────────────────────────
     private Event currentEvent   = new();
     private bool  showEventForm  = false;
     private bool  isEditingEvent = false;
+
+    // ── Templates ─────────────────────────────────────────────────────────────
+    private AreaTemplate currentTemplate   = new();
+    private bool         showTemplateForm  = false;
+    private bool         isEditingTemplate = false;
 
     // ── Areas ─────────────────────────────────────────────────────────────────
     private Area currentArea   = new();
@@ -483,6 +622,7 @@
     protected override async Task OnInitializedAsync()
     {
         events     = await AreaService.GetAllEventsAsync();
+        templates  = await AreaService.GetAllAreaTemplatesAsync();
         areas      = await AreaService.GetAllAreasAsync();
         categories = await AreaService.GetAllCategoriesAsync();
     }
@@ -491,6 +631,7 @@
     {
         activeTab        = tab;
         showEventForm    = false;
+        showTemplateForm = false;
         showAreaForm     = false;
         showCategoryForm = false;
     }
@@ -549,6 +690,55 @@
         events = await AreaService.GetAllEventsAsync();
     }
 
+    // ── Templates CRUD ────────────────────────────────────────────────────────
+    private void ShowCreateTemplateForm()
+    {
+        showTemplateForm  = true;
+        isEditingTemplate = false;
+        currentTemplate   = new AreaTemplate
+        {
+            AreaCategoryId = categories?.FirstOrDefault()?.Id ?? 0
+        };
+    }
+
+    private void CancelTemplateEdit()
+    {
+        showTemplateForm  = false;
+        isEditingTemplate = false;
+        currentTemplate   = new AreaTemplate();
+    }
+
+    private async Task SubmitTemplateForm()
+    {
+        if (isEditingTemplate)
+            await AreaService.UpdateAreaTemplateAsync(currentTemplate);
+        else
+            await AreaService.CreateAreaTemplateAsync(currentTemplate);
+
+        templates = await AreaService.GetAllAreaTemplatesAsync();
+        CancelTemplateEdit();
+    }
+
+    private void EditTemplate(AreaTemplate t)
+    {
+        isEditingTemplate = true;
+        showTemplateForm  = true;
+        currentTemplate   = new AreaTemplate
+        {
+            Id             = t.Id,
+            Name           = t.Name,
+            MinAge         = t.MinAge,
+            Location       = t.Location,
+            AreaCategoryId = t.AreaCategoryId
+        };
+    }
+
+    private async Task DeleteTemplate(int id)
+    {
+        await AreaService.DeleteAreaTemplateAsync(id);
+        templates = await AreaService.GetAllAreaTemplatesAsync();
+    }
+
     // ── Areas CRUD ────────────────────────────────────────────────────────────
     private void ShowCreateAreaForm()
     {
@@ -557,8 +747,8 @@
         currentArea   = new Area
         {
             Date           = DateTime.Today,
-            EventId        = events.FirstOrDefault()?.Id ?? 0,
-            AreaCategoryId = categories.FirstOrDefault()?.Id ?? 0
+            EventId        = events?.FirstOrDefault()?.Id ?? 0,
+            AreaTemplateId = templates?.FirstOrDefault()?.Id ?? 0
         };
     }
 
@@ -576,7 +766,8 @@
         else
             await AreaService.CreateAreaAsync(currentArea);
 
-        areas = await AreaService.GetAllAreasAsync();
+        areas     = await AreaService.GetAllAreasAsync();
+        templates = await AreaService.GetAllAreaTemplatesAsync();
         CancelAreaEdit();
     }
 
@@ -587,21 +778,19 @@
         currentArea   = new Area
         {
             Id             = area.Id,
-            Name           = area.Name,
+            AreaTemplateId = area.AreaTemplateId,
             MaxCapacity    = area.MaxCapacity,
             Date           = area.Date,
             TimeSlot       = area.TimeSlot,
-            AreaCategoryId = area.AreaCategoryId,   // ← neu
-            MinAge         = area.MinAge,
-            EventId        = area.EventId,
-            Location       = area.Location
+            EventId        = area.EventId
         };
     }
 
     private async Task DeleteArea(int id)
     {
         await AreaService.DeleteAreaAsync(id);
-        areas = await AreaService.GetAllAreasAsync();
+        areas     = await AreaService.GetAllAreasAsync();
+        templates = await AreaService.GetAllAreaTemplatesAsync();
     }
 
     // ── Categories CRUD ───────────────────────────────────────────────────────
@@ -645,6 +834,6 @@
     {
         await AreaService.DeleteCategoryAsync(id);
         categories = await AreaService.GetAllCategoriesAsync();
-        areas      = await AreaService.GetAllAreasAsync();
+        templates  = await AreaService.GetAllAreaTemplatesAsync();
     }
 }

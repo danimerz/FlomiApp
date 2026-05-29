@@ -14,7 +14,58 @@ public class AreaService : IAreaService
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // AREAS
+    // AREA TEMPLATES (Stammdaten)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public async Task<List<AreaTemplate>> GetAllAreaTemplatesAsync()
+    {
+        return await _context.AreaTemplates
+            .Include(t => t.AreaCategory)
+            .Include(t => t.Areas)
+            .OrderBy(t => t.Name)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<AreaTemplate?> GetAreaTemplateByIdAsync(int id)
+    {
+        return await _context.AreaTemplates
+            .Include(t => t.AreaCategory)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task CreateAreaTemplateAsync(AreaTemplate template)
+    {
+        _context.AreaTemplates.Add(template);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAreaTemplateAsync(AreaTemplate template)
+    {
+        var existing = await _context.AreaTemplates.FindAsync(template.Id);
+        if (existing != null)
+        {
+            existing.Name           = template.Name;
+            existing.MinAge         = template.MinAge;
+            existing.Location       = template.Location;
+            existing.AreaCategoryId = template.AreaCategoryId;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task DeleteAreaTemplateAsync(int id)
+    {
+        var template = await _context.AreaTemplates.FindAsync(id);
+        if (template != null)
+        {
+            _context.AreaTemplates.Remove(template);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // AREAS (Zuweisungen)
     // ══════════════════════════════════════════════════════════════════════════
 
     public async Task<List<Area>> GetAllAreasAsync()
@@ -22,7 +73,7 @@ public class AreaService : IAreaService
         return await _context.Areas
             .Include(a => a.Appointments)
             .Include(a => a.Event)
-            .Include(a => a.AreaCategory)   // ← neu
+            .Include(a => a.AreaTemplate).ThenInclude(t => t!.AreaCategory)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -32,7 +83,7 @@ public class AreaService : IAreaService
         return await _context.Areas
             .Include(a => a.Appointments)
             .Include(a => a.Event)
-            .Include(a => a.AreaCategory)   // ← neu
+            .Include(a => a.AreaTemplate).ThenInclude(t => t!.AreaCategory)
             .Where(a => a.EventId == eventId)
             .AsNoTracking()
             .ToListAsync();
@@ -43,7 +94,7 @@ public class AreaService : IAreaService
         return await _context.Areas
             .Include(a => a.Appointments)
             .Include(a => a.Event)
-            .Include(a => a.AreaCategory)   // ← neu
+            .Include(a => a.AreaTemplate).ThenInclude(t => t!.AreaCategory)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id)
             ?? throw new InvalidOperationException($"Area with id {id} not found.");
@@ -60,21 +111,13 @@ public class AreaService : IAreaService
         var existing = await _context.Areas.FindAsync(area.Id);
         if (existing != null)
         {
-            existing.Name           = area.Name;
+            existing.AreaTemplateId = area.AreaTemplateId;
             existing.MaxCapacity    = area.MaxCapacity;
             existing.Date           = area.Date;
             existing.TimeSlot       = area.TimeSlot;
-            existing.AreaCategoryId = area.AreaCategoryId;  // ← neu (war: Category)
-            existing.MinAge         = area.MinAge;
             existing.EventId        = area.EventId;
-            existing.Location       = area.Location;
+            await _context.SaveChangesAsync();
         }
-        else
-        {
-            _context.Areas.Update(area);
-        }
-
-        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAreaAsync(int id)
@@ -128,13 +171,13 @@ public class AreaService : IAreaService
             existing.Date        = evt.Date;
             existing.Description = evt.Description;
             existing.IsActive    = evt.IsActive;
+            await _context.SaveChangesAsync();
         }
         else
         {
             _context.Events.Update(evt);
+            await _context.SaveChangesAsync();
         }
-
-        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteEventAsync(int id)
@@ -179,13 +222,13 @@ public class AreaService : IAreaService
         if (existing != null)
         {
             existing.Name = category.Name;
+            await _context.SaveChangesAsync();
         }
         else
         {
             _context.AreaCategories.Update(category);
+            await _context.SaveChangesAsync();
         }
-
-        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteCategoryAsync(int id)

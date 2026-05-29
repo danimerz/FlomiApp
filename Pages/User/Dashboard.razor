@@ -111,7 +111,7 @@
                                                         <div class="appointment-card__header">
                                                             <div>
                                                                 <div class="appointment-card__topline">Anmeldung</div>
-                                                                <h3>@appointment.Area.Name</h3>
+                                                                <h3>@appointment.Area?.AreaTemplate?.Name</h3>
                                                             </div>
                                                             <div class="appointment-card__header-right">
                                                                 <span class="status-badge">@appointment.Status</span>
@@ -129,11 +129,11 @@
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Zeit</span>
-                                                                <span class="value">@appointment.Area.TimeSlot</span>
+                                                                <span class="value">@appointment.Area?.TimeSlot</span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Ort</span>
-                                                                <span class="value">@appointment.Area.Location</span>
+                                                                <span class="value">@appointment.Area?.AreaTemplate?.Location</span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Status</span>
@@ -483,7 +483,7 @@
         var icsContent = BuildIcsContent(appointment);
         var bytes      = Encoding.UTF8.GetBytes(icsContent);
         var base64     = Convert.ToBase64String(bytes);
-        var fileName   = $"Termin_{appointment.Area.Name}_{appointment.Area.Date:yyyyMMdd}.ics";
+        var fileName   = $"Termin_{appointment.Area.AreaTemplate?.Name}_{appointment.Area.Date:yyyyMMdd}.ics";
 
         await JS.InvokeVoidAsync("downloadFile", fileName, "text/calendar", base64);
     }
@@ -511,9 +511,9 @@
         sb.AppendLine($"DTSTAMP:{now}");
         sb.AppendLine($"DTSTART:{dtStart}");
         sb.AppendLine($"DTEND:{dtEnd}");
-        sb.AppendLine($"SUMMARY:{appointment.Area.Event?.Name} – {appointment.Area.Name}");
-        sb.AppendLine($"DESCRIPTION:Bereich: {appointment.Area.Name}\\nPerson: {personName}");
-        sb.AppendLine($"LOCATION:{appointment.Area.Location}");
+        sb.AppendLine($"SUMMARY:{appointment.Area.Event?.Name} – {appointment.Area.AreaTemplate?.Name}");
+        sb.AppendLine($"DESCRIPTION:Bereich: {appointment.Area.AreaTemplate?.Name}\\nPerson: {personName}");
+        sb.AppendLine($"LOCATION:{appointment.Area.AreaTemplate?.Location}");
         sb.AppendLine("STATUS:CONFIRMED");
         sb.AppendLine("END:VEVENT");
         sb.AppendLine("END:VCALENDAR");

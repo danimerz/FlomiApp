@@ -24,16 +24,17 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.Event)
             .Include(a => a.Area)
-                .ThenInclude(ar => ar.AreaCategory)
+                .ThenInclude(ar => ar.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .AsQueryable();
 
         if (eventId.HasValue)
             query = query.Where(a => a.Area.EventId == eventId.Value);
-            query = query.Where(a => a.Area.AreaCategory.Name.ToLower() == "verkauf");
+            query = query.Where(a => a.Area.AreaTemplate!.AreaCategory!.Name.ToLower() == "verkauf");
 
         var data = await query
             .Where(a => a.Status != AppointmentStatus.Cancelled)
-            .OrderBy(a => a.Area.Name)
+            .OrderBy(a => a.Area.AreaTemplate!.Name)
             .ThenBy(a => a.Area.TimeSlot)
             .ToListAsync();
 
@@ -49,7 +50,7 @@ namespace FlomiApp.Services
 
         // ── Gruppieren nach Bereich + Zeitslot ────────────────────────────────
         var grouped = data
-            .GroupBy(a => new { a.Area.Name, a.Area.TimeSlot })
+            .GroupBy(a => new { Name = a.Area.AreaTemplate?.Name ?? "", a.Area.TimeSlot })
             .OrderBy(g => g.Key.Name)
             .ThenBy(g => g.Key.TimeSlot);
 
@@ -150,16 +151,17 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.Event)
             .Include(a => a.Area)
-                .ThenInclude(ar => ar.AreaCategory)
+                .ThenInclude(ar => ar.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .AsQueryable();
 
         if (eventId.HasValue)
             query = query.Where(a => a.Area.EventId == eventId.Value);
-            query = query.Where(a => a.Area.AreaCategory.Name.ToLower() == "gastro");
+            query = query.Where(a => a.Area.AreaTemplate!.AreaCategory!.Name.ToLower() == "gastro");
 
         var data = await query
             .Where(a => a.Status != AppointmentStatus.Cancelled)
-            .OrderBy(a => a.Area.Name)
+            .OrderBy(a => a.Area.AreaTemplate!.Name)
             .ThenBy(a => a.Area.TimeSlot)
             .ToListAsync();
 
@@ -175,7 +177,7 @@ namespace FlomiApp.Services
 
         // ── Gruppieren nach Bereich + Zeitslot ────────────────────────────────
         var grouped = data
-            .GroupBy(a => new { a.Area.Name, a.Area.TimeSlot })
+            .GroupBy(a => new { Name = a.Area.AreaTemplate?.Name ?? "", a.Area.TimeSlot })
             .OrderBy(g => g.Key.Name)
             .ThenBy(g => g.Key.TimeSlot);
 
