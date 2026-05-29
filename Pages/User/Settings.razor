@@ -109,7 +109,7 @@
                                            class="form-control-modern"
                                            placeholder="+41 41 750 06 49"
                                            value="@user.PhoneNumber"
-                                           @onchange="e => user.PhoneNumber = FlomiApp.Helpers.InputHelper.FormatSwissPhone(e.Value?.ToString())" />
+                                           @onchange="e => user.PhoneNumber = FlomiApp.Helpers.PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                 </div>
                                 <div class="form-group form-group--full">
                                     <label for="email">Email</label>

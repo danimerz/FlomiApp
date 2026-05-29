@@ -325,7 +325,7 @@
                                    class="av-input"
                                    placeholder="+41 79 000 00 00"
                                    value="@newVehicle.OwnerPhone"
-                                   @onchange="e => newVehicle.OwnerPhone = InputHelper.FormatSwissPhone(e.Value?.ToString())" />
+                                   @onchange="e => newVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                         </div>
                         <div class="av-field">
                             <label>Kontakt / Bemerkung</label>
@@ -510,7 +510,7 @@
                                             <input class="av-input"
                                                    value="@detail.ReadyFrom"
                                                    placeholder="z.B. 08:00"
-                                                   @onchange="e => detail.ReadyFrom = InputHelper.FormatTime(e.Value?.ToString())" />
+                                                   @onchange="e => detail.ReadyFrom = TimeHelper.FormatTime(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Abgeholt durch</label>
@@ -539,7 +539,7 @@
                                             <input class="av-input"
                                                    value="@detail.DriverPhone"
                                                    placeholder="+41 79 000 00 00"
-                                                   @onchange="e => detail.DriverPhone = InputHelper.FormatSwissPhone(e.Value?.ToString())" />
+                                                   @onchange="e => detail.DriverPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
@@ -646,7 +646,7 @@
                             <input type="text"
                                    class="av-input"
                                    value="@editVehicle.OwnerPhone"
-                                   @onchange="e => editVehicle.OwnerPhone = InputHelper.FormatSwissPhone(e.Value?.ToString())" />
+                                   @onchange="e => editVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                         </div>
                         <div class="av-field">
                             <label>Kontakt / Bemerkung</label>
@@ -740,7 +740,7 @@
                                             <input class="av-input"
                                                    value="@detail.ReadyFrom"
                                                    placeholder="z.B. 08:00"
-                                                   @onchange="e => detail.ReadyFrom = InputHelper.FormatTime(e.Value?.ToString())" />
+                                                   @onchange="e => detail.ReadyFrom = TimeHelper.FormatTime(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Abgeholt durch</label>
@@ -769,7 +769,7 @@
                                             <input class="av-input"
                                                    value="@detail.DriverPhone"
                                                    placeholder="+41 79 000 00 00"
-                                                   @onchange="e => detail.DriverPhone = InputHelper.FormatSwissPhone(e.Value?.ToString())" />
+                                                   @onchange="e => detail.DriverPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
