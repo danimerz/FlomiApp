@@ -102,14 +102,19 @@
         {
             @foreach (var area in DisplayedAreas)
             {
-                var registered  = area.Appointments.Count(a => a.Status == AppointmentStatus.Registered);
-                var cancelled   = area.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled);
-                var open        = area.MaxCapacity - registered;
-                var pct         = area.MaxCapacity > 0 ? (double)registered / area.MaxCapacity * 100 : 0;
-                var isOpen      = open > 0;
-                var isExpanded  = expandedAreas.Contains(area.Id);
+                var registered   = area.Appointments.Count(a => a.Status == AppointmentStatus.Registered);
+                var cancelled    = area.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled);
+                var isUnlimited  = area.MaxCapacity >= 999;
+                var open         = isUnlimited ? 0 : area.MaxCapacity - registered;
+                var pct          = isUnlimited ? Math.Min(registered * 10, 100)
+                                               : (area.MaxCapacity > 0 ? (double)registered / area.MaxCapacity * 100 : 0);
+                var isOpen       = !isUnlimited && open > 0;
+                var isExpanded   = expandedAreas.Contains(area.Id);
+                var accordionCss = isUnlimited ? "appt-accordion--unlimited"
+                                 : isOpen      ? "appt-accordion--open-slots"
+                                               : "appt-accordion--full";
 
-                <div class="appt-accordion @(isOpen ? "appt-accordion--open-slots" : "appt-accordion--full")">
+                <div class="appt-accordion @accordionCss">
                     <button class="appt-accordion__header" @onclick="() => ToggleArea(area.Id)">
                         <div class="appt-accordion__title">
                             <span class="appt-accordion__chevron @(isExpanded ? "appt-accordion__chevron--open" : "")">▾</span>
@@ -124,7 +129,11 @@
                         </div>
                         <div class="appt-accordion__right">
                             <span class="appt-cat-badge">@(area.AreaTemplate?.AreaCategory?.Name ?? "–")</span>
-                            @if (isOpen)
+                            @if (isUnlimited)
+                            {
+                                <span class="appt-unlimited-badge">∞ Unbegrenzt</span>
+                            }
+                            else if (isOpen)
                             {
                                 <span class="appt-open-badge">⚠️ @open offen</span>
                             }
@@ -133,11 +142,16 @@
                                 <span class="appt-full-badge">✅ voll</span>
                             }
                             <div class="appt-capacity">
-                                <div class="appt-capacity__bar">
-                                    <div class="appt-capacity__fill @(pct >= 100 ? "appt-capacity__fill--full" : pct >= 75 ? "appt-capacity__fill--warn" : "")"
-                                         style="width: @Math.Min(pct, 100).ToString("F0")%"></div>
-                                </div>
-                                <span class="appt-capacity__label">@registered / @area.MaxCapacity</span>
+                                @if (!isUnlimited)
+                                {
+                                    <div class="appt-capacity__bar">
+                                        <div class="appt-capacity__fill @(pct >= 100 ? "appt-capacity__fill--full" : pct >= 75 ? "appt-capacity__fill--warn" : "")"
+                                             style="width: @Math.Min(pct, 100).ToString("F0")%"></div>
+                                    </div>
+                                }
+                                <span class="appt-capacity__label">
+                                    @registered @(isUnlimited ? "/ ∞" : $"/ {area.MaxCapacity}")
+                                </span>
                             </div>
                         </div>
                     </button>
@@ -188,15 +202,10 @@
                                 </table>
                             }
 
-                            @if (open > 0)
+                            @if (!isUnlimited && open > 0)
                             {
                                 <div class="appt-open-slots">
-                                    @for (int i = 0; i < open; i++)
-                                    {
-                                        <span class="appt-open-slot">
-                                            ○ Platz @(regAppointments.Count + i + 1) frei
-                                        </span>
-                                    }
+                                    <span class="appt-open-slot">○ @open Platz/Plätze frei</span>
                                 </div>
                             }
 
@@ -247,9 +256,9 @@
                 result = result.Where(a => a.AreaTemplate?.AreaCategoryId == filterCategoryId);
             result = filterMode switch
             {
-                "open" => result.Where(a =>
+                "open" => result.Where(a => a.MaxCapacity < 999 &&
                     a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered) > 0),
-                "full" => result.Where(a =>
+                "full" => result.Where(a => a.MaxCapacity < 999 &&
                     a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered) >= a.MaxCapacity),
                 _      => result
             };
@@ -259,8 +268,9 @@
 
     private int TotalRegistered => areas.Sum(a => a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered));
     private int TotalCancelled  => areas.Sum(a => a.Appointments.Count(ap => ap.Status == AppointmentStatus.Cancelled));
-    private int TotalOpen       => areas.Sum(a => Math.Max(0,
-        a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered)));
+    private int TotalOpen       => areas
+        .Where(a => a.MaxCapacity < 999)
+        .Sum(a => Math.Max(0, a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered)));
 
     protected override async Task OnInitializedAsync()
     {
