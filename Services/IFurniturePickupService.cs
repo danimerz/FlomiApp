@@ -37,4 +37,7 @@ public interface IFurniturePickupService
     /// Null wenn kein aktives Setting für diesen Event existiert.
     /// </summary>
     Task<FurniturePickupSettings?> GetSettingsByEventIdAsync(int eventId);
+
+    /// <summary>Zählt bestehende Abholungen (Pending/Accepted) für ein Datum + Event</summary>
+    Task<int> GetPickupCountForDateAsync(int eventId, DateTime date);
 }

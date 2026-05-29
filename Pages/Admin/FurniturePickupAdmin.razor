@@ -311,6 +311,30 @@
                                 }
                             }
 
+                            <!-- Max. Abholungen pro Tag -->
+                            <div class="afp-field" style="margin-top:1.25rem;max-width:320px">
+                                <label>
+                                    Max. Abholungen pro Tag
+                                    <span style="font-size:.8rem;font-weight:400;color:var(--color-text-placeholder)">
+                                        (leer = unbegrenzt)
+                                    </span>
+                                </label>
+                                <input type="number"
+                                       class="afp-input"
+                                       min="1"
+                                       placeholder="z.B. 5"
+                                       value="@(s.MaxPickupsPerDay?.ToString() ?? "")"
+                                       @onchange="e => s.MaxPickupsPerDay = int.TryParse(e.Value?.ToString(), out var v) && v > 0 ? v : null" />
+                                @if (s.MaxPickupsPerDay.HasValue && s.PickupDateFrom.HasValue && s.PickupDateTo.HasValue)
+                                {
+                                    var days     = (int)(s.PickupDateTo.Value - s.PickupDateFrom.Value).TotalDays + 1;
+                                    var capacity = days * s.MaxPickupsPerDay.Value;
+                                    <small style="color:var(--color-text-light)">
+                                        → max. @capacity Abholungen total (@days Tage × @s.MaxPickupsPerDay)
+                                    </small>
+                                }
+                            </div>
+
                             <!-- Aktionen -->
                             <div class="afp-settings-actions">
                                 <button class="afp-submit-btn"

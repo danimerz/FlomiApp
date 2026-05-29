@@ -248,4 +248,13 @@ public class FurniturePickupService : IFurniturePickupService
             .Include(s => s.Event)
             .FirstOrDefaultAsync(s => s.EventId == eventId && s.IsEnabled);
     }
+
+    public async Task<int> GetPickupCountForDateAsync(int eventId, DateTime date)
+    {
+        return await _context.FurniturePickupRequests
+            .Where(r => r.EventId == eventId
+                     && r.PickupDate.Date == date.Date
+                     && r.Status != PickupRequestStatus.Deleted)
+            .CountAsync();
+    }
 }

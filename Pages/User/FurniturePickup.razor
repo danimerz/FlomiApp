@@ -219,9 +219,16 @@
                                 }
                             </label>
                             <InputDate @bind-Value="model.PickupDate"
-                                    class="form-control-modern"
-                                    min="@pickupDateMin"
-                                    max="@pickupDateMax" />
+                                       @bind-Value:after="CheckDateCapacity"
+                                       class="form-control-modern"
+                                       min="@pickupDateMin"
+                                       max="@pickupDateMax" />
+                            @if (dateCapacityMessage != null)
+                            {
+                                <small class="@(dateIsFull ? "pickup-date-full" : "pickup-date-available")">
+                                    @dateCapacityMessage
+                                </small>
+                            }
                         </div>
 
                         <!-- Bilder Upload -->
@@ -300,7 +307,7 @@
             <!-- ── Submit ── -->
             <button type="submit"
                     class="pickup-submit-btn"
-                    disabled="@isSubmitting">
+                    disabled="@(isSubmitting || dateIsFull)">
                 @if (isSubmitting)
                 {
                     <span>⏳ Wird eingereicht...</span>
@@ -331,8 +338,10 @@
     private FurniturePickupSettings? activeSettings  = null;
 
     // ── Settings ──────────────────────────────────────────────────────────────
-    private string? pickupDateMin = null;
-    private string? pickupDateMax = null;
+    private string? pickupDateMin        = null;
+    private string? pickupDateMax        = null;
+    private string? dateCapacityMessage  = null;
+    private bool    dateIsFull           = false;
 
     // ── Bild-Vorschau ─────────────────────────────────────────────────────────
     private class ImagePreview
@@ -382,10 +391,33 @@
     }
 
     // ── Event auswählen ───────────────────────────────────────────────────────
+    private async Task CheckDateCapacity()
+    {
+        dateCapacityMessage = null;
+        dateIsFull          = false;
+        if (activeSettings?.MaxPickupsPerDay == null || selectedEventId == 0) return;
+
+        var count    = await FurniturePickupService.GetPickupCountForDateAsync(selectedEventId!.Value, model.PickupDate);
+        var max      = activeSettings.MaxPickupsPerDay.Value;
+        var freeSlots = max - count;
+
+        if (freeSlots <= 0)
+        {
+            dateIsFull          = true;
+            dateCapacityMessage = $"Dieser Tag ist bereits voll ({count}/{max} Abholungen). Bitte wähle einen anderen Tag.";
+        }
+        else
+        {
+            dateCapacityMessage = $"Noch {freeSlots} von {max} Plätzen frei für diesen Tag.";
+        }
+    }
+
     private async Task SelectEvent(int eventId)
     {
-        selectedEventId = eventId;
-        activeSettings  = await FurniturePickupService.GetSettingsByEventIdAsync(eventId);
+        selectedEventId     = eventId;
+        dateCapacityMessage = null;
+        dateIsFull          = false;
+        activeSettings      = await FurniturePickupService.GetSettingsByEventIdAsync(eventId);
 
         if (activeSettings != null)
         {

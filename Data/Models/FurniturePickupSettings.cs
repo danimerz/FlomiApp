@@ -16,6 +16,9 @@ namespace FlomiApp.Data.Models
         /// <summary>Spätestes Abholdatum das der User wählen kann</summary>
         public DateTime? PickupDateTo { get; set; }
 
+        /// <summary>Maximale Abholungen pro Tag – null = unbegrenzt</summary>
+        public int? MaxPickupsPerDay { get; set; }
+
         /// <summary>Verknüpfter Event – null = kein Event zugewiesen</summary>
         public int? EventId { get; set; }
 
