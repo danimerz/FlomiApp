@@ -441,14 +441,51 @@
     color: var(--color-info-text);
 }
 
-.area-mandatory-hint {
-    font-size: .82rem;
-    color: var(--color-warning-text);
-    background: var(--color-warning-bg);
-    border: 1px solid var(--color-warning-border);
-    border-radius: 10px;
-    padding: .45rem .85rem;
-    margin-bottom: .6rem;
+/* ── Toggle Switch (Slider) ───────────────────────────────────────────────── */
+.area-slot-toggle .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 30px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.area-slot-toggle .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.area-slot-toggle .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--color-border-input, #d1d5db);
+    border-radius: 34px;
+    transition: background .25s;
+    cursor: pointer;
+}
+
+.area-slot-toggle .slider:before {
+    content: "";
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    transition: transform .25s;
+}
+
+.area-slot-toggle input:checked + .slider {
+    background: linear-gradient(135deg, var(--color-primary-deeper, #1d4ed8), var(--color-primary, #2563eb));
+}
+
+.area-slot-toggle input:checked + .slider:before {
+    transform: translateX(26px);
 }
 
 /* ── Bestätigungs-Modal ───────────────────────────────────────────────────── */
