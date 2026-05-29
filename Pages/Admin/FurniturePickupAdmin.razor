@@ -250,10 +250,24 @@
                             </div>
 
                             <!-- Datumsspanne -->
-                            <p class="afp-hint">
-                                Lege fest, in welchem Zeitraum Benutzer ein Abholdatum wählen dürfen.
-                                Leer lassen = keine Einschränkung.
-                            </p>
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem">
+                                <p class="afp-hint" style="margin:0">
+                                    Lege fest, in welchem Zeitraum Benutzer ein Abholdatum wählen dürfen.
+                                </p>
+                                @if (s.EventId.HasValue)
+                                {
+                                    var evBtn = availableEvents?.FirstOrDefault(x => x.Id == s.EventId);
+                                    @if (evBtn != null)
+                                    {
+                                        <button type="button"
+                                                class="afp-btn afp-btn--detail"
+                                                style="font-size:.8rem;padding:.3rem .75rem"
+                                                @onclick="() => AutoFillDatesFromEvent(s, evBtn)">
+                                            📅 Aus Event (−8 / −1 Tag)
+                                        </button>
+                                    }
+                                }
+                            </div>
 
                             <div class="afp-date-grid">
                                 <div class="afp-field">
@@ -559,6 +573,12 @@
     }
 
     // ── Settings – Datum ──────────────────────────────────────────────────────
+    private void AutoFillDatesFromEvent(FurniturePickupSettings s, Event ev)
+    {
+        s.PickupDateFrom = ev.Date.AddDays(-8);
+        s.PickupDateTo   = ev.Date.AddDays(-1);
+    }
+
     private void OnDateFromChanged(FurniturePickupSettings s, ChangeEventArgs e)
     {
         if (DateTime.TryParse(e.Value?.ToString(), out var d))
