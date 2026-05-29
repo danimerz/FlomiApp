@@ -243,18 +243,22 @@
                                                 <span class="av-day-pill">
                                                     @d.Date.ToString("ddd dd.MM", new CultureInfo("de-CH"))
                                                 </span>
-                                                @if (!string.IsNullOrEmpty(driverDisplay))
-                                                {
-                                                    <span class="av-badge av-badge--driver av-badge--sm">
-                                                        🧑‍✈️ @driverDisplay
-                                                    </span>
-                                                }
-                                                @if (!string.IsNullOrEmpty(helperDisplay))
-                                                {
-                                                    <span class="av-badge av-badge--helper av-badge--sm">
-                                                        🙋 @helperDisplay
-                                                    </span>
-                                                }
+                                                <span class="av-badge-slot">
+                                                    @if (!string.IsNullOrEmpty(driverDisplay))
+                                                    {
+                                                        <span class="av-badge av-badge--driver av-badge--sm">
+                                                            🧑‍✈️ @driverDisplay
+                                                        </span>
+                                                    }
+                                                </span>
+                                                <span class="av-badge-slot">
+                                                    @if (!string.IsNullOrEmpty(helperDisplay))
+                                                    {
+                                                        <span class="av-badge av-badge--helper av-badge--sm">
+                                                            🙋 @helperDisplay
+                                                        </span>
+                                                    }
+                                                </span>
                                             </div>
                                         }
                                     }

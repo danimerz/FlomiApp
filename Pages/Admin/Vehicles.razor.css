@@ -133,14 +133,17 @@
 
 /* ── Day Pills (Tabelle) ──────────────────────────────────────────────────── */
 .av-day-pills {
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
+    display: grid;
+    grid-template-columns: 90px 130px 130px;
+    gap: .3rem .5rem;
+    align-items: center;
 }
 
 .av-day-pill {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 90px;
     padding: .2rem .6rem;
     border-radius: 999px;
     background: var(--color-info-bg);
@@ -149,6 +152,7 @@
     font-weight: 700;
     border: 1px solid var(--color-info-border);
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 /* ── Form Actions ─────────────────────────────────────────────────────────── */
@@ -288,14 +292,12 @@
 
 /* ── Day Pill Entry (table) ───────────────────────────────────────────────── */
 .av-day-pill-entry {
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    margin-bottom: .25rem;
+    display: contents;
 }
 
-.av-day-pill-entry:last-child {
-    margin-bottom: 0;
+.av-badge-slot {
+    display: flex;
+    align-items: center;
 }
 
 .av-badge--sm {

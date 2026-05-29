@@ -317,8 +317,7 @@
 /* ── File Upload ─────────────────────────────────────────────────────────── */
 .pickup-file-label {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: .75rem;
     padding: 1rem 1.5rem;
     border: 2px dashed var(--color-info-border);
