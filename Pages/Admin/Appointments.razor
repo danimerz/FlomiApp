@@ -102,128 +102,133 @@
         {
             @foreach (var area in DisplayedAreas)
             {
-                var registered   = area.Appointments.Count(a => a.Status == AppointmentStatus.Registered);
-                var cancelled    = area.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled);
-                var isUnlimited  = area.MaxCapacity >= 999;
-                var open         = isUnlimited ? 0 : area.MaxCapacity - registered;
-                var pct          = isUnlimited ? Math.Min(registered * 10, 100)
-                                               : (area.MaxCapacity > 0 ? (double)registered / area.MaxCapacity * 100 : 0);
-                var isOpen       = !isUnlimited && open > 0;
-                var isExpanded   = expandedAreas.Contains(area.Id);
-                var accordionCss = isUnlimited ? "appt-accordion--unlimited"
-                                 : isOpen      ? "appt-accordion--open-slots"
-                                               : "appt-accordion--full";
+                var hasAlt   = !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
+                // Emit up to two slot views: primary (useAlt=false) and alternative (useAlt=true)
+                var slots = hasAlt
+                    ? new[] { (useAlt: false, timeSlot: area.TimeSlot,             cap: area.MaxCapacity,                  suffix: "0") ,
+                               (useAlt: true,  timeSlot: area.AlternativeTimeSlot!, cap: area.AlternativeMaxCapacity!.Value, suffix: "1") }
+                    : new[] { (useAlt: false,  timeSlot: area.TimeSlot,             cap: area.MaxCapacity,                  suffix: "0") };
 
-                <div class="appt-accordion @accordionCss">
-                    <button class="appt-accordion__header" @onclick="() => ToggleArea(area.Id)">
-                        <div class="appt-accordion__title">
-                            <span class="appt-accordion__chevron @(isExpanded ? "appt-accordion__chevron--open" : "")">▾</span>
-                            <span class="appt-accordion__name">@area.AreaTemplate?.Name</span>
-                            <span class="appt-accordion__date">
-                                @area.Date.ToString("ddd dd.MM.yyyy", new CultureInfo("de-CH"))
-                                @if (!string.IsNullOrEmpty(area.TimeSlot))
-                                {
-                                    <span class="appt-accordion__time">@area.TimeSlot</span>
-                                }
-                            </span>
-                        </div>
-                        <div class="appt-accordion__right">
-                            <span class="appt-cat-badge">@(area.AreaTemplate?.AreaCategory?.Name ?? "–")</span>
-                            @if (isUnlimited)
-                            {
-                                <span class="appt-unlimited-badge">∞ Unbegrenzt</span>
-                            }
-                            else if (isOpen)
-                            {
-                                <span class="appt-open-badge">⚠️ @open offen</span>
-                            }
-                            else
-                            {
-                                <span class="appt-full-badge">✅ voll</span>
-                            }
-                            <div class="appt-capacity">
-                                @if (!isUnlimited)
-                                {
-                                    <div class="appt-capacity__bar">
-                                        <div class="appt-capacity__fill @(pct >= 100 ? "appt-capacity__fill--full" : pct >= 75 ? "appt-capacity__fill--warn" : "")"
-                                             style="width: @Math.Min(pct, 100).ToString("F0")%"></div>
-                                    </div>
-                                }
-                                <span class="appt-capacity__label">
-                                    @registered @(isUnlimited ? "/ ∞" : $"/ {area.MaxCapacity}")
+                @foreach (var slot in slots)
+                {
+                    var slotKey      = $"{area.Id}_{slot.suffix}";
+                    var regApts      = area.Appointments
+                        .Where(a => a.Status == AppointmentStatus.Registered && a.UseAlternativeSlot == slot.useAlt)
+                        .ToList();
+                    var cancelledApts = area.Appointments
+                        .Where(a => a.Status == AppointmentStatus.Cancelled && a.UseAlternativeSlot == slot.useAlt)
+                        .ToList();
+                    var registered   = regApts.Count;
+                    var isUnlimited  = slot.cap >= 999;
+                    var open         = isUnlimited ? 0 : slot.cap - registered;
+                    var pct          = isUnlimited ? Math.Min(registered * 10, 100)
+                                                   : (slot.cap > 0 ? (double)registered / slot.cap * 100 : 0);
+                    var isOpen       = !isUnlimited && open > 0;
+                    var isExpanded   = expandedAreas.Contains(slotKey);
+                    var accordionCss = isUnlimited ? "appt-accordion--unlimited"
+                                     : isOpen      ? "appt-accordion--open-slots"
+                                                   : "appt-accordion--full";
+
+                    <div class="appt-accordion @accordionCss">
+                        <button class="appt-accordion__header" @onclick="() => ToggleArea(slotKey)">
+                            <div class="appt-accordion__title">
+                                <span class="appt-accordion__chevron @(isExpanded ? "appt-accordion__chevron--open" : "")">▾</span>
+                                <span class="appt-accordion__name">@area.AreaTemplate?.Name</span>
+                                <span class="appt-accordion__date">
+                                    @area.Date.ToString("ddd dd.MM.yyyy", new CultureInfo("de-CH"))
+                                    @if (!string.IsNullOrEmpty(slot.timeSlot))
+                                    {
+                                        <span class="appt-accordion__time">@slot.timeSlot</span>
+                                    }
                                 </span>
                             </div>
-                        </div>
-                    </button>
+                            <div class="appt-accordion__right">
+                                <span class="appt-cat-badge">@(area.AreaTemplate?.AreaCategory?.Name ?? "–")</span>
+                                @if (isUnlimited)
+                                {
+                                    <span class="appt-unlimited-badge">∞ Unbegrenzt</span>
+                                }
+                                else if (isOpen)
+                                {
+                                    <span class="appt-open-badge">⚠️ @open offen</span>
+                                }
+                                else
+                                {
+                                    <span class="appt-full-badge">✅ voll</span>
+                                }
+                                <div class="appt-capacity">
+                                    @if (!isUnlimited)
+                                    {
+                                        <div class="appt-capacity__bar">
+                                            <div class="appt-capacity__fill @(pct >= 100 ? "appt-capacity__fill--full" : pct >= 75 ? "appt-capacity__fill--warn" : "")"
+                                                 style="width: @Math.Min(pct, 100).ToString("F0")%"></div>
+                                        </div>
+                                    }
+                                    <span class="appt-capacity__label">
+                                        @registered @(isUnlimited ? "/ ∞" : $"/ {slot.cap}")
+                                    </span>
+                                </div>
+                            </div>
+                        </button>
 
-                    @if (isExpanded)
-                    {
-                        <div class="appt-accordion__body">
-                            @{
-                                var regAppointments = area.Appointments
-                                    .Where(a => a.Status == AppointmentStatus.Registered)
-                                    .ToList();
-                            }
-                            @if (!regAppointments.Any())
-                            {
-                                <p class="appt-empty-msg">Noch keine Anmeldungen für diesen Bereich.</p>
-                            }
-                            else
-                            {
-                                <table class="appt-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Person</th>
-                                            <th>Pfadiname</th>
-                                            <th>Kommentar</th>
-                                            <th>Angemeldet am</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var ap in regAppointments)
-                                        {
-                                            var vorname    = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
-                                            var nachname   = ap.FamilyMember?.LastName  ?? ap.User?.LastName  ?? "";
-                                            var pfadi      = ap.FamilyMember?.Pfadiname ?? ap.User?.Pfadiname ?? "–";
+                        @if (isExpanded)
+                        {
+                            <div class="appt-accordion__body">
+                                @if (!regApts.Any())
+                                {
+                                    <p class="appt-empty-msg">Noch keine Anmeldungen für diesen Zeitslot.</p>
+                                }
+                                else
+                                {
+                                    <table class="appt-table">
+                                        <thead>
                                             <tr>
-                                                <td><strong>@vorname @nachname</strong></td>
-                                                <td>@pfadi</td>
-                                                <td>
-                                                    @if (!string.IsNullOrEmpty(ap.Comment))
-                                                    {
-                                                        <span class="appt-comment">@ap.Comment</span>
-                                                    }
-                                                    else { <span class="appt-no-comment">–</span> }
-                                                </td>
-                                                <td>@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                                <th>Person</th>
+                                                <th>Pfadiname</th>
+                                                <th>Kommentar</th>
+                                                <th>Angemeldet am</th>
                                             </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            }
-
-
-                            @if (cancelled > 0)
-                            {
-                                <details class="appt-cancelled-details">
-                                    <summary>@cancelled abgesagte Anmeldung(en) anzeigen</summary>
-                                    <table class="appt-table appt-table--cancelled">
+                                        </thead>
                                         <tbody>
-                                            @foreach (var ap in area.Appointments.Where(a => a.Status == AppointmentStatus.Cancelled))
+                                            @foreach (var ap in regApts)
                                             {
-                                                var vorname  = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
-                                                var nachname = ap.FamilyMember?.LastName  ?? ap.User?.LastName  ?? "";
+                                                var vorname = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
+                                                var nachname = ap.FamilyMember?.LastName ?? ap.User?.LastName ?? "";
+                                                var pfadi   = ap.FamilyMember?.Pfadiname ?? ap.User?.Pfadiname ?? "–";
                                                 <tr>
-                                                    <td>❌ @vorname @nachname</td>
+                                                    <td><strong>@vorname @nachname</strong></td>
+                                                    <td>@pfadi</td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(ap.Comment))
+                                                        { <span class="appt-comment">@ap.Comment</span> }
+                                                        else { <span class="appt-no-comment">–</span> }
+                                                    </td>
+                                                    <td>@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                                                 </tr>
                                             }
                                         </tbody>
                                     </table>
-                                </details>
-                            }
-                        </div>
-                    }
-                </div>
+                                }
+                                @if (cancelledApts.Any())
+                                {
+                                    <details class="appt-cancelled-details">
+                                        <summary>@cancelledApts.Count abgesagte Anmeldung(en) anzeigen</summary>
+                                        <table class="appt-table appt-table--cancelled">
+                                            <tbody>
+                                                @foreach (var ap in cancelledApts)
+                                                {
+                                                    var vorname  = ap.FamilyMember?.FirstName ?? ap.User?.FirstName ?? "–";
+                                                    var nachname = ap.FamilyMember?.LastName  ?? ap.User?.LastName  ?? "";
+                                                    <tr><td>❌ @vorname @nachname</td></tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </details>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
             }
         }
     }
@@ -234,7 +239,7 @@
     private List<Event>        events     = new();
     private List<AreaCategory> categories = new();
     private List<Area>         areas      = new();
-    private HashSet<int>       expandedAreas = new();
+    private HashSet<string>    expandedAreas = new(); // key: "areaId_0" or "areaId_1"
 
     private int    selectedEventId  = 0;
     private int    filterCategoryId = 0;
@@ -264,7 +269,14 @@
     private int TotalCancelled  => areas.Sum(a => a.Appointments.Count(ap => ap.Status == AppointmentStatus.Cancelled));
     private int TotalOpen       => areas
         .Where(a => a.MaxCapacity < 999)
-        .Sum(a => Math.Max(0, a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered)));
+        .Sum(a =>
+        {
+            var primary  = Math.Max(0, a.MaxCapacity - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered && !ap.UseAlternativeSlot));
+            var alt      = a.AlternativeMaxCapacity.HasValue
+                ? Math.Max(0, a.AlternativeMaxCapacity.Value - a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered && ap.UseAlternativeSlot))
+                : 0;
+            return primary + alt;
+        });
 
     protected override async Task OnInitializedAsync()
     {
@@ -286,14 +298,14 @@
         areas         = await AreaService.GetAreasWithAppointmentsAsync(selectedEventId);
         expandedAreas = areas
             .Where(a => a.Appointments.Any(ap => ap.Status == AppointmentStatus.Registered))
-            .Select(a => a.Id)
+            .SelectMany(a => new[] { $"{a.Id}_0", $"{a.Id}_1" })
             .ToHashSet();
         isLoading = false;
     }
 
-    private void ToggleArea(int areaId)
+    private void ToggleArea(string key)
     {
-        if (!expandedAreas.Remove(areaId))
-            expandedAreas.Add(areaId);
+        if (!expandedAreas.Remove(key))
+            expandedAreas.Add(key);
     }
 }
