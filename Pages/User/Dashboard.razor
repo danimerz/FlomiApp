@@ -152,6 +152,13 @@
                                                                     <span class="status-pill">@appointment.Status</span>
                                                                 </span>
                                                             </div>
+                                                            @if (!string.IsNullOrEmpty(appointment.Comment))
+                                                            {
+                                                                <div class="appointment-info-item appointment-info-item--comment">
+                                                                    <span class="label">Kommentar</span>
+                                                                    <span class="value">@appointment.Comment</span>
+                                                                </div>
+                                                            }
                                                         </div>
 
                                                         <div class="appointment-actions">

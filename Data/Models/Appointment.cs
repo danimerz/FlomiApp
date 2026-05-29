@@ -20,6 +20,8 @@ public class Appointment
 
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Registered;
 
+    public string? Comment { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }
 

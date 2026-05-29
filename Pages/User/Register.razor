@@ -206,7 +206,7 @@
                                                 else
                                                 {
                                                     <button class="register-btn"
-                                                            @onclick="() => RegisterAppointment(area.Id)"
+                                                            @onclick="() => OpenConfirmModal(area)"
                                                             disabled="@(!canRegister[area.Id] || registeringAreaId.HasValue)">
                                                         Jetzt registrieren
                                                     </button>
@@ -231,6 +231,72 @@
     }
 </div>
 
+@* ── Bestätigungs-Modal ── *@
+@if (confirmArea != null)
+{
+    <div class="reg-modal-backdrop" @onclick="CloseConfirmModal">
+        <div class="reg-modal" @onclick:stopPropagation="true">
+            <div class="reg-modal__header">
+                <h3>📋 Anmeldung bestätigen</h3>
+                <button class="reg-modal__close" @onclick="CloseConfirmModal">✕</button>
+            </div>
+            <div class="reg-modal__body">
+                <div class="reg-modal__info">
+                    <div class="reg-modal__info-row">
+                        <span class="reg-modal__label">Bereich</span>
+                        <span class="reg-modal__value"><strong>@confirmArea.AreaTemplate?.Name</strong></span>
+                    </div>
+                    <div class="reg-modal__info-row">
+                        <span class="reg-modal__label">Datum</span>
+                        <span class="reg-modal__value">@confirmArea.Date.ToString("dddd, dd.MM.yyyy", new System.Globalization.CultureInfo("de-CH"))</span>
+                    </div>
+                    <div class="reg-modal__info-row">
+                        <span class="reg-modal__label">Zeit</span>
+                        <span class="reg-modal__value">@confirmArea.TimeSlot</span>
+                    </div>
+                    @if (selectedMemberId > 0)
+                    {
+                        var member = familyMembers.FirstOrDefault(m => m.Id == selectedMemberId);
+                        @if (member != null)
+                        {
+                            <div class="reg-modal__info-row">
+                                <span class="reg-modal__label">Person</span>
+                                <span class="reg-modal__value">@member.FirstName @member.LastName</span>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="reg-modal__comment">
+                    <label for="reg-comment">Kommentar <span class="reg-modal__optional">(optional)</span></label>
+                    <textarea id="reg-comment"
+                              class="reg-modal__textarea"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="z.B. «Komme mit eigenem Auto», «Bringe Helfer mit», ..."
+                              @bind="confirmComment"></textarea>
+                </div>
+            </div>
+            <div class="reg-modal__footer">
+                <button class="register-btn" @onclick="ConfirmRegistration"
+                        disabled="@registeringAreaId.HasValue">
+                    @if (registeringAreaId.HasValue)
+                    {
+                        <span>⏳ Wird registriert...</span>
+                    }
+                    else
+                    {
+                        <span>✅ Jetzt registrieren</span>
+                    }
+                </button>
+                <button class="reg-modal__cancel-btn" @onclick="CloseConfirmModal">
+                    Abbrechen
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     // ── State ─────────────────────────────────────────────────────────────────
     private List<Event>?         events               = null;
@@ -251,6 +317,30 @@
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? registeringAreaId = null;
+
+    // ── Bestätigungs-Modal ────────────────────────────────────────────────────
+    private Area?   confirmArea    = null;
+    private string  confirmComment = string.Empty;
+
+    private void OpenConfirmModal(Area area)
+    {
+        confirmArea    = area;
+        confirmComment = string.Empty;
+    }
+
+    private void CloseConfirmModal()
+    {
+        confirmArea    = null;
+        confirmComment = string.Empty;
+    }
+
+    private async Task ConfirmRegistration()
+    {
+        if (confirmArea == null) return;
+        var areaId = confirmArea.Id;
+        CloseConfirmModal();
+        await RegisterAppointment(areaId, confirmComment);
+    }
 
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
@@ -345,7 +435,7 @@
     }
 
     // ── Registrierung mit Loading ─────────────────────────────────────────────
-    private async Task RegisterAppointment(int areaId)
+    private async Task RegisterAppointment(int areaId, string? comment = null)
     {
         registeringAreaId = areaId;
         StateHasChanged();
@@ -354,7 +444,8 @@
         {
             await AppointmentService.RegisterForAppointmentAsync(
                 userId, areaId,
-                selectedMemberId == 0 ? null : selectedMemberId);
+                selectedMemberId == 0 ? null : selectedMemberId,
+                comment);
 
             errorMessage = string.Empty;
             await LoadAreasForSelectedEvent();

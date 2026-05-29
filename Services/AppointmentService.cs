@@ -83,7 +83,7 @@ public class AppointmentService : IAppointmentService
     private bool IsVerkauf(Area area)
         => area.AreaTemplate?.AreaCategory?.Name == "Verkauf";
 
-    public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null)
+    public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null)
@@ -115,7 +115,8 @@ public class AppointmentService : IAppointmentService
             UserId         = userId,
             AreaId         = areaId,
             FamilyMemberId = familyMemberId,
-            Status         = AppointmentStatus.Registered
+            Status         = AppointmentStatus.Registered,
+            Comment        = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim()
         };
 
         _context.Appointments.Add(appointment);

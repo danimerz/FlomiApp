@@ -92,7 +92,7 @@ namespace FlomiApp.Services
                     string vorname    = a.FamilyMember?.FirstName ?? a.User.FirstName;
                     string nachname   = a.FamilyMember?.LastName  ?? a.User.LastName;
                     string pfadiName  = a.FamilyMember?.Pfadiname ?? a.User.Pfadiname ?? "";
-                    string kommentar  = "";
+                    string kommentar  = a.Comment ?? "";
 
                     // Alter berechnen
                     DateTime? birthday = a.FamilyMember?.Birthday ?? a.User.Birthday;
@@ -225,7 +225,7 @@ namespace FlomiApp.Services
                     string vorname    = a.FamilyMember?.FirstName ?? a.User.FirstName;
                     string nachname   = a.FamilyMember?.LastName  ?? a.User.LastName;
                     string pfadiName  = a.FamilyMember?.Pfadiname ?? a.User.Pfadiname ?? "";
-                    string kommentar  = "";
+                    string kommentar  = a.Comment ?? "";
 
                     // Alter berechnen
                     DateTime? birthday = a.FamilyMember?.Birthday ?? a.User.Birthday;
