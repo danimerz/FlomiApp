@@ -1,5 +1,6 @@
 @page "/admin/vehicles"
 @using FlomiApp.Data.Models
+@using FlomiApp.Helpers
 @using Microsoft.AspNetCore.Authorization
 @using System.Globalization
 @inject IAreaService    AreaService
@@ -324,7 +325,7 @@
                                    class="av-input"
                                    placeholder="+41 79 000 00 00"
                                    value="@newVehicle.OwnerPhone"
-                                   @onchange="e => newVehicle.OwnerPhone = FormatSwissPhone(e.Value?.ToString())" />
+                                   @onchange="e => newVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                         </div>
                         <div class="av-field">
                             <label>Kontakt / Bemerkung</label>
@@ -532,7 +533,10 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Fahrer Telefon</label>
-                                            <input class="av-input" @bind="detail.DriverPhone" placeholder="+41 79 000 00 00" />
+                                            <input class="av-input"
+                                                   value="@detail.DriverPhone"
+                                                   placeholder="+41 79 000 00 00"
+                                                   @onchange="e => detail.DriverPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
@@ -639,7 +643,7 @@
                             <input type="text"
                                    class="av-input"
                                    value="@editVehicle.OwnerPhone"
-                                   @onchange="e => editVehicle.OwnerPhone = FormatSwissPhone(e.Value?.ToString())" />
+                                   @onchange="e => editVehicle.OwnerPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                         </div>
                         <div class="av-field">
                             <label>Kontakt / Bemerkung</label>
@@ -756,7 +760,10 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Fahrer Telefon</label>
-                                            <input class="av-input" @bind="detail.DriverPhone" placeholder="+41 79 000 00 00" />
+                                            <input class="av-input"
+                                                   value="@detail.DriverPhone"
+                                                   placeholder="+41 79 000 00 00"
+                                                   @onchange="e => detail.DriverPhone = PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
@@ -1176,21 +1183,6 @@
         if (int.TryParse(e.Value?.ToString(), out var id))
             newAssignment.VehicleId = id;
         await LoadExistingAssignmentsForForm();
-    }
-
-    private static string? FormatSwissPhone(string? input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return input;
-
-        var digits = new string(input.Where(char.IsDigit).ToArray());
-
-        if (digits.StartsWith("0041"))        digits = digits[4..];
-        else if (digits.StartsWith("41") && digits.Length == 11) digits = digits[2..];
-        else if (digits.StartsWith("0"))      digits = digits[1..];
-
-        if (digits.Length != 9) return input;
-
-        return $"+41 {digits[0..2]} {digits[2..5]} {digits[5..7]} {digits[7..9]}";
     }
 
     private string GetVehicleLabel(Vehicle v)

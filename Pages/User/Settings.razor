@@ -105,8 +105,11 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="phoneNumber">Telefonnummer</label>
-                                    <InputText id="phoneNumber" @bind-Value="user.PhoneNumber"
-                                               class="form-control-modern" placeholder="+41 41 750 06 49" />
+                                    <input type="text" id="phoneNumber"
+                                           class="form-control-modern"
+                                           placeholder="+41 41 750 06 49"
+                                           value="@user.PhoneNumber"
+                                           @onchange="e => user.PhoneNumber = FlomiApp.Helpers.PhoneHelper.FormatSwissPhone(e.Value?.ToString())" />
                                 </div>
                                 <div class="form-group form-group--full">
                                     <label for="email">Email</label>

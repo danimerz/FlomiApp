@@ -147,9 +147,11 @@
 
                         <div class="pickup-field">
                             <label>Telefon</label>
-                            <InputText @bind-Value="model.PhoneNumber"
-                                       class="form-control-modern"
-                                       placeholder="z.B. +41 79 123 45 67" />
+                            <input type="text"
+                                   class="form-control-modern"
+                                   placeholder="z.B. +41 79 123 45 67"
+                                   value="@model.PhoneNumber"
+                                   @onchange="e => model.PhoneNumber = FlomiApp.Helpers.PhoneHelper.FormatSwissPhone(e.Value?.ToString()) ?? string.Empty" />
                         </div>
 
                     </div>
