@@ -230,6 +230,16 @@
                                 <InputText @bind-Value="currentTemplate.Location" class="ac-input"
                                            placeholder="z.B. Ägerihalle" />
                             </div>
+                            <div class="ac-field">
+                                <label>
+                                    Pflicht-Stufen für Hauptzeitslot
+                                    <span style="font-size:.78rem;font-weight:400;color:var(--color-text-placeholder)">
+                                        (kommagetrennt, leer = alle dürfen alternativ wählen)
+                                    </span>
+                                </label>
+                                <InputText @bind-Value="currentTemplate.MandatoryStufen" class="ac-input"
+                                           placeholder="z.B. Pfadi,Pio,Leiter" />
+                            </div>
                         </div>
 
                         <div class="ac-form-actions">
@@ -456,6 +466,29 @@
                             <div class="ac-field">
                                 <label>Max. Kapazität</label>
                                 <InputNumber @bind-Value="currentArea.MaxCapacity" class="ac-input" />
+                            </div>
+                        </div>
+
+                        <!-- Alternativer Zeitslot -->
+                        <div style="margin-top:1rem;padding:1rem;border-radius:12px;background:var(--color-info-bg);border:1px solid var(--color-info-border)">
+                            <p style="margin:0 0 .75rem;font-size:.85rem;font-weight:700;color:var(--color-info-text)">
+                                ⏰ Alternativer Zeitslot (optional)
+                            </p>
+                            <div class="ac-form-grid">
+                                <div class="ac-field">
+                                    <label>Alternativer Zeitslot</label>
+                                    <input type="text" class="ac-input"
+                                           placeholder="z.B. 07:30-12:00"
+                                           value="@currentArea.AlternativeTimeSlot"
+                                           @onchange="e => currentArea.AlternativeTimeSlot = FlomiApp.Helpers.TimeHelper.FormatTimeSlot(e.Value?.ToString())" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Alternative Max. Kapazität</label>
+                                    <input type="number" class="ac-input" min="1"
+                                           placeholder="z.B. 4"
+                                           value="@(currentArea.AlternativeMaxCapacity?.ToString() ?? "")"
+                                           @onchange="e => currentArea.AlternativeMaxCapacity = int.TryParse(e.Value?.ToString(), out var v) ? v : null" />
+                                </div>
                             </div>
                         </div>
 
@@ -1044,12 +1077,14 @@
         showAreaForm  = true;
         currentArea   = new Area
         {
-            Id             = area.Id,
-            AreaTemplateId = area.AreaTemplateId,
-            MaxCapacity    = area.MaxCapacity,
-            Date           = area.Date,
-            TimeSlot       = area.TimeSlot,
-            EventId        = area.EventId
+            Id                       = area.Id,
+            AreaTemplateId           = area.AreaTemplateId,
+            MaxCapacity              = area.MaxCapacity,
+            Date                     = area.Date,
+            TimeSlot                 = area.TimeSlot,
+            EventId                  = area.EventId,
+            AlternativeTimeSlot      = area.AlternativeTimeSlot,
+            AlternativeMaxCapacity   = area.AlternativeMaxCapacity
         };
     }
 

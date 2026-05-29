@@ -163,6 +163,35 @@
                                                     </span>
                                                 </div>
 
+                                                @{
+                                                    var hasAlt   = !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
+                                                    var altOk    = hasAlt && IsAlternativeAllowed(area);
+                                                    var isAlt    = altOk && useAltSlot.GetValueOrDefault(area.Id, false);
+                                                    var dispTime = isAlt ? area.AlternativeTimeSlot : area.TimeSlot;
+                                                    var dispReg  = isAlt ? altRegistrations.GetValueOrDefault(area.Id, 0) : currentRegistrations.GetValueOrDefault(area.Id, 0);
+                                                    var dispCap  = isAlt ? area.AlternativeMaxCapacity!.Value : area.MaxCapacity;
+                                                }
+                                                @if (altOk)
+                                                {
+                                                    <div class="area-slot-toggle">
+                                                        <span class="area-slot-toggle__label">
+                                                            @(isAlt ? "⏰ Halber Tag" : "⏰ Ganzer Tag")
+                                                        </span>
+                                                        <label class="toggle-switch" title="Zeitslot wechseln">
+                                                            <input type="checkbox"
+                                                                   checked="@isAlt"
+                                                                   @onchange="() => ToggleAltSlot(area.Id)" />
+                                                            <span class="slider round"></span>
+                                                        </label>
+                                                    </div>
+                                                }
+                                                @if (!altOk && hasAlt)
+                                                {
+                                                    <p class="area-mandatory-hint">
+                                                        🔒 Deine Stufe ist für den ganzen Tag eingeteilt.
+                                                    </p>
+                                                }
+
                                                 <div class="area-info-list">
                                                     <div class="area-info-item">
                                                         <span class="label">Datum</span>
@@ -170,13 +199,13 @@
                                                     </div>
                                                     <div class="area-info-item">
                                                         <span class="label">Zeit</span>
-                                                        <span class="value">@area.TimeSlot</span>
+                                                        <span class="value">@dispTime</span>
                                                     </div>
                                                     <div class="area-info-item">
                                                         <span class="label">Belegt</span>
                                                         <span class="value">
                                                             <span class="capacity-chip">
-                                                                @currentRegistrations[area.Id] / @area.MaxCapacity
+                                                                @dispReg / @dispCap
                                                             </span>
                                                         </span>
                                                     </div>
@@ -208,7 +237,7 @@
                                                 {
                                                     <button class="register-btn"
                                                             @onclick="() => OpenConfirmModal(area)"
-                                                            disabled="@(!canRegister[area.Id] || registeringAreaId.HasValue)">
+                                                            disabled="@(registeringAreaId.HasValue || (isAlt ? dispReg >= dispCap : !canRegister[area.Id]))">
                                                         Jetzt registrieren
                                                     </button>
                                                 }
@@ -253,7 +282,15 @@
                     </div>
                     <div class="reg-modal__info-row">
                         <span class="reg-modal__label">Zeit</span>
-                        <span class="reg-modal__value">@confirmArea.TimeSlot</span>
+                        <span class="reg-modal__value">
+                            @(confirmUseAlt ? confirmArea.AlternativeTimeSlot : confirmArea.TimeSlot)
+                            @if (confirmUseAlt)
+                            {
+                                <span style="margin-left:.4rem;font-size:.75rem;color:var(--color-info-text);font-weight:600">
+                                    (Halber Tag)
+                                </span>
+                            }
+                        </span>
                     </div>
                     @if (selectedMemberId > 0)
                     {
@@ -320,28 +357,52 @@
     private int? registeringAreaId = null;
 
     // ── Bestätigungs-Modal ────────────────────────────────────────────────────
-    private Area?   confirmArea    = null;
-    private string  confirmComment = string.Empty;
+    private Area?   confirmArea         = null;
+    private string  confirmComment      = string.Empty;
+    private bool    confirmUseAlt       = false;
+
+    // ── Alternative Zeitslot-Auswahl ──────────────────────────────────────────
+    private Dictionary<int, bool>  useAltSlot       = new(); // areaId → true = alternativ
+    private Dictionary<int, int>   altRegistrations = new(); // areaId → Anzahl
 
     private void OpenConfirmModal(Area area)
     {
         confirmArea    = area;
         confirmComment = string.Empty;
+        confirmUseAlt  = useAltSlot.GetValueOrDefault(area.Id, false);
     }
 
     private void CloseConfirmModal()
     {
         confirmArea    = null;
         confirmComment = string.Empty;
+        confirmUseAlt  = false;
     }
 
     private async Task ConfirmRegistration()
     {
         if (confirmArea == null) return;
         var areaId  = confirmArea.Id;
-        var comment = confirmComment;   // Kommentar sichern bevor Modal schliesst
+        var comment = confirmComment;
+        var useAlt  = confirmUseAlt;
         CloseConfirmModal();
-        await RegisterAppointment(areaId, comment);
+        await RegisterAppointment(areaId, comment, useAlt);
+    }
+
+    private bool IsAlternativeAllowed(Area area)
+    {
+        if (string.IsNullOrEmpty(area.AreaTemplate?.MandatoryStufen)) return true;
+        var mandatory = area.AreaTemplate.MandatoryStufen
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var stufe = selectedMemberId == 0
+            ? currentUser?.Stufe
+            : familyMembers.FirstOrDefault(m => m.Id == selectedMemberId)?.Stufe;
+        return !mandatory.Contains(stufe ?? "", StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void ToggleAltSlot(int areaId)
+    {
+        useAltSlot[areaId] = !useAltSlot.GetValueOrDefault(areaId, false);
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -425,7 +486,8 @@
 
         foreach (var area in areas)
         {
-            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id);
+            currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id, false);
+            altRegistrations[area.Id]     = await AreaService.GetCurrentRegistrationsAsync(area.Id, true);
             canRegister[area.Id]          = await AppointmentService.CanRegisterAsync(
                 userId, area.Id,
                 selectedMemberId == 0 ? null : selectedMemberId);
@@ -437,7 +499,7 @@
     }
 
     // ── Registrierung mit Loading ─────────────────────────────────────────────
-    private async Task RegisterAppointment(int areaId, string? comment = null)
+    private async Task RegisterAppointment(int areaId, string? comment = null, bool useAlternative = false)
     {
         registeringAreaId = areaId;
         StateHasChanged();
@@ -447,7 +509,8 @@
             await AppointmentService.RegisterForAppointmentAsync(
                 userId, areaId,
                 selectedMemberId == 0 ? null : selectedMemberId,
-                comment);
+                comment,
+                useAlternative);
 
             errorMessage = string.Empty;
             await LoadAreasForSelectedEvent();

@@ -46,10 +46,11 @@ public class AreaService : IAreaService
         var existing = await _context.AreaTemplates.FindAsync(template.Id);
         if (existing != null)
         {
-            existing.Name           = template.Name;
-            existing.MinAge         = template.MinAge;
-            existing.Location       = template.Location;
-            existing.AreaCategoryId = template.AreaCategoryId;
+            existing.Name            = template.Name;
+            existing.MinAge          = template.MinAge;
+            existing.Location        = template.Location;
+            existing.AreaCategoryId  = template.AreaCategoryId;
+            existing.MandatoryStufen = template.MandatoryStufen;
             await _context.SaveChangesAsync();
         }
     }
@@ -152,11 +153,13 @@ public class AreaService : IAreaService
         var existing = await _context.Areas.FindAsync(area.Id);
         if (existing != null)
         {
-            existing.AreaTemplateId = area.AreaTemplateId;
-            existing.MaxCapacity    = area.MaxCapacity;
-            existing.Date           = area.Date;
-            existing.TimeSlot       = area.TimeSlot;
-            existing.EventId        = area.EventId;
+            existing.AreaTemplateId          = area.AreaTemplateId;
+            existing.MaxCapacity             = area.MaxCapacity;
+            existing.Date                    = area.Date;
+            existing.TimeSlot                = area.TimeSlot;
+            existing.EventId                 = area.EventId;
+            existing.AlternativeTimeSlot     = area.AlternativeTimeSlot;
+            existing.AlternativeMaxCapacity  = area.AlternativeMaxCapacity;
             await _context.SaveChangesAsync();
         }
     }
@@ -171,10 +174,12 @@ public class AreaService : IAreaService
         }
     }
 
-    public async Task<int> GetCurrentRegistrationsAsync(int areaId)
+    public async Task<int> GetCurrentRegistrationsAsync(int areaId, bool alternative = false)
     {
         return await _context.Appointments
-            .Where(a => a.AreaId == areaId && a.Status == AppointmentStatus.Registered)
+            .Where(a => a.AreaId == areaId
+                     && a.Status == AppointmentStatus.Registered
+                     && a.UseAlternativeSlot == alternative)
             .CountAsync();
     }
 

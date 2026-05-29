@@ -83,7 +83,7 @@ public class AppointmentService : IAppointmentService
     private bool IsVerkauf(Area area)
         => area.AreaTemplate?.AreaCategory?.Name == "Verkauf";
 
-    public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null)
+    public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null, bool useAlternativeSlot = false)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null)
@@ -112,11 +112,12 @@ public class AppointmentService : IAppointmentService
 
         var appointment = new Appointment
         {
-            UserId         = userId,
-            AreaId         = areaId,
-            FamilyMemberId = familyMemberId,
-            Status         = AppointmentStatus.Registered,
-            Comment        = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim()
+            UserId             = userId,
+            AreaId             = areaId,
+            FamilyMemberId     = familyMemberId,
+            Status             = AppointmentStatus.Registered,
+            Comment            = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(),
+            UseAlternativeSlot = useAlternativeSlot
         };
 
         _context.Appointments.Add(appointment);
@@ -180,7 +181,7 @@ public class AppointmentService : IAppointmentService
             await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null)
+    public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null) return false;
@@ -189,10 +190,17 @@ public class AppointmentService : IAppointmentService
         if (minAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, minAge))
             return false;
 
-        var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
-        if (current >= area.MaxCapacity) return false;
+        var timeSlot = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
+            ? area.AlternativeTimeSlot
+            : area.TimeSlot;
+        var capacity = useAlternativeSlot && area.AlternativeMaxCapacity.HasValue
+            ? area.AlternativeMaxCapacity.Value
+            : area.MaxCapacity;
 
-        if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, area.TimeSlot))
+        var current = await _areaService.GetCurrentRegistrationsAsync(areaId, useAlternativeSlot);
+        if (current >= capacity) return false;
+
+        if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, timeSlot))
             return false;
 
         if (IsVerkauf(area))
@@ -206,7 +214,7 @@ public class AppointmentService : IAppointmentService
         var area = await _areaService.GetAreaByIdAsync(areaId);
         if (area == null) return false;
 
-        var current = await _areaService.GetCurrentRegistrationsAsync(areaId);
+        var current = await _areaService.GetCurrentRegistrationsAsync(areaId, false);
         if (current >= area.MaxCapacity) return false;
 
         if (await UserHasConflictingRegistrationAsync(userId, area.Date, area.TimeSlot))

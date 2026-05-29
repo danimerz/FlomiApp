@@ -142,7 +142,17 @@
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Zeit</span>
-                                                                <span class="value">@appointment.Area?.TimeSlot</span>
+                                                                <span class="value">
+                                                                    @(appointment.UseAlternativeSlot && !string.IsNullOrEmpty(appointment.Area?.AlternativeTimeSlot)
+                                                                        ? appointment.Area!.AlternativeTimeSlot
+                                                                        : appointment.Area?.TimeSlot)
+                                                                    @if (appointment.UseAlternativeSlot)
+                                                                    {
+                                                                        <span style="font-size:.72rem;color:var(--color-info-text);font-weight:700;margin-left:.3rem">
+                                                                            (Halber Tag)
+                                                                        </span>
+                                                                    }
+                                                                </span>
                                                             </div>
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Ort</span>

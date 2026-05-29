@@ -9,8 +9,10 @@ public class AreaTemplate
     [Required]
     public string Name { get; set; } = string.Empty;
 
-    public int    MinAge   { get; set; }
-    public string Location { get; set; } = string.Empty;
+    public int    MinAge          { get; set; }
+    public string Location        { get; set; } = string.Empty;
+    /// <summary>Komma-getrennte Stufen die nur den Hauptzeitslot buchen können, z.B. "Pfadi,Pio,Leiter"</summary>
+    public string? MandatoryStufen { get; set; }
 
     public int           AreaCategoryId { get; set; }
     public AreaCategory? AreaCategory   { get; set; }

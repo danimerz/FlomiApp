@@ -7,7 +7,9 @@ public class Area
     public int      EventId        { get; set; }
     public DateTime Date           { get; set; }
     public string   TimeSlot       { get; set; } = string.Empty;
-    public int      MaxCapacity    { get; set; }
+    public int      MaxCapacity            { get; set; }
+    public string?  AlternativeTimeSlot    { get; set; }
+    public int?     AlternativeMaxCapacity { get; set; }
 
     public AreaTemplate? AreaTemplate { get; set; }
     public Event?        Event        { get; set; }

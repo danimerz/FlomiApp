@@ -20,7 +20,7 @@ public interface IAreaService
     Task             CreateAreaAsync(Area area);
     Task             UpdateAreaAsync(Area area);
     Task             DeleteAreaAsync(int id);
-    Task<int>        GetCurrentRegistrationsAsync(int areaId);
+    Task<int>        GetCurrentRegistrationsAsync(int areaId, bool alternative = false);
 
     // ── Events ────────────────────────────────────────────────────────────────
     Task<List<Event>> GetAllEventsAsync();

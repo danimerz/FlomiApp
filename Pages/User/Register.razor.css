@@ -422,6 +422,35 @@
     line-height: 1.5;
 }
 
+/* ── Slot Toggle ──────────────────────────────────────────────────────────── */
+.area-slot-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .75rem;
+    padding: .55rem .9rem;
+    border-radius: 12px;
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
+}
+
+.area-slot-toggle__label {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--color-info-text);
+}
+
+.area-mandatory-hint {
+    font-size: .82rem;
+    color: var(--color-warning-text);
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: 10px;
+    padding: .45rem .85rem;
+    margin-bottom: .6rem;
+}
+
 /* ── Bestätigungs-Modal ───────────────────────────────────────────────────── */
 .reg-modal-backdrop {
     position: fixed;
