@@ -434,6 +434,8 @@
 
             model.PickupDate = defaultDate;
             model.EventId    = eventId;
+
+            await CheckDateCapacity();
         }
     }
 
