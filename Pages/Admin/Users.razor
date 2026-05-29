@@ -9,6 +9,7 @@
 @inject RoleManager<IdentityRole>     RoleManager
 @inject IMailService                  MailService
 @inject NavigationManager             Navigation
+@inject FlomiApp.Data.ApplicationDbContext Db
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Benutzerverwaltung – Admin</PageTitle>
@@ -90,6 +91,9 @@
                 </th>
                 <th>Rolle</th>
                 <th>Status</th>
+                <th class="usr-th-sort" @onclick='() => SortBy("Anmeldungen")'>
+                    Anmeldungen <span class="usr-sort-icon">@SortIcon("Anmeldungen")</span>
+                </th>
                 <th>Aktionen</th>
             </tr>
         </thead>
@@ -123,6 +127,17 @@
                         else
                         {
                             <span class="usr-badge usr-badge--active">✅ Aktiv</span>
+                        }
+                    </td>
+                    <td>
+                        @{ var apptCount = appointmentCounts.GetValueOrDefault(u.Id, 0); }
+                        @if (apptCount > 0)
+                        {
+                            <span class="usr-badge usr-badge--user">📋 @apptCount</span>
+                        }
+                        else
+                        {
+                            <span style="color:var(--color-text-placeholder);font-size:.82rem">–</span>
                         }
                     </td>
                     <td>
@@ -302,8 +317,9 @@
     private enum Tab { All, Admins, Locked }
     private Tab activeTab = Tab.All;
 
-    private List<ApplicationUser> users    = new();
-    private HashSet<string>       adminIds = new();
+    private List<ApplicationUser>      users              = new();
+    private HashSet<string>            adminIds           = new();
+    private Dictionary<string, int>   appointmentCounts  = new();
 
     private string searchText  = string.Empty;
     private string filterStufe = string.Empty;
@@ -357,10 +373,13 @@
 
             result = sortColumn switch
             {
-                "Email" => sortAsc ? result.OrderBy(u => u.Email)  : result.OrderByDescending(u => u.Email),
-                "Stufe" => sortAsc ? result.OrderBy(u => u.Stufe)  : result.OrderByDescending(u => u.Stufe),
-                _       => sortAsc ? result.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
-                                   : result.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
+                "Email"       => sortAsc ? result.OrderBy(u => u.Email)  : result.OrderByDescending(u => u.Email),
+                "Stufe"       => sortAsc ? result.OrderBy(u => u.Stufe)  : result.OrderByDescending(u => u.Stufe),
+                "Anmeldungen" => sortAsc
+                    ? result.OrderBy(u => appointmentCounts.GetValueOrDefault(u.Id, 0))
+                    : result.OrderByDescending(u => appointmentCounts.GetValueOrDefault(u.Id, 0)),
+                _             => sortAsc ? result.OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
+                                         : result.OrderByDescending(u => u.LastName).ThenByDescending(u => u.FirstName),
             };
 
             return result;
@@ -381,6 +400,13 @@
             if (await UserManager.IsInRoleAsync(u, "Admin"))
                 adminIds.Add(u.Id);
         }
+
+        appointmentCounts = await Db.Appointments
+            .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .Where(a => a.Status == AppointmentStatus.Registered && a.Area.Event.IsActive)
+            .GroupBy(a => a.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.UserId, x => x.Count);
     }
 
     // ── Sort ──────────────────────────────────────────────────────────────────
