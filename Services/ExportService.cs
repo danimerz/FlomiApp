@@ -26,9 +26,6 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.AreaTemplate)
                     .ThenInclude(t => t!.AreaCategory)
-            .Where(a => a.Area.AreaTemplate != null
-                     && a.Area.AreaTemplate.AreaCategory != null
-                     && a.Area.AreaTemplate.AreaCategory.Name.ToLower() == "verkauf")
             .AsQueryable();
 
         if (eventId.HasValue)
@@ -50,18 +47,25 @@ namespace FlomiApp.Services
 
         StyleHeader(ws, headers.Length);
 
-        // ── Gruppieren nach Bereich + Zeitslot ────────────────────────────────
+        // ── Gruppieren nach Kategorie / Bereich + Zeitslot ───────────────────
         var grouped = data
-            .GroupBy(a => new { Name = a.Area.AreaTemplate?.Name ?? "", a.Area.TimeSlot })
-            .OrderBy(g => g.Key.Name)
+            .GroupBy(a => new
+            {
+                Category = a.Area.AreaTemplate?.AreaCategory?.Name ?? "",
+                Name     = a.Area.AreaTemplate?.Name ?? "",
+                a.Area.TimeSlot
+            })
+            .OrderBy(g => g.Key.Category)
+            .ThenBy(g => g.Key.Name)
             .ThenBy(g => g.Key.TimeSlot);
 
         int row = 2;
 
         foreach (var group in grouped)
         {
-            // ── Ressort-Header Zeile (z.B. "Antiquitäten (07:30 - 13:00)") ──
-            string ressortLabel = $"{group.Key.Name} ({group.Key.TimeSlot})";
+            string ressortLabel = string.IsNullOrEmpty(group.Key.Category)
+                ? $"{group.Key.Name} ({group.Key.TimeSlot})"
+                : $"[{group.Key.Category}] {group.Key.Name} ({group.Key.TimeSlot})";
             ws.Cell(row, 1).Value = ressortLabel;
 
             // Ganze Zeile fett + hellgrauer Hintergrund
@@ -155,9 +159,6 @@ namespace FlomiApp.Services
             .Include(a => a.Area)
                 .ThenInclude(ar => ar.AreaTemplate)
                     .ThenInclude(t => t!.AreaCategory)
-            .Where(a => a.Area.AreaTemplate != null
-                     && a.Area.AreaTemplate.AreaCategory != null
-                     && a.Area.AreaTemplate.AreaCategory.Name.ToLower() == "gastro")
             .AsQueryable();
 
         if (eventId.HasValue)
@@ -179,18 +180,25 @@ namespace FlomiApp.Services
 
         StyleHeader(ws, headers.Length);
 
-        // ── Gruppieren nach Bereich + Zeitslot ────────────────────────────────
+        // ── Gruppieren nach Kategorie / Bereich + Zeitslot ───────────────────
         var grouped = data
-            .GroupBy(a => new { Name = a.Area.AreaTemplate?.Name ?? "", a.Area.TimeSlot })
-            .OrderBy(g => g.Key.Name)
+            .GroupBy(a => new
+            {
+                Category = a.Area.AreaTemplate?.AreaCategory?.Name ?? "",
+                Name     = a.Area.AreaTemplate?.Name ?? "",
+                a.Area.TimeSlot
+            })
+            .OrderBy(g => g.Key.Category)
+            .ThenBy(g => g.Key.Name)
             .ThenBy(g => g.Key.TimeSlot);
 
         int row = 2;
 
         foreach (var group in grouped)
         {
-            // ── Ressort-Header Zeile (z.B. "Antiquitäten (07:30 - 13:00)") ──
-            string ressortLabel = $"{group.Key.Name} ({group.Key.TimeSlot})";
+            string ressortLabel = string.IsNullOrEmpty(group.Key.Category)
+                ? $"{group.Key.Name} ({group.Key.TimeSlot})"
+                : $"[{group.Key.Category}] {group.Key.Name} ({group.Key.TimeSlot})";
             ws.Cell(row, 1).Value = ressortLabel;
 
             // Ganze Zeile fett + hellgrauer Hintergrund
