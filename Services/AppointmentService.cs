@@ -132,6 +132,7 @@ public class AppointmentService : IAppointmentService
                 .ThenInclude(a => a.Event)
             .Include(a => a.Area)
                 .ThenInclude(a => a.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
             .FirstOrDefaultAsync(a => a.Id == appointmentId && a.UserId == userId);
 
         if (appointment == null) return;
@@ -139,7 +140,44 @@ public class AppointmentService : IAppointmentService
         appointment.Status = AppointmentStatus.Cancelled;
         await _context.SaveChangesAsync();
 
+        // Fahrzeugzuweisung bereinigen falls Fahrer/Beifahrer-Bereich storniert wird
+        await ClearVehicleAssignmentOnCancelAsync(userId, appointment);
+
         await SendCancellationMailAsync(userId, appointment);
+    }
+
+    private async Task ClearVehicleAssignmentOnCancelAsync(string userId, Appointment appointment)
+    {
+        var categoryName = appointment.Area?.AreaTemplate?.AreaCategory?.Name;
+        if (categoryName != "Fahrer") return;
+
+        var areaName = appointment.Area!.AreaTemplate!.Name; // "Fahrer" oder "Beifahrer"
+        var date     = appointment.Area.Date.Date;
+        var eventId  = appointment.Area.EventId;
+
+        var assignmentDates = await _context.AssignmentDates
+            .Include(d => d.Assignment)
+            .Where(d => d.Assignment.EventId == eventId && d.Date.Date == date)
+            .ToListAsync();
+
+        bool changed = false;
+        foreach (var ad in assignmentDates)
+        {
+            if (areaName == "Fahrer" && ad.DriverUserId == userId)
+            {
+                ad.DriverUserId = null;
+                ad.DriverPhone  = null;
+                changed = true;
+            }
+            else if (areaName == "Beifahrer" && ad.HelperUserId == userId)
+            {
+                ad.HelperUserId = null;
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await _context.SaveChangesAsync();
     }
 
     public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null)
