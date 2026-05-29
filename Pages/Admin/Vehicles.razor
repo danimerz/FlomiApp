@@ -509,7 +509,9 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Fahrer (Benutzer)</label>
-                                            <select class="av-input" @bind="detail.DriverUserId">
+                                            <select class="av-input"
+                                                    value="@detail.DriverUserId"
+                                                    @onchange="e => ApplyDriverUser(detail, e.Value?.ToString(), false)">
                                                 <option value="">– Kein Benutzer –</option>
                                                 @foreach (var u in DriverUsersForDate(date, false))
                                                 {
@@ -530,7 +532,9 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
-                                            <select class="av-input" @bind="detail.HelperUserId">
+                                            <select class="av-input"
+                                                    value="@detail.HelperUserId"
+                                                    @onchange="e => ApplyHelperUser(detail, e.Value?.ToString(), false)">
                                                 <option value="">– Kein Benutzer –</option>
                                                 @foreach (var u in HelperUsersForDate(date, false))
                                                 {
@@ -739,7 +743,9 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Fahrer (Benutzer)</label>
-                                            <select class="av-input" @bind="detail.DriverUserId">
+                                            <select class="av-input"
+                                                    value="@detail.DriverUserId"
+                                                    @onchange="e => ApplyDriverUser(detail, e.Value?.ToString(), true)">
                                                 <option value="">– Kein Benutzer –</option>
                                                 @foreach (var u in DriverUsersForDate(date, true))
                                                 {
@@ -760,7 +766,9 @@
                                         </div>
                                         <div class="av-field">
                                             <label>Helfer (Benutzer)</label>
-                                            <select class="av-input" @bind="detail.HelperUserId">
+                                            <select class="av-input"
+                                                    value="@detail.HelperUserId"
+                                                    @onchange="e => ApplyHelperUser(detail, e.Value?.ToString(), true)">
                                                 <option value="">– Kein Benutzer –</option>
                                                 @foreach (var u in HelperUsersForDate(date, true))
                                                 {
@@ -1202,6 +1210,29 @@
         if (int.TryParse(e.Value?.ToString(), out var id))
             newAssignment.VehicleId = id;
         await LoadExistingAssignmentsForForm();
+    }
+
+    private void ApplyDriverUser(AssignmentDate detail, string? userId, bool isEdit)
+    {
+        detail.DriverUserId = userId;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var u = (isEdit ? editDriverUsersByDate : newDriverUsersByDate)
+                    .Values.SelectMany(l => l)
+                    .FirstOrDefault(u => u.Id == userId)
+                    ?? users?.FirstOrDefault(u => u.Id == userId);
+            if (u != null && !string.IsNullOrEmpty(u.PhoneNumber))
+                detail.DriverPhone = PhoneHelper.FormatSwissPhone(u.PhoneNumber);
+        }
+        else
+        {
+            detail.DriverPhone = null;
+        }
+    }
+
+    private void ApplyHelperUser(AssignmentDate detail, string? userId, bool isEdit)
+    {
+        detail.HelperUserId = userId;
     }
 
     private List<ApplicationUser> DriverUsersForDate(DateTime date, bool isEdit)
