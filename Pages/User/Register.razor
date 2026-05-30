@@ -198,9 +198,14 @@
                                                     <div class="area-info-item">
                                                         <span class="label">Belegt</span>
                                                         <span class="value">
-                                                            <span class="capacity-chip">
-                                                                @dispReg / @dispCap
-                                                            </span>
+                                                            @if (dispCap >= 999)
+                                                            {
+                                                                <span class="capacity-chip capacity-chip--unlimited">∞ Unbegrenzt</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="capacity-chip">@dispReg / @dispCap</span>
+                                                            }
                                                         </span>
                                                     </div>
                                                     @if ((area.AreaTemplate?.MinAge ?? 0) > 0)
