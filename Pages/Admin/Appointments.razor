@@ -19,7 +19,7 @@
 
     <!-- ── Filter ── -->
     <div class="appt-filter-bar">
-        <div class="appt-filter-group">
+        <div class="appt-filter-group" style="min-width:280px">
             <label>Event</label>
             <select class="appt-select" @bind="selectedEventId" @bind:after="LoadAreas">
                 <option value="0" disabled>– Bitte wählen –</option>
@@ -47,6 +47,15 @@
                 <option value="full">Nur volle Bereiche</option>
             </select>
         </div>
+        @if (areas.Any())
+        {
+            <div class="appt-filter-group" style="align-self:flex-end">
+                <button class="appt-toggle-all-btn" @onclick="ToggleAllAreas"
+                        title="@(AllExpanded ? "Alle schliessen" : "Alle öffnen")">
+                    @(AllExpanded ? "▲ Alle schliessen" : "▼ Alle öffnen")
+                </button>
+            </div>
+        }
     </div>
 
     @if (selectedEventId == 0)
@@ -307,5 +316,20 @@
     {
         if (!expandedAreas.Remove(key))
             expandedAreas.Add(key);
+    }
+
+    private IEnumerable<string> AllSlotKeys => DisplayedAreas
+        .SelectMany(a => !string.IsNullOrEmpty(a.AlternativeTimeSlot) && a.AlternativeMaxCapacity.HasValue
+            ? new[] { $"{a.Id}_0", $"{a.Id}_1" }
+            : new[] { $"{a.Id}_0" });
+
+    private bool AllExpanded => AllSlotKeys.All(k => expandedAreas.Contains(k));
+
+    private void ToggleAllAreas()
+    {
+        if (AllExpanded)
+            foreach (var k in AllSlotKeys.ToList()) expandedAreas.Remove(k);
+        else
+            foreach (var k in AllSlotKeys) expandedAreas.Add(k);
     }
 }
