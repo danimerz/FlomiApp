@@ -162,67 +162,6 @@
             </div>
         </div>
 
-        @* ── Benutzer ── *@
-        <div class="export-card">
-            <div class="export-card__icon">👤</div>
-            <div class="export-card__content">
-                <h3>Benutzer</h3>
-                <p>Alle registrierten Benutzer mit Kontaktdaten und Einstellungen.</p>
-                <div class="export-card__meta">
-                    <span class="export-tag">Kontakt</span>
-                    <span class="export-tag">Stufe</span>
-                    <span class="export-tag">Einstellungen</span>
-                </div>
-            </div>
-            <div class="export-card__action">
-                @if (isExporting == "users")
-                {
-                    <div class="btn-loading btn-loading--primary">
-                        <span class="btn-spinner btn-spinner--blue"></span>
-                        <span>Wird exportiert...</span>
-                    </div>
-                }
-                else
-                {
-                    <button class="export-btn"
-                            disabled="@(isExporting != null)"
-                            @onclick='() => RunExport("users")'>
-                        ⬇️ Excel exportieren
-                    </button>
-                }
-            </div>
-        </div>
-
-        @* ── Familienmitglieder ── *@
-        <div class="export-card">
-            <div class="export-card__icon">👨‍👩‍👧</div>
-            <div class="export-card__content">
-                <h3>Familienmitglieder</h3>
-                <p>Alle hinterlegten Familienmitglieder mit zugehörigem Konto.</p>
-                <div class="export-card__meta">
-                    <span class="export-tag">Person</span>
-                    <span class="export-tag">Stufe</span>
-                    <span class="export-tag">Konto</span>
-                </div>
-            </div>
-            <div class="export-card__action">
-                @if (isExporting == "family")
-                {
-                    <div class="btn-loading btn-loading--primary">
-                        <span class="btn-spinner btn-spinner--blue"></span>
-                        <span>Wird exportiert...</span>
-                    </div>
-                }
-                else
-                {
-                    <button class="export-btn"
-                            disabled="@(isExporting != null)"
-                            @onclick='() => RunExport("family")'>
-                        ⬇️ Excel exportieren
-                    </button>
-                }
-            </div>
-        </div>
 
     </div>
 
@@ -299,16 +238,6 @@
                     bytes    = await ExportService.ExportPickupRequestsAsync(
                                    selectedEventId > 0 ? selectedEventId : null);
                     fileName = $"Abholungen{eventSuffix}_{dateSuffix}.xlsx";
-                    break;
-
-                case "users":
-                    bytes    = await ExportService.ExportUsersAsync();
-                    fileName = $"Benutzer_{dateSuffix}.xlsx";
-                    break;
-
-                case "family":
-                    bytes    = await ExportService.ExportFamilyMembersAsync();
-                    fileName = $"Familienmitglieder_{dateSuffix}.xlsx";
                     break;
 
                 default:
