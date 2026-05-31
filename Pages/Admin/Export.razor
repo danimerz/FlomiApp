@@ -40,12 +40,12 @@
             <div class="export-card__icon">📋</div>
             <div class="export-card__content">
                 <h3>Anmeldungen Verkauf</h3>
-                <p>Alle Terminbuchungen mit Person, Bereich, Status und Zeitslot.</p>
+                <p>Alle Anmeldungen der Kategorie «Verkauf» — Ganz- und Halbtagsschichten mit Zeitslot-Spalte.</p>
                 <div class="export-card__meta">
-                    <span class="export-tag">Bereich</span>
+                    <span class="export-tag">Ressort</span>
+                    <span class="export-tag">Zeitslot</span>
                     <span class="export-tag">Person</span>
-                    <span class="export-tag">Status</span>
-                    <span class="export-tag">Datum</span>
+                    <span class="export-tag">Pfadiname</span>
                 </div>
             </div>
             <div class="export-card__action">
@@ -72,12 +72,12 @@
             <div class="export-card__icon">🍳</div>
             <div class="export-card__content">
                 <h3>Anmeldungen Gastro</h3>
-                <p>Alle Terminbuchungen mit Person, Bereich, Status und Zeitslot.</p>
+                <p>Alle Anmeldungen der Kategorie «Gastro» — gleiche Struktur wie Verkauf.</p>
                 <div class="export-card__meta">
-                    <span class="export-tag">Bereich</span>
+                    <span class="export-tag">Ressort</span>
+                    <span class="export-tag">Zeitslot</span>
                     <span class="export-tag">Person</span>
-                    <span class="export-tag">Status</span>
-                    <span class="export-tag">Datum</span>
+                    <span class="export-tag">Pfadiname</span>
                 </div>
             </div>
             <div class="export-card__action">
@@ -93,6 +93,38 @@
                     <button class="export-btn"
                             disabled="@(isExporting != null)"
                             @onclick='() => RunExport("gastro")'>
+                        ⬇️ Excel exportieren
+                    </button>
+                }
+            </div>
+        </div>
+
+        @* ── Fahrzeuge ── *@
+        <div class="export-card">
+            <div class="export-card__icon">🚗</div>
+            <div class="export-card__content">
+                <h3>Fahrzeug-Einsätze</h3>
+                <p>Alle Fahrzeugzuweisungen pro Einsatztag mit Fahrer, Beifahrer und Logistikdetails.</p>
+                <div class="export-card__meta">
+                    <span class="export-tag">Datum</span>
+                    <span class="export-tag">Fahrzeughalter</span>
+                    <span class="export-tag">Fahrer</span>
+                    <span class="export-tag">Beifahrer</span>
+                </div>
+            </div>
+            <div class="export-card__action">
+                @if (isExporting == "vehicles")
+                {
+                    <div class="btn-loading btn-loading--primary">
+                        <span class="btn-spinner btn-spinner--blue"></span>
+                        <span>Wird exportiert...</span>
+                    </div>
+                }
+                else
+                {
+                    <button class="export-btn"
+                            disabled="@(isExporting != null)"
+                            @onclick='() => RunExport("vehicles")'>
                         ⬇️ Excel exportieren
                     </button>
                 }
@@ -255,6 +287,12 @@
                     bytes    = await ExportService.ExportGastroAppointmentsAsync(
                                    selectedEventId > 0 ? selectedEventId : null);
                     fileName = $"Anmeldungen Gastro{eventSuffix}_{dateSuffix}.xlsx";
+                    break;
+
+                case "vehicles":
+                    bytes    = await ExportService.ExportVehicleAssignmentsAsync(
+                                   selectedEventId > 0 ? selectedEventId : null);
+                    fileName = $"Fahrzeuge{eventSuffix}_{dateSuffix}.xlsx";
                     break;
 
                 case "pickups":

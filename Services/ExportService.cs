@@ -15,8 +15,109 @@ namespace FlomiApp.Services
             _db = db;
         }
 
+        // ── Shared: Anmeldungen nach Kategorie ───────────────────────────────
+        private async Task<byte[]> ExportAppointmentsByCategoryAsync(
+            int? eventId, string categoryName, string sheetName)
+        {
+            var query = _db.Appointments
+                .Include(a => a.User)
+                .Include(a => a.FamilyMember)
+                .Include(a => a.Area)
+                    .ThenInclude(ar => ar.AreaTemplate)
+                        .ThenInclude(t => t!.AreaCategory)
+                .Where(a => a.Status != AppointmentStatus.Cancelled
+                         && a.Area.AreaTemplate != null
+                         && a.Area.AreaTemplate.AreaCategory != null
+                         && a.Area.AreaTemplate.AreaCategory.Name.ToLower() == categoryName.ToLower())
+                .AsQueryable();
+
+            if (eventId.HasValue)
+                query = query.Where(a => a.Area.EventId == eventId.Value);
+
+            var data = await query
+                .OrderBy(a => a.Area.AreaTemplate!.Name)
+                .ThenBy(a => a.UseAlternativeSlot)
+                .ToListAsync();
+
+            using var wb  = new XLWorkbook();
+            var ws = wb.Worksheets.Add(sheetName);
+
+            var headers = new[] { "Ressort", "Zeitslot", "Name", "Pfadiname", "Kommentar", "Alter" };
+            for (int i = 0; i < headers.Length; i++)
+                ws.Cell(1, i + 1).Value = headers[i];
+            StyleHeader(ws, headers.Length);
+
+            int row = 2;
+            var grouped = data
+                .GroupBy(a => a.Area.AreaTemplate?.Name ?? "")
+                .OrderBy(g => g.Key);
+
+            foreach (var group in grouped)
+            {
+                // Ressort-Header
+                ws.Cell(row, 1).Value = group.Key;
+                ws.Range(row, 1, row, headers.Length).Style.Font.Bold = true;
+                ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#D9D9D9");
+                ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                row++;
+
+                foreach (var a in group)
+                {
+                    var timeSlot = a.UseAlternativeSlot && !string.IsNullOrEmpty(a.Area.AlternativeTimeSlot)
+                        ? a.Area.AlternativeTimeSlot
+                        : a.Area.TimeSlot;
+
+                    var vorname   = a.FamilyMember?.FirstName ?? a.User.FirstName;
+                    var nachname  = a.FamilyMember?.LastName  ?? a.User.LastName;
+                    var pfadi     = a.FamilyMember?.Pfadiname ?? a.User.Pfadiname ?? "–";
+                    var kommentar = a.Comment ?? "";
+
+                    DateTime? birthday = a.FamilyMember?.Birthday ?? a.User.Birthday;
+                    string alter = "";
+                    if (birthday.HasValue)
+                    {
+                        int age = DateTime.Today.Year - birthday.Value.Year;
+                        if (birthday.Value.Date > DateTime.Today.AddYears(-age)) age--;
+                        alter = age.ToString();
+                    }
+
+                    ws.Cell(row, 1).Value = "";
+                    ws.Cell(row, 2).Value = timeSlot;
+                    ws.Cell(row, 3).Value = $"{vorname} {nachname}";
+                    ws.Cell(row, 4).Value = pfadi;
+                    ws.Cell(row, 5).Value = kommentar;
+                    ws.Cell(row, 6).Value = alter;
+                    ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                    if (row % 2 == 0)
+                        ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+
+                    row++;
+                }
+                row++; // Leerzeile nach Gruppe
+            }
+
+            ws.Column(1).Width = 28;
+            ws.Column(2).Width = 18;
+            ws.Column(3).Width = 22;
+            ws.Column(4).Width = 16;
+            ws.Column(5).Width = 30;
+            ws.Column(6).Width = 8;
+
+            if (row > 2)
+            {
+                ws.Range(1, 1, row - 1, headers.Length).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                ws.Range(1, 1, row - 1, headers.Length).Style.Border.OutsideBorderColor = XLColor.FromHtml("#CBD5E1");
+            }
+            ws.SheetView.FreezeRows(1);
+            return WorkbookToBytes(wb);
+        }
+
         // ── Appointments ──────────────────────────────────────────────────────
-    public async Task<byte[]> ExportAppointmentsAsync(int? eventId = null)
+    public Task<byte[]> ExportAppointmentsAsync(int? eventId = null)
+        => ExportAppointmentsByCategoryAsync(eventId, "Verkauf", "Anmeldungen Verkauf");
+
+    private async Task<byte[]> _OldExportAppointmentsAsync(int? eventId = null)
     {
         var query = _db.Appointments
             .Include(a => a.User)
@@ -148,8 +249,10 @@ namespace FlomiApp.Services
         return WorkbookToBytes(wb);
     }
 
-// ── Appointments ──────────────────────────────────────────────────────
-    public async Task<byte[]> ExportGastroAppointmentsAsync(int? eventId = null)
+    public Task<byte[]> ExportGastroAppointmentsAsync(int? eventId = null)
+        => ExportAppointmentsByCategoryAsync(eventId, "Gastro", "Anmeldungen Gastro");
+
+    private async Task<byte[]> _OldExportGastroAppointmentsAsync(int? eventId = null)
     {
         var query = _db.Appointments
             .Include(a => a.User)
@@ -418,6 +521,107 @@ namespace FlomiApp.Services
             }
 
             StyleTable(ws, headers.Length, row - 1);
+            return WorkbookToBytes(wb);
+        }
+
+        // ── Fahrzeuge ─────────────────────────────────────────────────────────
+        public async Task<byte[]> ExportVehicleAssignmentsAsync(int? eventId = null)
+        {
+            var dates = await _db.AssignmentDates
+                .Include(d => d.Assignment).ThenInclude(a => a.Vehicle)
+                .Include(d => d.Assignment).ThenInclude(a => a.Event)
+                .Where(d => eventId == null || d.Assignment.EventId == eventId)
+                .OrderBy(d => d.Date)
+                .ThenBy(d => d.Assignment.Vehicle.OwnerName)
+                .AsNoTracking()
+                .ToListAsync();
+
+            // User-Lookup für Fahrer/Beifahrer
+            var userIds = dates
+                .SelectMany(d => new[] { d.DriverUserId, d.HelperUserId }.Where(id => id != null))
+                .Distinct().ToList();
+            var users = await _db.Users
+                .Where(u => userIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.FirstName, u.LastName, u.Pfadiname, u.PhoneNumber })
+                .ToListAsync();
+            string UserName(string? uid) => uid == null ? "" :
+                users.FirstOrDefault(u => u.Id == uid) is { } u
+                    ? $"{u.FirstName} {u.LastName}"
+                    : "";
+            string UserPhone(string? uid) => uid == null ? "" :
+                users.FirstOrDefault(u => u.Id == uid)?.PhoneNumber ?? "";
+
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Fahrzeuge");
+
+            // Titel
+            var eventName = eventId.HasValue
+                ? (await _db.Events.FindAsync(eventId.Value))?.Name ?? "Fahrzeuge"
+                : "Fahrzeuge";
+            ws.Cell(1, 1).Value = eventName;
+            ws.Cell(1, 1).Style.Font.Bold = true;
+            ws.Cell(1, 1).Style.Font.FontSize = 14;
+
+            var headers = new[]
+            {
+                "Fahrzeughalter", "Tel.-Nummer", "Fahrer", "Fahrer Tel.",
+                "Beifahrer", "Bereit ab", "Abgeholt durch", "Zurückgebracht durch"
+            };
+
+            int row = 3;
+            DateTime? currentDate = null;
+
+            foreach (var d in dates)
+            {
+                // Datums-Abschnittsheader
+                if (d.Date.Date != currentDate)
+                {
+                    currentDate = d.Date.Date;
+                    var dateLabel = d.Date.ToString("ddd dd.MM.yyyy", new System.Globalization.CultureInfo("de-CH"));
+                    ws.Cell(row, 1).Value = dateLabel;
+                    var dateRange = ws.Range(row, 1, row, headers.Length);
+                    dateRange.Style.Font.Bold = true;
+                    dateRange.Style.Font.FontSize = 12;
+                    dateRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1D4ED8");
+                    dateRange.Style.Font.FontColor = XLColor.White;
+                    dateRange.Merge();
+                    row++;
+
+                    // Spalten-Header
+                    for (int i = 0; i < headers.Length; i++)
+                        ws.Cell(row, i + 1).Value = headers[i];
+                    var hRange = ws.Range(row, 1, row, headers.Length);
+                    hRange.Style.Font.Bold = true;
+                    hRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#DBEAFE");
+                    hRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    row++;
+                }
+
+                var driverName  = !string.IsNullOrEmpty(d.DriverName) ? d.DriverName  : UserName(d.DriverUserId);
+                var driverPhone = !string.IsNullOrEmpty(d.DriverPhone) ? d.DriverPhone : UserPhone(d.DriverUserId);
+                var helperName  = !string.IsNullOrEmpty(d.HelperName) ? d.HelperName  : UserName(d.HelperUserId);
+
+                ws.Cell(row, 1).Value = d.Assignment.Vehicle.OwnerName;
+                ws.Cell(row, 2).Value = d.Assignment.Vehicle.OwnerPhone ?? "";
+                ws.Cell(row, 3).Value = driverName;
+                ws.Cell(row, 4).Value = driverPhone;
+                ws.Cell(row, 5).Value = helperName;
+                ws.Cell(row, 6).Value = d.ReadyFrom ?? "";
+                ws.Cell(row, 7).Value = d.PickedUpBy ?? "";
+                ws.Cell(row, 8).Value = d.ReturnedBy ?? "";
+
+                if (row % 2 == 0)
+                    ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+
+                ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Hair;
+                row++;
+            }
+
+            ws.Column(1).Width = 22; ws.Column(2).Width = 16;
+            ws.Column(3).Width = 20; ws.Column(4).Width = 16;
+            ws.Column(5).Width = 20; ws.Column(6).Width = 12;
+            ws.Column(7).Width = 24; ws.Column(8).Width = 24;
+            ws.SheetView.FreezeRows(2);
             return WorkbookToBytes(wb);
         }
 
