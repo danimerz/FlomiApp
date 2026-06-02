@@ -1,0 +1,38 @@
+{
+  "name": "FlomiApp",
+  "short_name": "FlomiApp",
+  "description": "Verwaltung und Anmeldung für den Flomi-Markt der Pfadfinderabteilung",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/user/dashboard",
+      "description": "Meine Anmeldungen"
+    },
+    {
+      "name": "Anmelden",
+      "url": "/user/register",
+      "description": "Für Bereiche anmelden"
+    }
+  ]
+}
