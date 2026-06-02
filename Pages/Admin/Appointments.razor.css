@@ -356,6 +356,19 @@
     font-style: italic;
 }
 
+/* ── Admin Cancel Button ──────────────────────────────────────────────────── */
+.appt-cancel-btn {
+    padding: .2rem .45rem;
+    border: 1px solid var(--color-error-border);
+    border-radius: 6px;
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+    cursor: pointer;
+    font-size: .85rem;
+    transition: filter .15s;
+}
+.appt-cancel-btn:hover { filter: brightness(1.1); }
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .appt-filter-bar   { flex-direction: column; }

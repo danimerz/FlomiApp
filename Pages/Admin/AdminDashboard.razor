@@ -1,0 +1,205 @@
+@page "/admin/dashboard"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@inject FlomiApp.Data.ApplicationDbContext Db
+@inject IAreaService AreaService
+@inject IFurniturePickupService FurniturePickupService
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Admin Dashboard</h1>
+            <p>Gesamtübersicht aller laufenden Aktivitäten des Flomi.</p>
+        </div>
+    </section>
+
+    @if (isLoading)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content"><h3>Wird geladen...</h3></div>
+        </div>
+    }
+    else
+    {
+        <!-- ── KPI Grid ── -->
+        <div class="adm-kpi-grid">
+            <a class="adm-kpi adm-kpi--blue" href="/admin/appointments">
+                <div class="adm-kpi__num">@totalRegistered</div>
+                <div class="adm-kpi__label">Anmeldungen</div>
+                <div class="adm-kpi__sub">für aktive Events</div>
+            </a>
+            <a class="adm-kpi adm-kpi--orange" href="/admin/appointments?filter=open">
+                <div class="adm-kpi__num">@openSlots</div>
+                <div class="adm-kpi__label">Offene Plätze</div>
+                <div class="adm-kpi__sub">in aktiven Bereichen</div>
+            </a>
+            <a class="adm-kpi adm-kpi--yellow" href="/admin/furniture-pickup">
+                <div class="adm-kpi__num">@pendingPickups</div>
+                <div class="adm-kpi__label">Offene Abholungen</div>
+                <div class="adm-kpi__sub">ausstehende Anfragen</div>
+            </a>
+            <a class="adm-kpi adm-kpi--green" href="/admin/vehicles">
+                <div class="adm-kpi__num">@vehiclesAssigned</div>
+                <div class="adm-kpi__label">Fahrzeuge</div>
+                <div class="adm-kpi__sub">mit Zuweisung</div>
+            </a>
+            <a class="adm-kpi adm-kpi--purple" href="/admin/users">
+                <div class="adm-kpi__num">@totalUsers</div>
+                <div class="adm-kpi__label">Benutzer</div>
+                <div class="adm-kpi__sub">registriert</div>
+            </a>
+            <a class="adm-kpi adm-kpi--red" href="/admin/appointments">
+                <div class="adm-kpi__num">@cancelledCount</div>
+                <div class="adm-kpi__label">Stornierungen</div>
+                <div class="adm-kpi__sub">in aktiven Events</div>
+            </a>
+        </div>
+
+        <!-- ── Sections ── -->
+        <div class="adm-sections">
+
+            <!-- Bereiche nach Auslastung -->
+            <div class="adm-section">
+                <h2 class="adm-section__title">📋 Bereiche nach Auslastung</h2>
+                @if (!areaStats.Any())
+                {
+                    <p class="adm-empty">Keine aktiven Bereiche gefunden.</p>
+                }
+                else
+                {
+                    @foreach (var a in areaStats)
+                    {
+                        var pct = a.Cap > 0 ? Math.Min((double)a.Reg / a.Cap * 100, 100) : 0;
+                        <div class="adm-area-row">
+                            <div class="adm-area-row__info">
+                                <span class="adm-area-row__name">@a.Name</span>
+                                <span class="adm-area-row__date">@a.Date.ToString("ddd dd.MM", new System.Globalization.CultureInfo("de-CH"))</span>
+                                <span class="adm-area-row__event">@a.EventName</span>
+                            </div>
+                            <div class="adm-area-row__bar-wrap">
+                                <div class="adm-area-row__bar">
+                                    <div class="adm-area-row__fill @(pct >= 100 ? "full" : pct >= 75 ? "warn" : "")"
+                                         style="width:@pct.ToString("F0")%"></div>
+                                </div>
+                                <span class="adm-area-row__count">@a.Reg / @(a.Cap >= 999 ? "∞" : a.Cap.ToString())</span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Neueste Möbel-Anfragen -->
+            <div class="adm-section">
+                <h2 class="adm-section__title">🛋️ Neueste Möbel-Anfragen</h2>
+                @if (!recentPickups.Any())
+                {
+                    <p class="adm-empty">Keine ausstehenden Anfragen.</p>
+                }
+                else
+                {
+                    <table class="adm-mini-table">
+                        <thead><tr><th>#</th><th>Person</th><th>Abholdatum</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var r in recentPickups)
+                            {
+                                <tr>
+                                    <td>#@r.OrderNumber</td>
+                                    <td>@r.FirstName @r.LastName</td>
+                                    <td>@r.PickupDate.ToShortDateString()</td>
+                                    <td>
+                                        <span class="adm-status-badge adm-status-badge--@r.Status.ToString().ToLower()">
+                                            @r.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <a href="/admin/furniture-pickup" class="adm-link">Alle anzeigen →</a>
+                }
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private bool isLoading = true;
+
+    private int totalRegistered;
+    private int openSlots;
+    private int pendingPickups;
+    private int vehiclesAssigned;
+    private int totalUsers;
+    private int cancelledCount;
+
+    private record AreaStat(string Name, string EventName, DateTime Date, int Reg, int Cap);
+    private List<AreaStat>                   areaStats    = new();
+    private List<FurniturePickupRequest>     recentPickups = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var activeEventIds = await Db.Events
+            .Where(e => e.IsActive)
+            .Select(e => e.Id)
+            .ToListAsync();
+
+        totalRegistered = await Db.Appointments
+            .Where(a => activeEventIds.Contains(a.Area.EventId)
+                     && a.Status == AppointmentStatus.Registered)
+            .CountAsync();
+
+        cancelledCount = await Db.Appointments
+            .Where(a => activeEventIds.Contains(a.Area.EventId)
+                     && a.Status == AppointmentStatus.Cancelled)
+            .CountAsync();
+
+        var areas = await Db.Areas
+            .Include(a => a.AreaTemplate)
+            .Include(a => a.Event)
+            .Include(a => a.Appointments)
+            .Where(a => activeEventIds.Contains(a.EventId))
+            .ToListAsync();
+
+        openSlots = areas.Where(a => a.MaxCapacity < 999)
+            .Sum(a => Math.Max(0, a.MaxCapacity -
+                a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered)));
+
+        areaStats = areas
+            .Select(a => new AreaStat(
+                a.AreaTemplate?.Name ?? "–",
+                a.Event?.Name ?? "–",
+                a.Date,
+                a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered),
+                a.MaxCapacity))
+            .OrderByDescending(a => a.Cap < 999 ? (double)a.Reg / a.Cap : 0)
+            .Take(8)
+            .ToList();
+
+        pendingPickups = await Db.FurniturePickupRequests
+            .Where(r => r.Status == PickupRequestStatus.Pending)
+            .CountAsync();
+
+        recentPickups = await Db.FurniturePickupRequests
+            .Where(r => r.Status == PickupRequestStatus.Pending)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(5)
+            .ToListAsync();
+
+        vehiclesAssigned = await Db.VehicleAssignments
+            .Where(a => activeEventIds.Contains(a.EventId))
+            .CountAsync();
+
+        totalUsers = await Db.Users.CountAsync();
+
+        isLoading = false;
+    }
+}

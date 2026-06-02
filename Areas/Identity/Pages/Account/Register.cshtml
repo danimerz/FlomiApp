@@ -49,7 +49,18 @@
                         <label asp-for="Input.Password" class="register-label">
                             Passwort <span class="register-required">*</span>
                         </label>
-                        <input asp-for="Input.Password" type="password" class="register-input" />
+                        <input asp-for="Input.Password" id="reg-pw" type="password"
+                               class="register-input" oninput="updateRegPwStrength(this.value)" />
+                        <div style="height:5px;border-radius:999px;background:#e2e8f0;margin-top:.4rem;overflow:hidden;">
+                            <div id="reg-pw-bar" style="height:100%;border-radius:999px;width:0%;transition:width .3s,background .3s;"></div>
+                        </div>
+                        <span id="reg-pw-label" style="font-size:.78rem;font-weight:600;margin-top:.2rem;display:block;color:#94a3b8;"></span>
+                        <ul style="margin:.4rem 0 0;padding-left:1.1rem;font-size:.8rem;color:#64748b;line-height:1.8;">
+                            <li id="req-len">Mindestens 6 Zeichen</li>
+                            <li id="req-upper">Mindestens 1 Grossbuchstabe</li>
+                            <li id="req-digit">Mindestens 1 Ziffer</li>
+                            <li id="req-special">Mindestens 1 Sonderzeichen (!@@#$...)</li>
+                        </ul>
                         <span asp-validation-for="Input.Password" class="register-error"></span>
                     </div>
 
@@ -135,4 +146,40 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateRegPwStrength(pw) {
+            var bar   = document.getElementById('reg-pw-bar');
+            var label = document.getElementById('reg-pw-label');
+            var setReq = function(id, ok) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.style.color = ok ? '#16a34a' : '#94a3b8';
+                el.style.fontWeight = ok ? '700' : '400';
+            };
+
+            var hasLen     = pw.length >= 6;
+            var hasUpper   = /[A-Z]/.test(pw);
+            var hasDigit   = /[0-9]/.test(pw);
+            var hasSpecial = /[^a-zA-Z0-9]/.test(pw);
+
+            setReq('req-len',     hasLen);
+            setReq('req-upper',   hasUpper);
+            setReq('req-digit',   hasDigit);
+            setReq('req-special', hasSpecial);
+
+            var score = [hasLen, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+            var configs = [
+                { w: '0%',   c: '#e2e8f0', t: '' },
+                { w: '25%',  c: '#ef4444', t: '⚠️ Schwach' },
+                { w: '50%',  c: '#f97316', t: '👍 Ausreichend' },
+                { w: '75%',  c: '#eab308', t: '✅ Gut' },
+                { w: '100%', c: '#16a34a', t: '🔒 Sicher' }
+            ];
+            var cfg = configs[pw.length > 0 ? score : 0];
+            bar.style.width      = cfg.w;
+            bar.style.background = cfg.c;
+            label.textContent    = cfg.t;
+            label.style.color    = cfg.c;
+        }
+    </script>
 }

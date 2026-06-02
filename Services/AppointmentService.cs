@@ -123,7 +123,7 @@ public class AppointmentService : IAppointmentService
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
 
-        await SendRegistrationMailsAsync(userId, familyMemberId, area);
+        await SendRegistrationMailsAsync(userId, familyMemberId, area, comment);
     }
 
     public async Task CancelAppointmentAsync(int appointmentId, string userId)
@@ -226,7 +226,7 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area)
+    private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area, string? comment = null)
     {
         try
         {
@@ -246,7 +246,8 @@ public class AppointmentService : IAppointmentService
                     areaName,
                     eventName,
                     area.Date,
-                    area.TimeSlot);
+                    area.TimeSlot,
+                    comment);
             }
 
             await _mailService.SendAdminNewRegistrationAsync(

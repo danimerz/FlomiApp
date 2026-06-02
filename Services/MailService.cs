@@ -49,19 +49,34 @@ public class MailService : IMailService
     // ─── Benutzer-Mails ───────────────────────────────────────────────────────
     public async Task SendRegistrationConfirmationAsync(
         string toEmail, string toName, string areaName,
-        string eventName, DateTime date, string timeSlot)
+        string eventName, DateTime date, string timeSlot,
+        string? comment = null)
     {
-        var subject = $"Anmeldebestätigung – {areaName}";
+        var subject = $"✅ Anmeldebestätigung – {areaName} · {eventName}";
+        var commentRow = string.IsNullOrEmpty(comment) ? "" :
+            $"<tr><td style='padding:6px 12px;color:#64748b;'>Dein Kommentar:</td><td style='padding:6px 12px;font-style:italic;'>{comment}</td></tr>";
+
         var body = $"""
-            <h2>Hallo {toName}! 🎉</h2>
-            <p>Deine Anmeldung war erfolgreich.</p>
-            <table cellpadding="8" style="border-collapse:collapse;">
-                <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
-                <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{date:dd.MM.yyyy}</td></tr>
-                <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
-            </table>
-            <p>Wir freuen uns auf dich!</p>
+            <div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:16px 16px 0 0;padding:28px 32px;">
+                <h1 style="margin:0;color:#fff;font-size:1.5rem;">Anmeldebestätigung 🎉</h1>
+              </div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;">
+                <p style="color:#374151;margin-top:0;">Hallo <strong>{toName}</strong>,<br>deine Anmeldung war erfolgreich!</p>
+                <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:16px 0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+                  <tr style="background:#dbeafe;">
+                    <td colspan="2" style="padding:10px 12px;font-weight:800;color:#1d4ed8;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;">Dein Einsatz</td>
+                  </tr>
+                  <tr><td style="padding:6px 12px;color:#64748b;width:40%">Event:</td><td style="padding:6px 12px;font-weight:700;">{eventName}</td></tr>
+                  <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Bereich:</td><td style="padding:6px 12px;font-weight:700;">{areaName}</td></tr>
+                  <tr><td style="padding:6px 12px;color:#64748b;">Datum:</td><td style="padding:6px 12px;font-weight:700;">{date:dddd, dd. MMMM yyyy}</td></tr>
+                  <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Zeit:</td><td style="padding:6px 12px;font-weight:700;">{timeSlot}</td></tr>
+                  {commentRow}
+                </table>
+                <p style="color:#64748b;font-size:.9rem;">Du kannst deine Anmeldungen jederzeit im <a href="/user/dashboard" style="color:#2563eb;">Dashboard</a> einsehen oder stornieren.</p>
+                <p style="color:#374151;font-weight:700;margin-bottom:0;">Wir freuen uns auf dich! 🙌</p>
+              </div>
+            </div>
             """;
 
         await SendAsync(toEmail, toName, subject, body);

@@ -6,7 +6,7 @@ public interface IMailService
 {
     // Benutzer-Mails
     Task SendRegistrationConfirmationAsync(string toEmail, string toName,
-        string areaName, string eventName, DateTime date, string timeSlot);
+        string areaName, string eventName, DateTime date, string timeSlot, string? comment = null);
 
     Task SendCancellationConfirmationAsync(string toEmail, string toName,
         string areaName, string eventName, DateTime date, string timeSlot);

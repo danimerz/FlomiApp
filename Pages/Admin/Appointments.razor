@@ -2,7 +2,9 @@
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
 @using System.Globalization
-@inject IAreaService AreaService
+@inject IAreaService                         AreaService
+@inject IAppointmentService                  AppointmentService
+@inject FlomiApp.Data.ApplicationDbContext   Db
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Anmeldungen – Admin</PageTitle>
@@ -194,8 +196,10 @@
                                             <tr>
                                                 <th>Person</th>
                                                 <th>Pfadiname</th>
+
                                                 <th>Kommentar</th>
                                                 <th>Angemeldet am</th>
+                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -213,6 +217,13 @@
                                                         else { <span class="appt-no-comment">–</span> }
                                                     </td>
                                                     <td>@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                                    <td>
+                                                        <button class="appt-cancel-btn"
+                                                                @onclick="() => AdminCancelAppointment(ap.Id)"
+                                                                title="Anmeldung stornieren">
+                                                            🗑️
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             }
                                         </tbody>
@@ -310,6 +321,15 @@
             .SelectMany(a => new[] { $"{a.Id}_0", $"{a.Id}_1" })
             .ToHashSet();
         isLoading = false;
+    }
+
+    private async Task AdminCancelAppointment(int appointmentId)
+    {
+        var ap = await Db.Appointments.FindAsync(appointmentId);
+        if (ap == null) return;
+        ap.Status = AppointmentStatus.Cancelled;
+        await Db.SaveChangesAsync();
+        await LoadAreas();
     }
 
     private void ToggleArea(string key)
