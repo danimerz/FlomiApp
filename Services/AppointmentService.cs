@@ -83,6 +83,9 @@ public class AppointmentService : IAppointmentService
     private bool IsVerkauf(Area area)
         => area.AreaTemplate?.AreaCategory?.Name == "Verkauf";
 
+    private bool IsKuchen(Area area)
+        => area.AreaTemplate?.AreaCategory?.Name == "Kuchen";
+
     public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null, bool useAlternativeSlot = false)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
@@ -96,9 +99,9 @@ public class AppointmentService : IAppointmentService
 
         if (!await CanRegisterAsync(userId, areaId, familyMemberId))
         {
-            var message = IsVerkauf(area)
-                ? "Du kannst dich nur für einen Verkauf-Bereich registrieren."
-                : "Der Bereich ist voll.";
+            var message = IsVerkauf(area) ? "Du kannst dich nur für einen Verkauf-Bereich registrieren."
+                        : IsKuchen(area)  ? "Du kannst dich pro Tag nur einmal für Kuchen anmelden."
+                                          : "Der Bereich ist voll.";
             throw new InvalidOperationException(message);
         }
 
@@ -206,6 +209,9 @@ public class AppointmentService : IAppointmentService
         if (IsVerkauf(area))
             return !await PersonHasRegisteredSaleAreaAsync(userId, familyMemberId, area.EventId);
 
+        if (IsKuchen(area))
+            return !await PersonHasRegisteredCategoryOnDateAsync(userId, familyMemberId, "Kuchen", area.Date.Date);
+
         return true;
     }
 
@@ -222,6 +228,9 @@ public class AppointmentService : IAppointmentService
 
         if (IsVerkauf(area))
             return !await UserHasRegisteredSaleAreaAsync(userId, area.EventId);
+
+        if (IsKuchen(area))
+            return !await PersonHasRegisteredCategoryOnDateAsync(userId, null, "Kuchen", area.Date.Date);
 
         return true;
     }
@@ -362,6 +371,25 @@ public class AppointmentService : IAppointmentService
         var age = referenceDate.Year - birthDate.Year;
         if (referenceDate < birthDate.AddYears(age)) age--;
         return age;
+    }
+
+    private async Task<bool> PersonHasRegisteredCategoryOnDateAsync(
+        string userId, int? familyMemberId, string categoryName, DateTime date)
+    {
+        return await _context.Appointments
+            .Include(a => a.Area)
+                .ThenInclude(ar => ar.AreaTemplate)
+                    .ThenInclude(t => t!.AreaCategory)
+            .Where(a => a.UserId == userId
+                     && a.Status == AppointmentStatus.Registered
+                     && a.Area.Date.Date == date
+                     && a.Area.AreaTemplate != null
+                     && a.Area.AreaTemplate.AreaCategory != null
+                     && a.Area.AreaTemplate.AreaCategory.Name == categoryName)
+            .Where(a => familyMemberId.HasValue
+                ? a.FamilyMemberId == familyMemberId
+                : a.FamilyMemberId == null)
+            .AnyAsync();
     }
 
     private async Task<bool> PersonHasRegisteredSaleAreaAsync(

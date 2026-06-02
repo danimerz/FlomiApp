@@ -310,7 +310,7 @@
                               class="reg-modal__textarea"
                               rows="3"
                               maxlength="500"
-                              placeholder="z.B. «Komme mit eigenem Auto», «Bringe Helfer mit», ..."
+                              placeholder="z.B. «Bringe Helfer mit», ..."
                               @bind="confirmComment"></textarea>
                 </div>
             </div>
@@ -568,6 +568,9 @@
 
         if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
             return "Nur eine Verkauf-Registrierung ist möglich.";
+
+        if (area.AreaTemplate?.AreaCategory?.Name == "Kuchen")
+            return "Pro Tag ist nur eine Kuchen-Anmeldung möglich.";
 
         if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
             return "Bereich ist derzeit voll.";
