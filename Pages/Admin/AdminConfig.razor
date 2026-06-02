@@ -5,7 +5,8 @@
 @inject IAreaService AreaService
 @inject IMailService MailService
 @inject FlomiApp.Data.ApplicationDbContext Db
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
 
 <PageTitle>Konfiguration – Admin</PageTitle>
 

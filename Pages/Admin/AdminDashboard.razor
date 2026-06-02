@@ -7,7 +7,8 @@
 @inject IAreaService AreaService
 @inject IFurniturePickupService FurniturePickupService
 @inject IJSRuntime JS
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.AnyAdmin)]
 
 <PageTitle>Admin Dashboard</PageTitle>
 

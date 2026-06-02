@@ -2,7 +2,8 @@
 @using FlomiApp.Data.Models
 @using FlomiApp.Services
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
 @inject IExportService ExportService
 @inject IAreaService AreaService
 @inject IJSRuntime JS

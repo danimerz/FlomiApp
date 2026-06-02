@@ -67,7 +67,7 @@
 
                     </div>
 
-                    <AuthorizeView Roles="Admin">
+                    <AuthorizeView Roles="Admin,FahrzeugAdmin,MoebelAdmin,BereichsAdmin">
                         <Authorized>
                             <div class="navmenu-section">
                                 <div class="navmenu-section__label">Administration</div>
@@ -80,18 +80,22 @@
                                 @if (IsOpen("overview"))
                                 {
                                     <div class="navmenu-group-body">
+                                        <AuthorizeView Roles="Admin,FahrzeugAdmin,MoebelAdmin,BereichsAdmin" Context="r1">
                                         <div class="navmenu-item">
                                             <NavLink class="navmenu-link" href="admin/dashboard">
                                                 <span class="navmenu-icon">📊</span>
                                                 <span>Dashboard</span>
                                             </NavLink>
                                         </div>
+                                        </AuthorizeView>
+                                        <AuthorizeView Roles="Admin,BereichsAdmin" Context="r2">
                                         <div class="navmenu-item">
                                             <NavLink class="navmenu-link" href="admin/appointments">
                                                 <span class="navmenu-icon">📋</span>
                                                 <span>Anmeldungen</span>
                                             </NavLink>
                                         </div>
+                                        </AuthorizeView>
                                     </div>
                                 }
 
@@ -103,24 +107,30 @@
                                 @if (IsOpen("event"))
                                 {
                                     <div class="navmenu-group-body">
+                                        <AuthorizeView Roles="Admin" Context="e1">
                                         <div class="navmenu-item">
                                             <NavLink class="navmenu-link" href="admin/config">
                                                 <span class="navmenu-icon">🗓</span>
                                                 <span>Konfiguration</span>
                                             </NavLink>
                                         </div>
+                                        </AuthorizeView>
+                                        <AuthorizeView Roles="Admin,FahrzeugAdmin" Context="e2">
                                         <div class="navmenu-item">
                                             <NavLink class="navmenu-link" href="admin/vehicles">
                                                 <span class="navmenu-icon">🚗</span>
                                                 <span>Fahrzeuge</span>
                                             </NavLink>
                                         </div>
+                                        </AuthorizeView>
+                                        <AuthorizeView Roles="Admin,MoebelAdmin" Context="e3">
                                         <div class="navmenu-item">
                                             <NavLink class="navmenu-link" href="admin/furniture-pickup">
                                                 <span class="navmenu-icon">📦</span>
                                                 <span>Möbel Abholungen</span>
                                             </NavLink>
                                         </div>
+                                        </AuthorizeView>
                                     </div>
                                 }
 

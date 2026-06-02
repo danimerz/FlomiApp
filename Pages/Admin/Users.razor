@@ -10,7 +10,8 @@
 @inject IMailService                  MailService
 @inject NavigationManager             Navigation
 @inject FlomiApp.Data.ApplicationDbContext Db
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
 
 <PageTitle>Benutzerverwaltung – Admin</PageTitle>
 
@@ -110,13 +111,19 @@
                     <td>@(u.Pfadiname ?? "–")</td>
                     <td>@(u.Stufe ?? "–")</td>
                     <td>
-                        @if (isAdmin)
+                        @{ var userRoles = allUserRoles.GetValueOrDefault(u.Id, new()); }
+                        @if (!userRoles.Any())
                         {
-                            <span class="usr-badge usr-badge--admin">🔴 Admin</span>
+                            <span class="usr-badge usr-badge--user">Benutzer</span>
                         }
                         else
                         {
-                            <span class="usr-badge usr-badge--user">Benutzer</span>
+                            @foreach (var r in userRoles)
+                            {
+                                <span class="usr-badge @(r=="Admin" ? "usr-badge--admin" : "usr-badge--user")" style="margin:.1rem .1rem">
+                                    @(r == "Admin" ? "🔴" : r == "FahrzeugAdmin" ? "🚗" : r == "MoebelAdmin" ? "📦" : "📋") @r
+                                </span>
+                            }
                         }
                     </td>
                     <td>
@@ -142,7 +149,7 @@
                     </td>
                     <td>
                         <div class="usr-actions">
-                            <button class="usr-btn usr-btn--edit" @onclick="() => OpenEdit(u)">
+                            <button class="usr-btn usr-btn--edit" @onclick="async () => await OpenEdit(u)">
                                 ✏️ Edit
                             </button>
                             <button class="usr-btn usr-btn--pw" @onclick="() => OpenPwReset(u)">
@@ -217,11 +224,23 @@
                     </div>
                 </div>
                 <div class="usr-role-toggle">
-                    <label class="usr-role-label">
+                    <div style="font-weight:700;font-size:.9rem;color:var(--color-text-strong);margin-bottom:.6rem">Rollen</div>
+                    <label class="usr-role-label" style="margin-bottom:.4rem">
                         <input type="checkbox" @bind="editIsAdmin" />
-                        <span>Admin-Rolle</span>
+                        <span>🔴 Admin (Superadmin — alles)</span>
                     </label>
-                    <small>Admins haben Zugriff auf alle Verwaltungsfunktionen.</small>
+                    <label class="usr-role-label" style="margin-bottom:.4rem">
+                        <input type="checkbox" @bind="editIsFahrzeugAdmin" />
+                        <span>🚗 FahrzeugAdmin — Fahrzeuge verwalten</span>
+                    </label>
+                    <label class="usr-role-label" style="margin-bottom:.4rem">
+                        <input type="checkbox" @bind="editIsMoebelAdmin" />
+                        <span>📦 MöbelAdmin — Möbelabholungen verwalten</span>
+                    </label>
+                    <label class="usr-role-label">
+                        <input type="checkbox" @bind="editIsBereichsAdmin" />
+                        <span>📋 BereichsAdmin — Anmeldungen einsehen</span>
+                    </label>
                 </div>
             </div>
             <div class="usr-modal__footer">
@@ -317,9 +336,10 @@
     private enum Tab { All, Admins, Locked }
     private Tab activeTab = Tab.All;
 
-    private List<ApplicationUser>      users              = new();
-    private HashSet<string>            adminIds           = new();
-    private Dictionary<string, int>   appointmentCounts  = new();
+    private List<ApplicationUser>             users              = new();
+    private HashSet<string>                   adminIds           = new();
+    private Dictionary<string, int>           appointmentCounts  = new();
+    private Dictionary<string, List<string>>  allUserRoles       = new();
 
     private string searchText  = string.Empty;
     private string filterStufe = string.Empty;
@@ -332,7 +352,10 @@
 
     // ── Edit ──────────────────────────────────────────────────────────────────
     private ApplicationUser? editUser    = null;
-    private bool             editIsAdmin = false;
+    private bool             editIsAdmin         = false;
+    private bool             editIsFahrzeugAdmin = false;
+    private bool             editIsMoebelAdmin   = false;
+    private bool             editIsBereichsAdmin = false;
 
     // ── Delete ────────────────────────────────────────────────────────────────
     private ApplicationUser? confirmDeleteUser = null;
@@ -394,11 +417,16 @@
     private async Task LoadUsers()
     {
         users    = await UserManager.Users.OrderBy(u => u.LastName).ThenBy(u => u.FirstName).ToListAsync();
-        adminIds = new HashSet<string>();
+        adminIds     = new HashSet<string>();
+        allUserRoles = new();
+        var allRoles = new[] { "Admin", "FahrzeugAdmin", "MoebelAdmin", "BereichsAdmin" };
         foreach (var u in users)
         {
-            if (await UserManager.IsInRoleAsync(u, "Admin"))
-                adminIds.Add(u.Id);
+            var roles = new List<string>();
+            foreach (var role in allRoles)
+                if (await UserManager.IsInRoleAsync(u, role)) roles.Add(role);
+            allUserRoles[u.Id] = roles;
+            if (roles.Contains("Admin")) adminIds.Add(u.Id);
         }
 
         appointmentCounts = await Db.Appointments
@@ -420,7 +448,7 @@
         sortColumn != col ? "⇅" : sortAsc ? "▲" : "▼";
 
     // ── Edit ──────────────────────────────────────────────────────────────────
-    private void OpenEdit(ApplicationUser u)
+    private async Task OpenEdit(ApplicationUser u)
     {
         editUser = new ApplicationUser
         {
@@ -433,9 +461,19 @@
             Email       = u.Email,
             UserName    = u.UserName
         };
-        editIsAdmin    = adminIds.Contains(u.Id);
+        editIsAdmin         = await UserManager.IsInRoleAsync(u, "Admin");
+        editIsFahrzeugAdmin = await UserManager.IsInRoleAsync(u, "FahrzeugAdmin");
+        editIsMoebelAdmin   = await UserManager.IsInRoleAsync(u, "MoebelAdmin");
+        editIsBereichsAdmin = await UserManager.IsInRoleAsync(u, "BereichsAdmin");
         successMessage = null;
         errorMessage   = null;
+    }
+
+    private async Task SyncRole(ApplicationUser u, string role, bool shouldHave)
+    {
+        var has = await UserManager.IsInRoleAsync(u, role);
+        if (shouldHave && !has)  await UserManager.AddToRoleAsync(u, role);
+        if (!shouldHave && has)  await UserManager.RemoveFromRoleAsync(u, role);
     }
 
     private void CloseEdit() { editUser = null; }
@@ -471,12 +509,11 @@
                 return;
             }
 
-            // Rolle anpassen
-            var isCurrentlyAdmin = await UserManager.IsInRoleAsync(existing, "Admin");
-            if (editIsAdmin && !isCurrentlyAdmin)
-                await UserManager.AddToRoleAsync(existing, "Admin");
-            else if (!editIsAdmin && isCurrentlyAdmin)
-                await UserManager.RemoveFromRoleAsync(existing, "Admin");
+            // Rollen synchronisieren
+            await SyncRole(existing, "Admin",         editIsAdmin);
+            await SyncRole(existing, "FahrzeugAdmin", editIsFahrzeugAdmin);
+            await SyncRole(existing, "MoebelAdmin",   editIsMoebelAdmin);
+            await SyncRole(existing, "BereichsAdmin", editIsBereichsAdmin);
 
             await LoadUsers();
             successMessage = $"Benutzer «{existing.FirstName} {existing.LastName}» wurde gespeichert.";

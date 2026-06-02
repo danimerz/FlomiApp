@@ -2,7 +2,8 @@
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
 @inject IFurniturePickupService FurniturePickupService
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.AdminOrMoebel)]
 
 <PageTitle>Möbel Abholungen – Admin</PageTitle>
 

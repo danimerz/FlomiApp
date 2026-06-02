@@ -6,7 +6,8 @@
 @using System.Text.Json
 @inject FlomiApp.Data.ApplicationDbContext Db
 @inject IJSRuntime JS
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
 
 <PageTitle>Statistiken – Admin</PageTitle>
 

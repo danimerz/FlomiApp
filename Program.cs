@@ -92,9 +92,10 @@ async Task SeedAdminUserAsync(IServiceProvider services)
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    foreach (var role in new[] { "Admin", "FahrzeugAdmin", "MoebelAdmin", "BereichsAdmin" })
     {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
     }
 
     var adminEmail = "admin@flomiapp.com";

@@ -5,7 +5,8 @@
 @inject IAreaService                         AreaService
 @inject IAppointmentService                  AppointmentService
 @inject FlomiApp.Data.ApplicationDbContext   Db
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.AdminOrBereichs)]
 
 <PageTitle>Anmeldungen – Admin</PageTitle>
 

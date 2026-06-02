@@ -5,7 +5,8 @@
 @using System.Globalization
 @inject IAreaService    AreaService
 @inject IVehicleService VehicleService
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.AdminOrFahrzeug)]
 
 <PageTitle>Fahrzeuge – Admin</PageTitle>
 

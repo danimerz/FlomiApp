@@ -2,7 +2,8 @@
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
 @inject INewsService NewsService
-@attribute [Authorize(Roles = "Admin")]
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
 
 <PageTitle>News – Admin</PageTitle>
 
