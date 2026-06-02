@@ -4,6 +4,7 @@
 @inject FlomiApp.Services.IChatService ChatService
 @inject UserManager<FlomiApp.Data.Models.ApplicationUser> NavUserManager
 @inject AuthenticationStateProvider NavAuthStateProvider
+@inject NavigationManager NavManager
 @implements IDisposable
 
 <div class="navmenu-shell">
@@ -243,6 +244,22 @@
     protected override void OnInitialized()
     {
         ChatService.OnMessageSent += OnNewMessage;
+        NavManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        var path = new Uri(e.Location).AbsolutePath.ToLower();
+        if (path == "/user/messages")
+        {
+            userUnreadCount = 0;
+            InvokeAsync(StateHasChanged);
+        }
+        else if (path == "/admin/messages")
+        {
+            adminUnreadCount = 0;
+            InvokeAsync(StateHasChanged);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -283,7 +300,11 @@
         }
     }
 
-    public void Dispose() => ChatService.OnMessageSent -= OnNewMessage;
+    public void Dispose()
+    {
+        ChatService.OnMessageSent       -= OnNewMessage;
+        NavManager.LocationChanged      -= OnLocationChanged;
+    }
 
     // ── Admin-Gruppen Collapse ─────────────────────────────────────────────
     private HashSet<string> openGroups = new();
