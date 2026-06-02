@@ -241,25 +241,8 @@
                 .Distinct()
                 .ToListAsync(),
 
-            "fahrer" => await Db.AssignmentDates
-                .Include(d => d.Assignment).ThenInclude(a => a.Event)
-                .Where(d => d.DriverUserId != null
-                         && (filterEventId == 0 || d.Assignment.EventId == filterEventId))
-                .Join(Db.Users, d => d.DriverUserId, u => u.Id,
-                    (d, u) => new Recipient(u.Email!, $"{u.FirstName} {u.LastName}"))
-                .Where(r => r.Email != null)
-                .Distinct()
-                .ToListAsync(),
-
-            "beifahrer" => await Db.AssignmentDates
-                .Include(d => d.Assignment)
-                .Where(d => d.HelperUserId != null
-                         && (filterEventId == 0 || d.Assignment.EventId == filterEventId))
-                .Join(Db.Users, d => d.HelperUserId, u => u.Id,
-                    (d, u) => new Recipient(u.Email!, $"{u.FirstName} {u.LastName}"))
-                .Where(r => r.Email != null)
-                .Distinct()
-                .ToListAsync(),
+            "fahrer" => await GetVehicleUserRecipients(isDriver: true),
+            "beifahrer" => await GetVehicleUserRecipients(isDriver: false),
 
             "pickups" => await Db.FurniturePickupRequests
                 .Include(r => r.User)
@@ -279,6 +262,22 @@
 
             _ => new()
         };
+    }
+
+    private async Task<List<Recipient>> GetVehicleUserRecipients(bool isDriver)
+    {
+        var userIds = await Db.AssignmentDates
+            .Include(d => d.Assignment)
+            .Where(d => (isDriver ? d.DriverUserId : d.HelperUserId) != null
+                     && (filterEventId == 0 || d.Assignment.EventId == filterEventId))
+            .Select(d => isDriver ? d.DriverUserId! : d.HelperUserId!)
+            .Distinct()
+            .ToListAsync();
+
+        return await Db.Users
+            .Where(u => userIds.Contains(u.Id) && u.Email != null)
+            .Select(u => new Recipient(u.Email!, $"{u.FirstName} {u.LastName}"))
+            .ToListAsync();
     }
 
     private async Task SendMails()
