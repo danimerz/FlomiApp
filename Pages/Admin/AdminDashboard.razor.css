@@ -1,9 +1,17 @@
 /* ── KPI Grid ─────────────────────────────────────────────────────────────── */
 .adm-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
     gap: 1rem;
     margin-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+    .adm-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 560px) {
+    .adm-kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 .adm-kpi {
