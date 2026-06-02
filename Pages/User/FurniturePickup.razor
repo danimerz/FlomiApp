@@ -448,6 +448,9 @@
     }
 
     // ── Bild Upload ───────────────────────────────────────────────────────────
+    private static readonly HashSet<string> AllowedImageMimes =
+        new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/webp", "image/gif" };
+
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         imageError = null;
@@ -467,6 +470,12 @@
             if (file.Size > maxSizeBytes)
             {
                 imageError = $"'{file.Name}' ist zu gross (max. 5 MB).";
+                continue;
+            }
+
+            if (!AllowedImageMimes.Contains(file.ContentType))
+            {
+                imageError = $"'{file.Name}' ist kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
                 continue;
             }
 

@@ -30,7 +30,7 @@ public class MailService : IMailService
 
             using var client = new SmtpClient();
 
-            client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            // SSL-Zertifikat wird standardmässig validiert (sicherer Standard)
 
             await client.ConnectAsync(_smtp.Host, _smtp.Port, SecureSocketOptions.SslOnConnect);
             await client.AuthenticateAsync(_smtp.Username, _smtp.Password);

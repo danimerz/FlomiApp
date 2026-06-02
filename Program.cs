@@ -26,8 +26,19 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
         {
-        options.SignIn.RequireConfirmedAccount = false; // ← true zu false
-        options.SignIn.RequireConfirmedEmail = false;   // ← neu hinzufügen
+            options.SignIn.RequireConfirmedAccount = false;
+            options.SignIn.RequireConfirmedEmail   = false;
+
+            // Passwort-Policy
+            options.Password.RequiredLength          = 6;
+            options.Password.RequireDigit            = true;
+            options.Password.RequireUppercase        = true;
+            options.Password.RequireNonAlphanumeric  = true;
+
+            // Brute-Force-Schutz: Konto nach 5 Fehlversuchen 10 Min sperren
+            options.Lockout.MaxFailedAccessAttempts  = 5;
+            options.Lockout.DefaultLockoutTimeSpan   = TimeSpan.FromMinutes(10);
+            options.Lockout.AllowedForNewUsers        = true;
         })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -110,7 +121,9 @@ async Task SeedAdminUserAsync(IServiceProvider services)
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(adminUser, "Admin123!");
+        var config        = services.GetRequiredService<IConfiguration>();
+        var adminPassword = config["AdminPassword"] ?? "Admin123!";
+        var result        = await userManager.CreateAsync(adminUser, adminPassword);
 
         if (result.Succeeded)
         {
