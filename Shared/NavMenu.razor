@@ -55,61 +55,97 @@
                             <div class="navmenu-section">
                                 <div class="navmenu-section__label">Administration</div>
 
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/dashboard">
-                                        <span class="navmenu-icon">📊</span>
-                                        <span>Dashboard</span>
-                                    </NavLink>
-                                </div>
+                                <!-- ── Gruppe: Übersicht ── -->
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("overview")'>
+                                    <span>Übersicht</span>
+                                    <span class="navmenu-group-chevron @(IsOpen("overview") ? "navmenu-group-chevron--open" : "")">▾</span>
+                                </button>
+                                @if (IsOpen("overview"))
+                                {
+                                    <div class="navmenu-group-body">
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/dashboard">
+                                                <span class="navmenu-icon">📊</span>
+                                                <span>Dashboard</span>
+                                            </NavLink>
+                                        </div>
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/appointments">
+                                                <span class="navmenu-icon">📋</span>
+                                                <span>Anmeldungen</span>
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                }
 
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/config">
-                                        <span class="navmenu-icon">🗓</span>
-                                        <span>Veranstaltungen verwalten</span>
-                                    </NavLink>
-                                </div>
+                                <!-- ── Gruppe: Event & Betrieb ── -->
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("event")'>
+                                    <span>Event & Betrieb</span>
+                                    <span class="navmenu-group-chevron @(IsOpen("event") ? "navmenu-group-chevron--open" : "")">▾</span>
+                                </button>
+                                @if (IsOpen("event"))
+                                {
+                                    <div class="navmenu-group-body">
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/config">
+                                                <span class="navmenu-icon">🗓</span>
+                                                <span>Konfiguration</span>
+                                            </NavLink>
+                                        </div>
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/vehicles">
+                                                <span class="navmenu-icon">🚗</span>
+                                                <span>Fahrzeuge</span>
+                                            </NavLink>
+                                        </div>
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/furniture-pickup">
+                                                <span class="navmenu-icon">📦</span>
+                                                <span>Möbel Abholungen</span>
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                }
 
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/furniture-pickup">
-                                        <span class="navmenu-icon">📦</span>
-                                        <span>Möbel Abholungen</span>
-                                    </NavLink>
-                                </div>
+                                <!-- ── Gruppe: Community ── -->
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("community")'>
+                                    <span>Community</span>
+                                    <span class="navmenu-group-chevron @(IsOpen("community") ? "navmenu-group-chevron--open" : "")">▾</span>
+                                </button>
+                                @if (IsOpen("community"))
+                                {
+                                    <div class="navmenu-group-body">
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/news">
+                                                <span class="navmenu-icon">📢</span>
+                                                <span>News</span>
+                                            </NavLink>
+                                        </div>
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/users">
+                                                <span class="navmenu-icon">👥</span>
+                                                <span>Benutzerverwaltung</span>
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                }
 
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/vehicles">
-                                        <span class="navmenu-icon">🚗</span>
-                                        <span>Fahrzeuge</span>
-                                    </NavLink>
-                                </div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/news">
-                                        <span class="navmenu-icon">📢</span>
-                                        <span>News</span>
-                                    </NavLink>
-                                </div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/users">
-                                        <span class="navmenu-icon">👥</span>
-                                        <span>Benutzerverwaltung</span>
-                                    </NavLink>
-                                </div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/appointments">
-                                        <span class="navmenu-icon">📋</span>
-                                        <span>Anmeldungen</span>
-                                    </NavLink>
-                                </div>
-
-                                <div class="navmenu-item">
-                                    <NavLink class="navmenu-link" href="admin/export">
-                                        <span class="navmenu-icon">📊</span>
-                                        <span>Export</span>
-                                    </NavLink>
-                                </div>
+                                <!-- ── Gruppe: Daten ── -->
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("data")'>
+                                    <span>Daten</span>
+                                    <span class="navmenu-group-chevron @(IsOpen("data") ? "navmenu-group-chevron--open" : "")">▾</span>
+                                </button>
+                                @if (IsOpen("data"))
+                                {
+                                    <div class="navmenu-group-body">
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/export">
+                                                <span class="navmenu-icon">📤</span>
+                                                <span>Export</span>
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                }
 
                             </div>
                         </Authorized>
@@ -172,6 +208,17 @@
 @code {
     [Parameter]
     public EventCallback OnNavLinkClicked { get; set; }
+
+    // ── Admin-Gruppen Collapse ─────────────────────────────────────────────
+    private HashSet<string> openGroups = new() { "overview", "event", "community", "data" };
+
+    private bool IsOpen(string group) => openGroups.Contains(group);
+
+    private void ToggleGroup(string group)
+    {
+        if (!openGroups.Remove(group))
+            openGroups.Add(group);
+    }
 
     private async Task HandleNavClick()
     {
