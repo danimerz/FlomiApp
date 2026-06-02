@@ -1,23 +1,30 @@
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FlomiApp.Services;
 
 public class ChatService : IChatService
 {
-    private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public event Action<ChatMessage>? OnMessageSent;
 
-    public ChatService(IDbContextFactory<ApplicationDbContext> dbFactory)
+    public ChatService(IServiceScopeFactory scopeFactory)
     {
-        _dbFactory = dbFactory;
+        _scopeFactory = scopeFactory;
+    }
+
+    private ApplicationDbContext CreateDb()
+    {
+        var scope = _scopeFactory.CreateScope();
+        return scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     }
 
     public async Task<List<ChatMessage>> GetConversationAsync(string userId1, string userId2)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync();
+        using var db = CreateDb();
         return await db.ChatMessages
             .Where(m => (m.FromUserId == userId1 && m.ToUserId == userId2)
                      || (m.FromUserId == userId2 && m.ToUserId == userId1))
@@ -28,7 +35,7 @@ public class ChatService : IChatService
 
     public async Task<List<ApplicationUser>> GetUsersWithMessagesAsync(string adminId)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync();
+        using var db = CreateDb();
         var userIds = await db.ChatMessages
             .Where(m => m.FromUserId == adminId || m.ToUserId == adminId)
             .Select(m => m.FromUserId == adminId ? m.ToUserId : m.FromUserId)
@@ -44,7 +51,7 @@ public class ChatService : IChatService
 
     public async Task<int> GetUnreadCountAsync(string toUserId, string? fromUserId = null)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync();
+        using var db = CreateDb();
         var query = db.ChatMessages
             .Where(m => m.ToUserId == toUserId && !m.IsRead);
         if (fromUserId != null)
@@ -54,7 +61,7 @@ public class ChatService : IChatService
 
     public async Task<ChatMessage> SendMessageAsync(string fromId, string toId, string body, bool isFromAdmin)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync();
+        using var db = CreateDb();
         var msg = new ChatMessage
         {
             FromUserId  = fromId,
@@ -78,7 +85,7 @@ public class ChatService : IChatService
 
     public async Task MarkReadAsync(string readerUserId, string otherUserId)
     {
-        await using var db = await _dbFactory.CreateDbContextAsync();
+        using var db = CreateDb();
         var unread = await db.ChatMessages
             .Where(m => m.ToUserId == readerUserId && m.FromUserId == otherUserId && !m.IsRead)
             .ToListAsync();
