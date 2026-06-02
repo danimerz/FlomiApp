@@ -1,5 +1,77 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
+/* ── Not Authorized / Not Found ──────────────────────────────────────────── */
+.auth-error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+}
+
+.auth-error-card {
+    background: var(--color-surface-card, #ffffff);
+    border: 1px solid var(--color-border-card, #e2e8f0);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(15,23,42,.1);
+    padding: 3rem 2.5rem;
+    text-align: center;
+    max-width: 440px;
+    width: 100%;
+}
+
+.auth-error-icon {
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 1.25rem;
+}
+
+.auth-error-title {
+    margin: 0 0 .75rem;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-strong, #0f172a);
+}
+
+.auth-error-text {
+    margin: 0 0 2rem;
+    font-size: .95rem;
+    color: var(--color-text-medium, #64748b);
+    line-height: 1.6;
+}
+
+.auth-error-actions {
+    display: flex;
+    gap: .75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.auth-error-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: .75rem 1.5rem;
+    border-radius: 12px;
+    font-size: .95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: filter .15s, transform .15s;
+}
+
+.auth-error-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+.auth-error-btn--primary {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37,99,235,.25);
+}
+
+.auth-error-btn--secondary {
+    background: transparent;
+    color: var(--color-primary, #2563eb);
+    border: 1.5px solid var(--color-primary, #2563eb);
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
