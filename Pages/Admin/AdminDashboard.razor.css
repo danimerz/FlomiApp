@@ -146,7 +146,6 @@
 }
 
 /* ── Activity Feed ────────────────────────────────────────────────────────── */
-.adm-section--feed { grid-column: 1 / -1; }
 
 .adm-section__link {
     float: right;
