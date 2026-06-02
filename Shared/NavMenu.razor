@@ -210,7 +210,7 @@
     public EventCallback OnNavLinkClicked { get; set; }
 
     // ── Admin-Gruppen Collapse ─────────────────────────────────────────────
-    private HashSet<string> openGroups = new() { "overview", "event", "community", "data" };
+    private HashSet<string> openGroups = new();
 
     private bool IsOpen(string group) => openGroups.Contains(group);
 
