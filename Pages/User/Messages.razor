@@ -1,0 +1,134 @@
+@page "/user/messages"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@implements IDisposable
+@inject IChatService ChatService
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<PageTitle>Nachrichten</PageTitle>
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Nachrichten</span>
+            <h1>Nachrichten</h1>
+            <p>Direkte Kommunikation mit dem Flomi-Admin.</p>
+        </div>
+    </section>
+
+    <div class="chat-box">
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-scroll">
+            @if (!messages.Any())
+            {
+                <div class="chat-empty">
+                    <span>💬</span>
+                    <p>Noch keine Nachrichten. Schreib dem Admin!</p>
+                </div>
+            }
+            @foreach (var m in messages)
+            {
+                var mine = m.FromUserId == userId;
+                <div class="chat-bubble-wrap @(mine ? "chat-bubble-wrap--mine" : "")">
+                    <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
+                        <div class="chat-bubble__body">@m.Body</div>
+                        <div class="chat-bubble__time">@m.SentAt.ToString("dd.MM HH:mm")</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-row">
+            <textarea class="chat-input"
+                      placeholder="Nachricht schreiben…"
+                      rows="2"
+                      @bind="newMessage"
+                      @onkeydown="OnKeyDown"></textarea>
+            <button class="chat-send-btn"
+                    @onclick="Send"
+                    disabled="@(sending || string.IsNullOrWhiteSpace(newMessage))">
+                ▶
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string              userId      = string.Empty;
+    private string?             adminId     = null;
+    private List<ChatMessage>   messages    = new();
+    private string              newMessage  = string.Empty;
+    private bool                sending     = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(auth.User);
+        if (user == null) return;
+        userId = user.Id;
+
+        // Admin-ID holen (erster Admin-User)
+        var admins = await UserManager.GetUsersInRoleAsync("Admin");
+        adminId = admins.FirstOrDefault()?.Id;
+        if (adminId == null) return;
+
+        messages = await ChatService.GetConversationAsync(userId, adminId);
+        await ChatService.MarkReadAsync(userId, adminId);
+
+        ChatService.OnMessageSent += OnNewMessage;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await ScrollToBottom();
+    }
+
+    private void OnNewMessage(ChatMessage msg)
+    {
+        if ((msg.FromUserId == userId && msg.ToUserId == adminId) ||
+            (msg.FromUserId == adminId && msg.ToUserId == userId))
+        {
+            messages.Add(msg);
+            InvokeAsync(async () =>
+            {
+                if (msg.FromUserId == adminId)
+                    await ChatService.MarkReadAsync(userId, adminId!);
+                StateHasChanged();
+                await ScrollToBottom();
+            });
+        }
+    }
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(newMessage) || adminId == null) return;
+        sending = true;
+        var body = newMessage;
+        newMessage = string.Empty;
+        await ChatService.SendMessageAsync(userId, adminId, body, isFromAdmin: false);
+        sending = false;
+        await ScrollToBottom();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+            await Send();
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try { await JS.InvokeVoidAsync("eval", "var el=document.getElementById('chat-scroll');if(el)el.scrollTop=el.scrollHeight;"); }
+        catch { }
+    }
+
+    public void Dispose() => ChatService.OnMessageSent -= OnNewMessage;
+}

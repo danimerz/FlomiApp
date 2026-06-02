@@ -1,0 +1,222 @@
+@page "/admin/messages"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@implements IDisposable
+@inject IChatService ChatService
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Nachrichten – Admin</PageTitle>
+
+<div class="dashboard-page">
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Nachrichten</h1>
+            <p>Direkte Kommunikation mit einzelnen Benutzern.</p>
+        </div>
+    </section>
+
+    <div class="adm-chat-layout">
+
+        <!-- Kontaktliste -->
+        <div class="adm-chat-sidebar">
+            <div class="adm-chat-sidebar__title">Konversationen</div>
+
+            @if (!contactUsers.Any())
+            {
+                <p class="adm-chat-empty-contacts">Noch keine Unterhaltungen.</p>
+            }
+            @foreach (var u in contactUsers)
+            {
+                var unread = unreadByUser.GetValueOrDefault(u.Id, 0);
+                <button class="adm-chat-contact @(selectedUser?.Id == u.Id ? "adm-chat-contact--active" : "")"
+                        @onclick="() => SelectUser(u)">
+                    <div class="adm-chat-contact__avatar">@u.FirstName[0]</div>
+                    <div class="adm-chat-contact__info">
+                        <span class="adm-chat-contact__name">@u.FirstName @u.LastName</span>
+                        <span class="adm-chat-contact__sub">@(u.Pfadiname ?? u.Stufe ?? "")</span>
+                    </div>
+                    @if (unread > 0)
+                    {
+                        <span class="adm-chat-contact__badge">@unread</span>
+                    }
+                </button>
+            }
+
+            <!-- Neuer Chat: Benutzer wählen -->
+            <div class="adm-chat-new">
+                <select class="adm-chat-new-select" @bind="newChatUserId">
+                    <option value="">+ Neuer Chat…</option>
+                    @foreach (var u in allUsers)
+                    {
+                        <option value="@u.Id">@u.FirstName @u.LastName</option>
+                    }
+                </select>
+                @if (!string.IsNullOrEmpty(newChatUserId))
+                {
+                    <button class="adm-chat-new-btn" @onclick="StartNewChat">Öffnen</button>
+                }
+            </div>
+        </div>
+
+        <!-- Chat-Fenster -->
+        <div class="adm-chat-window">
+            @if (selectedUser == null)
+            {
+                <div class="adm-chat-placeholder">
+                    <span>💬</span>
+                    <p>Wähle links eine Konversation oder starte eine neue.</p>
+                </div>
+            }
+            else
+            {
+                <div class="adm-chat-window__header">
+                    <div class="adm-chat-contact__avatar">@selectedUser.FirstName[0]</div>
+                    <div>
+                        <strong>@selectedUser.FirstName @selectedUser.LastName</strong>
+                        @if (!string.IsNullOrEmpty(selectedUser.Pfadiname))
+                        { <span class="adm-chat-window__sub"> · @selectedUser.Pfadiname</span> }
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="adm-chat-scroll">
+                    @if (!messages.Any())
+                    {
+                        <div class="chat-empty"><span>💬</span><p>Noch keine Nachrichten.</p></div>
+                    }
+                    @foreach (var m in messages)
+                    {
+                        var mine = m.IsFromAdmin;
+                        <div class="chat-bubble-wrap @(mine ? "chat-bubble-wrap--mine" : "")">
+                            <div class="chat-bubble @(mine ? "chat-bubble--mine" : "chat-bubble--theirs")">
+                                <div class="chat-bubble__body">@m.Body</div>
+                                <div class="chat-bubble__time">@m.SentAt.ToString("dd.MM HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="chat-input-row">
+                    <textarea class="chat-input"
+                              placeholder="Nachricht an @selectedUser.FirstName…"
+                              rows="2"
+                              @bind="newMessage"
+                              @onkeydown="OnKeyDown"></textarea>
+                    <button class="chat-send-btn"
+                            @onclick="Send"
+                            disabled="@(sending || string.IsNullOrWhiteSpace(newMessage))">
+                        ▶
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string              adminId          = string.Empty;
+    private ApplicationUser?    selectedUser     = null;
+    private List<ChatMessage>   messages         = new();
+    private List<ApplicationUser> contactUsers   = new();
+    private List<ApplicationUser> allUsers       = new();
+    private Dictionary<string, int> unreadByUser = new();
+    private string              newMessage       = string.Empty;
+    private string              newChatUserId    = string.Empty;
+    private bool                sending          = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth  = await AuthStateProvider.GetAuthenticationStateAsync();
+        var admin = await UserManager.GetUserAsync(auth.User);
+        if (admin == null) return;
+        adminId = admin.Id;
+
+        await LoadContacts();
+        allUsers = await UserManager.Users
+            .Where(u => u.Id != adminId)
+            .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)
+            .ToListAsync();
+
+        ChatService.OnMessageSent += OnNewMessage;
+    }
+
+    private async Task LoadContacts()
+    {
+        contactUsers = await ChatService.GetUsersWithMessagesAsync(adminId);
+        unreadByUser = new();
+        foreach (var u in contactUsers)
+            unreadByUser[u.Id] = await ChatService.GetUnreadCountAsync(adminId, u.Id);
+    }
+
+    private async Task SelectUser(ApplicationUser user)
+    {
+        selectedUser = user;
+        newChatUserId = string.Empty;
+        messages = await ChatService.GetConversationAsync(adminId, user.Id);
+        await ChatService.MarkReadAsync(adminId, user.Id);
+        unreadByUser[user.Id] = 0;
+        StateHasChanged();
+        await ScrollToBottom();
+    }
+
+    private async Task StartNewChat()
+    {
+        if (string.IsNullOrEmpty(newChatUserId)) return;
+        var user = allUsers.FirstOrDefault(u => u.Id == newChatUserId);
+        if (user != null) await SelectUser(user);
+    }
+
+    private void OnNewMessage(ChatMessage msg)
+    {
+        var relevant = (msg.FromUserId == adminId || msg.ToUserId == adminId);
+        if (!relevant) return;
+
+        var otherId = msg.FromUserId == adminId ? msg.ToUserId : msg.FromUserId;
+
+        InvokeAsync(async () =>
+        {
+            if (selectedUser?.Id == otherId)
+            {
+                messages.Add(msg);
+                if (msg.FromUserId != adminId)
+                    await ChatService.MarkReadAsync(adminId, otherId);
+            }
+            else if (msg.FromUserId != adminId)
+            {
+                unreadByUser[otherId] = unreadByUser.GetValueOrDefault(otherId, 0) + 1;
+                if (!contactUsers.Any(u => u.Id == otherId))
+                    await LoadContacts();
+            }
+            StateHasChanged();
+            if (selectedUser?.Id == otherId) await ScrollToBottom();
+        });
+    }
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(newMessage) || selectedUser == null) return;
+        sending = true;
+        var body = newMessage;
+        newMessage = string.Empty;
+        await ChatService.SendMessageAsync(adminId, selectedUser.Id, body, isFromAdmin: true);
+        sending = false;
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey) await Send();
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try { await JS.InvokeVoidAsync("eval", "var el=document.getElementById('adm-chat-scroll');if(el)el.scrollTop=el.scrollHeight;"); }
+        catch { }
+    }
+
+    public void Dispose() => ChatService.OnMessageSent -= OnNewMessage;
+}

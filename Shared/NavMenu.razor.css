@@ -379,6 +379,23 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* ── Unread Badge ─────────────────────────────────────────────────────────── */
+.navmenu-unread {
+    margin-left: auto;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: .68rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 /* ── Admin Group Headers ──────────────────────────────────────────────────── */
 .navmenu-group-header {
     display: flex;

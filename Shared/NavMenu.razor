@@ -1,5 +1,10 @@
 ﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
 @inject FlomiApp.Services.ThemeState ThemeState
+@inject FlomiApp.Services.IChatService ChatService
+@inject UserManager<FlomiApp.Data.Models.ApplicationUser> NavUserManager
+@inject AuthenticationStateProvider NavAuthStateProvider
+@implements IDisposable
 
 <div class="navmenu-shell">
     <div class="navmenu-links" @onclick="HandleNavClick">
@@ -38,6 +43,17 @@
                             <NavLink class="navmenu-link" href="user/furniture-pickup">
                                 <span class="navmenu-icon">🛋</span>
                                 <span>Möbel Abholservice</span>
+                            </NavLink>
+                        </div>
+
+                        <div class="navmenu-item">
+                            <NavLink class="navmenu-link" href="user/messages">
+                                <span class="navmenu-icon">💬</span>
+                                <span>Nachrichten</span>
+                                @if (userUnreadCount > 0)
+                                {
+                                    <span class="navmenu-unread">@userUnreadCount</span>
+                                }
                             </NavLink>
                         </div>
 
@@ -119,6 +135,16 @@
                                             <NavLink class="navmenu-link" href="admin/news">
                                                 <span class="navmenu-icon">📢</span>
                                                 <span>News</span>
+                                            </NavLink>
+                                        </div>
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/messages">
+                                                <span class="navmenu-icon">💬</span>
+                                                <span>Nachrichten</span>
+                                                @if (adminUnreadCount > 0)
+                                                {
+                                                    <span class="navmenu-unread">@adminUnreadCount</span>
+                                                }
                                             </NavLink>
                                         </div>
                                         <div class="navmenu-item">
@@ -208,6 +234,46 @@
 @code {
     [Parameter]
     public EventCallback OnNavLinkClicked { get; set; }
+
+    // ── Unread counts ─────────────────────────────────────────────────────────
+    private int    userUnreadCount  = 0;
+    private int    adminUnreadCount = 0;
+    private string currentUserId   = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await NavAuthStateProvider.GetAuthenticationStateAsync();
+        var user = await NavUserManager.GetUserAsync(auth.User);
+        if (user == null) return;
+        currentUserId = user.Id;
+
+        var admins = await NavUserManager.GetUsersInRoleAsync("Admin");
+        var adminId = admins.FirstOrDefault()?.Id;
+
+        var isAdmin = auth.User.IsInRole("Admin");
+        if (isAdmin && !string.IsNullOrEmpty(currentUserId))
+            adminUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId);
+        else if (!string.IsNullOrEmpty(adminId))
+            userUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId, adminId);
+
+        ChatService.OnMessageSent += OnNewMessage;
+    }
+
+    private void OnNewMessage(FlomiApp.Data.Models.ChatMessage msg)
+    {
+        if (msg.ToUserId == currentUserId)
+        {
+            InvokeAsync(() =>
+            {
+                if (msg.IsFromAdmin) userUnreadCount++;
+                else adminUnreadCount++;
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
+        }
+    }
+
+    public void Dispose() => ChatService.OnMessageSent -= OnNewMessage;
 
     // ── Admin-Gruppen Collapse ─────────────────────────────────────────────
     private HashSet<string> openGroups = new();
