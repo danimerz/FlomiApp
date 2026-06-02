@@ -161,7 +161,7 @@
             <div class="mail-card mail-hint">
                 <h3 class="mail-card__title">ℹ️ Hinweise</h3>
                 <ul style="margin:.5rem 0 0;padding-left:1.2rem;font-size:.88rem;color:var(--color-text-medium);line-height:1.8">
-                    <li>Nur Benutzer mit aktivierten E-Mail-Benachrichtigungen erhalten die Mail.</li>
+                    <li>Alle Benutzer mit hinterlegter E-Mail-Adresse erhalten die Mail.</li>
                     <li>Mails werden einzeln versendet — kein CC/BCC.</li>
                     <li>Grosse Mengen (>50) können etwas Zeit brauchen.</li>
                     <li>Der Betreff wird mit «FlomiApp: » vorangestellt.</li>
@@ -216,14 +216,13 @@
         return targetGroup switch
         {
             "all" => await Db.Users
-                .Where(u => u.EmailNotificationsEnabled && u.Email != null)
+                .Where(u => u.Email != null)
                 .Select(u => new Recipient(u.Email!, $"{u.FirstName} {u.LastName}"))
                 .ToListAsync(),
 
             "event" => await Db.Appointments
                 .Include(a => a.User)
                 .Where(a => a.Status == AppointmentStatus.Registered
-                         && a.User.EmailNotificationsEnabled
                          && a.User.Email != null
                          && (filterEventId == 0 || a.Area.EventId == filterEventId))
                 .Select(a => new Recipient(a.User.Email!, $"{a.User.FirstName} {a.User.LastName}"))
@@ -233,7 +232,6 @@
             "area" => await Db.Appointments
                 .Include(a => a.User)
                 .Where(a => a.Status == AppointmentStatus.Registered
-                         && a.User.EmailNotificationsEnabled
                          && a.User.Email != null
                          && (filterEventId == 0 || a.Area.EventId == filterEventId)
                          && (filterAreaId == 0 || a.AreaId == filterAreaId))
@@ -247,7 +245,6 @@
             "pickups" => await Db.FurniturePickupRequests
                 .Include(r => r.User)
                 .Where(r => r.Status == PickupRequestStatus.Pending
-                         && r.User.EmailNotificationsEnabled
                          && r.User.Email != null)
                 .Select(r => new Recipient(r.User.Email!, $"{r.User.FirstName} {r.User.LastName}"))
                 .Distinct()
