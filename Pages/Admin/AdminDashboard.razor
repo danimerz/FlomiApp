@@ -6,6 +6,7 @@
 @inject FlomiApp.Data.ApplicationDbContext Db
 @inject IAreaService AreaService
 @inject IFurniturePickupService FurniturePickupService
+@inject IJSRuntime JS
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Admin Dashboard</PageTitle>
@@ -20,6 +21,18 @@
         </div>
     </section>
 
+    <!-- ── Tabs ── -->
+    <div class="ac-tabs">
+        <button class="ac-tab @(activeTab == DashTab.Overview ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(DashTab.Overview)">
+            📊 Übersicht
+        </button>
+        <button class="ac-tab @(activeTab == DashTab.Stats ? "ac-tab--active" : "")"
+                @onclick="() => SetTab(DashTab.Stats)">
+            📈 Statistiken
+        </button>
+    </div>
+
     @if (isLoading)
     {
         <div class="state-card state-card--info">
@@ -27,7 +40,7 @@
             <div class="state-card__content"><h3>Wird geladen...</h3></div>
         </div>
     }
-    else
+    else if (activeTab == DashTab.Overview)
     {
         <!-- ── KPI Grid ── -->
         <div class="adm-kpi-grid">
@@ -168,10 +181,81 @@
 
         </div>
     }
+    else if (activeTab == DashTab.Stats)
+    {
+        <div class="stats-filter" style="margin-bottom:1.5rem">
+            <div class="stats-filter__group">
+                <label>Event</label>
+                <select class="stats-select" @bind="selectedEventId" @bind:after="LoadAndRender">
+                    <option value="0">Alle aktiven Events</option>
+                    @foreach (var ev in events)
+                    {
+                        <option value="@ev.Id">@ev.Name (@ev.Date.ToShortDateString())</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="stats-kpi-row">
+            <div class="stats-kpi"><span class="stats-kpi__num">@statsTotalReg</span><span class="stats-kpi__label">Anmeldungen</span></div>
+            <div class="stats-kpi"><span class="stats-kpi__num">@statsTotalCanc</span><span class="stats-kpi__label">Stornierungen</span></div>
+            <div class="stats-kpi"><span class="stats-kpi__num">@Math.Round(fillRate,0)%</span><span class="stats-kpi__label">Ø Auslastung</span></div>
+            <div class="stats-kpi"><span class="stats-kpi__num">@uniquePersons</span><span class="stats-kpi__label">Personen</span></div>
+        </div>
+
+        @if (statsLoading)
+        {
+            <div class="state-card state-card--info">
+                <div class="state-card__icon">⏳</div>
+                <div class="state-card__content"><h3>Daten werden geladen...</h3></div>
+            </div>
+        }
+        else
+        {
+            <div class="stats-grid">
+                <div class="stats-card stats-card--wide">
+                    <h3 class="stats-card__title">📈 Anmeldungen über Zeit (letzte 30 Tage)</h3>
+                    <div class="stats-chart-wrap" style="height:220px"><canvas id="chart-timeline"></canvas></div>
+                </div>
+                <div class="stats-card">
+                    <h3 class="stats-card__title">🍩 Nach Kategorie</h3>
+                    <div class="stats-chart-wrap" style="height:220px"><canvas id="chart-category"></canvas></div>
+                </div>
+                <div class="stats-card">
+                    <h3 class="stats-card__title">👥 Nach Stufe</h3>
+                    <div class="stats-chart-wrap" style="height:220px"><canvas id="chart-stufe"></canvas></div>
+                </div>
+                <div class="stats-card stats-card--wide">
+                    <h3 class="stats-card__title">📊 Belegungsrate pro Bereich</h3>
+                    <div class="stats-chart-wrap" style="height:@(Math.Max(180, areaLabels.Count * 36))px"><canvas id="chart-areas"></canvas></div>
+                </div>
+            </div>
+        }
+    }
 
 </div>
 
 @code {
+    private enum DashTab { Overview, Stats }
+    private DashTab activeTab = DashTab.Overview;
+
+    private async Task SetTab(DashTab tab)
+    {
+        activeTab = tab;
+        if (tab == DashTab.Stats && !statsLoaded)
+        {
+            await LoadStatsData();
+            statsLoaded = true;
+        }
+        if (tab == DashTab.Stats)
+        {
+            StateHasChanged();
+            await Task.Delay(50);
+            await RenderCharts();
+        }
+    }
+
+    // ── Overview state ────────────────────────────────────────────────────────
     private bool isLoading = true;
 
     private int totalRegistered;
@@ -180,6 +264,27 @@
     private int vehiclesAssigned;
     private int totalUsers;
     private int cancelledCount;
+
+    // ── Stats state ───────────────────────────────────────────────────────────
+    private List<Event>  events        = new();
+    private bool         statsLoading  = false;
+    private bool         statsLoaded   = false;
+    private bool         statsRendered = false;
+    private int          selectedEventId = 0;
+    private int          statsTotalReg;
+    private int          statsTotalCanc;
+    private double       fillRate;
+    private int          uniquePersons;
+    private List<string> timelineLabels = new();
+    private List<int>    timelineReg    = new();
+    private List<int>    timelineCanc   = new();
+    private List<string> categoryLabels = new();
+    private List<int>    categoryData   = new();
+    private List<string> stufeLabels    = new();
+    private List<int>    stufeData      = new();
+    private List<string> areaLabels     = new();
+    private List<int>    areaRegistered = new();
+    private List<int>    areaCapacity   = new();
 
     private record AreaStat(string Name, string EventName, DateTime Date, int Reg, int Cap);
     private record ActivityItem(DateTime Timestamp, string Type, string PersonName, string Detail, string? SubDetail = null);
@@ -190,6 +295,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        events = await Db.Events.Where(e => e.IsActive).OrderBy(e => e.Date).ToListAsync();
+
         var activeEventIds = await Db.Events
             .Where(e => e.IsActive)
             .Select(e => e.Id)
@@ -285,6 +392,75 @@
         activityFeed = feed.OrderByDescending(a => a.Timestamp).Take(40).ToList();
 
         isLoading = false;
+    }
+
+    // ── Stats Methoden ────────────────────────────────────────────────────────
+    private async Task LoadAndRender()
+    {
+        statsLoading = true; StateHasChanged();
+        await LoadStatsData();
+        statsLoading = false; StateHasChanged();
+        await Task.Delay(50);
+        await RenderCharts();
+    }
+
+    private async Task LoadStatsData()
+    {
+        var activeIds = await Db.Events.Where(e => e.IsActive).Select(e => e.Id).ToListAsync();
+        var query = Db.Appointments
+            .Include(a => a.User).Include(a => a.FamilyMember)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate).ThenInclude(t => t!.AreaCategory)
+            .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .AsQueryable();
+        if (selectedEventId > 0) query = query.Where(a => a.Area.EventId == selectedEventId);
+        else query = query.Where(a => activeIds.Contains(a.Area.EventId));
+        var all = await query.AsNoTracking().ToListAsync();
+
+        statsTotalReg  = all.Count(a => a.Status == AppointmentStatus.Registered);
+        statsTotalCanc = all.Count(a => a.Status == AppointmentStatus.Cancelled);
+        uniquePersons   = all.Where(a => a.Status == AppointmentStatus.Registered)
+            .Select(a => a.FamilyMemberId.HasValue ? $"fm_{a.FamilyMemberId}" : $"u_{a.UserId}")
+            .Distinct().Count();
+
+        var areaQ = Db.Areas.Include(a => a.AreaTemplate).Include(a => a.Appointments).AsQueryable();
+        if (selectedEventId > 0) areaQ = areaQ.Where(a => a.EventId == selectedEventId);
+        else areaQ = areaQ.Where(a => activeIds.Contains(a.EventId));
+        var areasData = await areaQ.AsNoTracking().ToListAsync();
+        var capped = areasData.Where(a => a.MaxCapacity < 999).ToList();
+        fillRate = capped.Any() ? capped.Average(a => a.MaxCapacity > 0
+            ? (double)a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered) / a.MaxCapacity * 100 : 0) : 0;
+
+        var since = DateTime.Today.AddDays(-29);
+        timelineLabels = Enumerable.Range(0, 30).Select(i => since.AddDays(i).ToString("dd.MM", new CultureInfo("de-CH"))).ToList();
+        timelineReg    = Enumerable.Range(0, 30).Select(i => all.Count(a => a.CreatedAt.Date == since.AddDays(i).Date && a.Status == AppointmentStatus.Registered)).ToList();
+        timelineCanc   = Enumerable.Range(0, 30).Select(i => all.Count(a => a.CreatedAt.Date == since.AddDays(i).Date && a.Status == AppointmentStatus.Cancelled)).ToList();
+
+        var byCat = all.Where(a => a.Status == AppointmentStatus.Registered).GroupBy(a => a.Area?.AreaTemplate?.AreaCategory?.Name ?? "Sonstiges").OrderByDescending(g => g.Count());
+        categoryLabels = byCat.Select(g => g.Key).ToList();
+        categoryData   = byCat.Select(g => g.Count()).ToList();
+
+        var byStufe = all.Where(a => a.Status == AppointmentStatus.Registered).GroupBy(a => a.FamilyMember?.Stufe ?? a.User?.Stufe ?? "–").OrderByDescending(g => g.Count());
+        stufeLabels = byStufe.Select(g => g.Key).ToList();
+        stufeData   = byStufe.Select(g => g.Count()).ToList();
+
+        var areaFill = areasData.Where(a => a.MaxCapacity < 999)
+            .Select(a => new { Label = $"{a.AreaTemplate?.Name ?? "–"} · {a.Date:dd.MM}", Reg = a.Appointments.Count(ap => ap.Status == AppointmentStatus.Registered), Cap = a.MaxCapacity })
+            .OrderByDescending(x => x.Cap > 0 ? (double)x.Reg / x.Cap : 0).Take(12).ToList();
+        areaLabels     = areaFill.Select(x => x.Label).ToList();
+        areaRegistered = areaFill.Select(x => x.Reg).ToList();
+        areaCapacity   = areaFill.Select(x => x.Cap).ToList();
+    }
+
+    private async Task RenderCharts()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("flomiCharts.renderTimeline",   "chart-timeline", timelineLabels, timelineReg, timelineCanc);
+            if (categoryLabels.Any()) await JS.InvokeVoidAsync("flomiCharts.renderCategoryDonut", "chart-category", categoryLabels, categoryData);
+            if (stufeLabels.Any())    await JS.InvokeVoidAsync("flomiCharts.renderStufeBars",     "chart-stufe",    stufeLabels,    stufeData);
+            if (areaLabels.Any())     await JS.InvokeVoidAsync("flomiCharts.renderAreaBars",      "chart-areas",    areaLabels,     areaRegistered, areaCapacity);
+        }
+        catch { }
     }
 
     private string DayLabel(DateTime date)
