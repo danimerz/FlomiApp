@@ -2,6 +2,8 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject INewsService NewsService
+@using FlomiApp.Data.Models
 
 <PageTitle>Willkommen</PageTitle>
 
@@ -33,18 +35,39 @@
     <section class="home-card">
         <div class="home-card__header">
             <div>
-                <div class="home-card__topline">News</div>
+                <div class="home-card__topline">Aktuell</div>
                 <h2>News</h2>
             </div>
+            <a href="/news" class="home-card__link">Alle News →</a>
         </div>
 
         <div class="home-card__body">
-            <div class="notice-box">
-                <p>
-                    Der Flomi im 2027 findet nächstes Jahr <strong>früher</strong> statt als gewohnt, nämlich am 10. und 17. April 2027.
-                    Daher empfehlen wir allen Helferinnen und Helfern, sich bereits jetzt für die Einsätze anzumelden, damit wir besser planen können.
-                </p>
-            </div>
+            @if (latestNews == null)
+            {
+                <p style="color:var(--color-text-placeholder)">Wird geladen...</p>
+            }
+            else if (latestNews.Count == 0)
+            {
+                <p style="color:var(--color-text-placeholder)">Aktuell keine Meldungen vorhanden.</p>
+            }
+            else
+            {
+                var n = latestNews[0];
+                <div class="notice-box">
+                    <div class="notice-box__date">
+                        📅 @n.CreatedAt.ToString("dd. MMMM yyyy", new System.Globalization.CultureInfo("de-CH"))
+                    </div>
+                    <strong class="notice-box__title">@n.Title</strong>
+                    <p class="notice-box__content">@n.Content</p>
+                </div>
+                @if (latestNews.Count > 1)
+                {
+                    <p style="margin-top:.75rem;font-size:.85rem;color:var(--color-text-light)">
+                        + @(latestNews.Count - 1) weitere Meldung(en) —
+                        <a href="/news">alle anzeigen</a>
+                    </p>
+                }
+            }
         </div>
     </section>
     <section class="home-card">
@@ -133,11 +156,14 @@
 </div>
 
 @code {
-    private string welcomeText = "Willkommen bei der Flomi App";
-    private bool isAuthenticated = false;
+    private string           welcomeText  = "Willkommen bei der Flomi App";
+    private bool             isAuthenticated = false;
+    private List<NewsItem>?  latestNews   = null;
 
     protected override async Task OnInitializedAsync()
     {
+        latestNews = await NewsService.GetPublishedAsync();
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 

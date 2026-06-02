@@ -1,0 +1,60 @@
+@page "/news"
+@using FlomiApp.Data.Models
+@inject INewsService NewsService
+
+<PageTitle>News</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Informationen</span>
+            <h1>News & Mitteilungen</h1>
+            <p>Alle aktuellen und vergangenen Meldungen rund um den Flomi.</p>
+        </div>
+    </section>
+
+    @if (news == null)
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">⏳</div>
+            <div class="state-card__content"><h3>Wird geladen...</h3></div>
+        </div>
+    }
+    else if (!news.Any())
+    {
+        <div class="state-card state-card--empty">
+            <div class="state-card__icon">📭</div>
+            <div class="state-card__content">
+                <h3>Keine Meldungen</h3>
+                <p>Aktuell sind keine Mitteilungen vorhanden.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="news-archive">
+            @foreach (var item in news)
+            {
+                <article class="news-card">
+                    <div class="news-card__date">
+                        📅 @item.CreatedAt.ToString("dddd, dd. MMMM yyyy",
+                            new System.Globalization.CultureInfo("de-CH"))
+                    </div>
+                    <h2 class="news-card__title">@item.Title</h2>
+                    <div class="news-card__content">@item.Content</div>
+                </article>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<NewsItem>? news;
+
+    protected override async Task OnInitializedAsync()
+    {
+        news = await NewsService.GetPublishedAsync();
+    }
+}

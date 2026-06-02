@@ -11,6 +11,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    public DbSet<NewsItem>               NewsItems               { get; set; }
     public DbSet<Area>                   Areas                   { get; set; }
     public DbSet<AreaTemplate>           AreaTemplates           { get; set; }
     public DbSet<AreaCategory>           AreaCategories          { get; set; }

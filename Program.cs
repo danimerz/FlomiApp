@@ -47,6 +47,7 @@ builder.Services.AddScoped<IFurniturePickupService, FurniturePickupService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 
 var app = builder.Build();
 
