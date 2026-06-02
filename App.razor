@@ -3,21 +3,19 @@
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    <LayoutView Layout="@typeof(MainLayout)">
-                        <div class="auth-error-page">
-                            <div class="auth-error-card">
-                                <div class="auth-error-icon">🔒</div>
-                                <h1 class="auth-error-title">Kein Zugriff</h1>
-                                <p class="auth-error-text">
-                                    Du hast keine Berechtigung, diese Seite aufzurufen.
-                                </p>
-                                <div class="auth-error-actions">
-                                    <a href="/" class="auth-error-btn auth-error-btn--primary">← Zur Startseite</a>
-                                    <a href="/Identity/Account/Login" class="auth-error-btn auth-error-btn--secondary">Anmelden</a>
-                                </div>
+                    <div class="auth-error-page">
+                        <div class="auth-error-card">
+                            <div class="auth-error-icon">🔒</div>
+                            <h1 class="auth-error-title">Kein Zugriff</h1>
+                            <p class="auth-error-text">
+                                Du hast keine Berechtigung, diese Seite aufzurufen.
+                            </p>
+                            <div class="auth-error-actions">
+                                <a href="/" class="auth-error-btn auth-error-btn--primary">← Zur Startseite</a>
+                                <a href="/Identity/Account/Login" class="auth-error-btn auth-error-btn--secondary">Anmelden</a>
                             </div>
                         </div>
-                    </LayoutView>
+                    </div>
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
