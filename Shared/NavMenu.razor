@@ -240,23 +240,33 @@
     private int    adminUnreadCount = 0;
     private string currentUserId   = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var auth = await NavAuthStateProvider.GetAuthenticationStateAsync();
-        var user = await NavUserManager.GetUserAsync(auth.User);
-        if (user == null) return;
-        currentUserId = user.Id;
-
-        var admins = await NavUserManager.GetUsersInRoleAsync("Admin");
-        var adminId = admins.FirstOrDefault()?.Id;
-
-        var isAdmin = auth.User.IsInRole("Admin");
-        if (isAdmin && !string.IsNullOrEmpty(currentUserId))
-            adminUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId);
-        else if (!string.IsNullOrEmpty(adminId))
-            userUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId, adminId);
-
         ChatService.OnMessageSent += OnNewMessage;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var auth = await NavAuthStateProvider.GetAuthenticationStateAsync();
+            var user = await NavUserManager.GetUserAsync(auth.User);
+            if (user == null) return;
+            currentUserId = user.Id;
+
+            var admins = await NavUserManager.GetUsersInRoleAsync("Admin");
+            var adminId = admins.FirstOrDefault()?.Id;
+
+            var isAdmin = auth.User.IsInRole("Admin");
+            if (isAdmin)
+                adminUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId);
+            else if (!string.IsNullOrEmpty(adminId))
+                userUnreadCount = await ChatService.GetUnreadCountAsync(currentUserId, adminId);
+
+            StateHasChanged();
+        }
+        catch { /* Prerender-Phase, keine DB verfügbar */ }
     }
 
     private void OnNewMessage(FlomiApp.Data.Models.ChatMessage msg)
