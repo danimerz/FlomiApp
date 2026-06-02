@@ -34,18 +34,26 @@
             @foreach (var u in contactUsers)
             {
                 var unread = unreadByUser.GetValueOrDefault(u.Id, 0);
-                <button class="adm-chat-contact @(selectedUser?.Id == u.Id ? "adm-chat-contact--active" : "")"
-                        @onclick="() => SelectUser(u)">
-                    <div class="adm-chat-contact__avatar">@u.FirstName[0]</div>
-                    <div class="adm-chat-contact__info">
-                        <span class="adm-chat-contact__name">@u.FirstName @u.LastName</span>
-                        <span class="adm-chat-contact__sub">@(u.Pfadiname ?? u.Stufe ?? "")</span>
-                    </div>
-                    @if (unread > 0)
-                    {
-                        <span class="adm-chat-contact__badge">@unread</span>
-                    }
-                </button>
+                <div class="adm-chat-contact-wrap">
+                    <button class="adm-chat-contact @(selectedUser?.Id == u.Id ? "adm-chat-contact--active" : "")"
+                            @onclick="() => SelectUser(u)">
+                        <div class="adm-chat-contact__avatar">@u.FirstName[0]</div>
+                        <div class="adm-chat-contact__info">
+                            <span class="adm-chat-contact__name">@u.FirstName @u.LastName</span>
+                            <span class="adm-chat-contact__sub">@(u.Pfadiname ?? u.Stufe ?? "")</span>
+                        </div>
+                        @if (unread > 0)
+                        {
+                            <span class="adm-chat-contact__badge">@unread</span>
+                        }
+                    </button>
+                    <button class="adm-chat-delete-btn"
+                            title="Chat löschen"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => confirmDeleteUser = u">
+                        ✕
+                    </button>
+                </div>
             }
 
             <!-- Neuer Chat: Benutzer wählen -->
@@ -118,8 +126,23 @@
     </div>
 </div>
 
+@if (confirmDeleteUser != null)
+{
+    <div class="adm-delete-backdrop" @onclick="() => confirmDeleteUser = null">
+        <div class="adm-delete-modal" @onclick:stopPropagation="true">
+            <h3>🗑️ Chat löschen</h3>
+            <p>Alle Nachrichten mit <strong>@confirmDeleteUser.FirstName @confirmDeleteUser.LastName</strong> werden unwiderruflich gelöscht.</p>
+            <div class="adm-delete-modal__actions">
+                <button class="adm-delete-confirm-btn" @onclick="DeleteConversation">Ja, löschen</button>
+                <button class="adm-delete-cancel-btn" @onclick="() => confirmDeleteUser = null">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private string              adminId          = string.Empty;
+    private ApplicationUser?    confirmDeleteUser = null;
+    private string              adminId           = string.Empty;
     private ApplicationUser?    selectedUser     = null;
     private List<ChatMessage>   messages         = new();
     private List<ApplicationUser> contactUsers   = new();
@@ -216,6 +239,19 @@
     {
         try { await JS.InvokeVoidAsync("eval", "var el=document.getElementById('adm-chat-scroll');if(el)el.scrollTop=el.scrollHeight;"); }
         catch { }
+    }
+
+    private async Task DeleteConversation()
+    {
+        if (confirmDeleteUser == null) return;
+        await ChatService.DeleteConversationAsync(adminId, confirmDeleteUser.Id);
+        if (selectedUser?.Id == confirmDeleteUser.Id)
+        {
+            selectedUser = null;
+            messages     = new();
+        }
+        confirmDeleteUser = null;
+        await LoadContacts();
     }
 
     public void Dispose() => ChatService.OnMessageSent -= OnNewMessage;

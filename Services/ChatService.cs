@@ -83,6 +83,17 @@ public class ChatService : IChatService
         return msg;
     }
 
+    public async Task DeleteConversationAsync(string userId1, string userId2)
+    {
+        using var db = CreateDb();
+        var msgs = await db.ChatMessages
+            .Where(m => (m.FromUserId == userId1 && m.ToUserId == userId2)
+                     || (m.FromUserId == userId2 && m.ToUserId == userId1))
+            .ToListAsync();
+        db.ChatMessages.RemoveRange(msgs);
+        await db.SaveChangesAsync();
+    }
+
     public async Task MarkReadAsync(string readerUserId, string otherUserId)
     {
         using var db = CreateDb();

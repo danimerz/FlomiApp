@@ -12,4 +12,5 @@ public interface IChatService
     Task<int>                      GetUnreadCountAsync(string toUserId, string? fromUserId = null);
     Task<ChatMessage>              SendMessageAsync(string fromId, string toId, string body, bool isFromAdmin);
     Task                           MarkReadAsync(string readerUserId, string otherUserId);
+    Task                           DeleteConversationAsync(string userId1, string userId2);
 }

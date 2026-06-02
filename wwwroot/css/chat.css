@@ -247,6 +247,67 @@
 }
 .adm-chat-placeholder span { font-size: 3rem; }
 
+/* ── Contact wrap + delete btn ────────────────────────────────────────────── */
+.adm-chat-contact-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.adm-chat-contact-wrap .adm-chat-contact { flex: 1; }
+
+.adm-chat-delete-btn {
+    position: absolute;
+    right: .5rem;
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+    font-size: .72rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .15s;
+    flex-shrink: 0;
+}
+.adm-chat-contact-wrap:hover .adm-chat-delete-btn { opacity: 1; }
+.adm-chat-delete-btn:hover { background: var(--color-error-text); color: #fff; }
+
+/* ── Delete Confirmation Modal ────────────────────────────────────────────── */
+.adm-delete-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+}
+.adm-delete-modal {
+    background: var(--color-surface-card);
+    border-radius: 18px;
+    padding: 1.75rem 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 24px 60px rgba(15,23,42,.2);
+}
+.adm-delete-modal h3 { margin: 0 0 .75rem; font-size: 1.05rem; }
+.adm-delete-modal p  { margin: 0 0 1.25rem; color: var(--color-text-medium); font-size: .92rem; }
+.adm-delete-modal__actions { display: flex; gap: .75rem; }
+.adm-delete-confirm-btn {
+    flex: 1; padding: .7rem; border: none; border-radius: 10px;
+    background: var(--color-error-text); color: #fff; font-weight: 700; cursor: pointer;
+}
+.adm-delete-confirm-btn:hover { filter: brightness(1.1); }
+.adm-delete-cancel-btn {
+    flex: 1; padding: .7rem; border: 1.5px solid var(--color-border-input); border-radius: 10px;
+    background: transparent; color: var(--color-text-medium); font-weight: 700; cursor: pointer;
+}
+
 .adm-chat-empty-contacts {
     padding: 1rem;
     font-size: .85rem;
