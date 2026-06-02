@@ -79,6 +79,8 @@
     border-radius: 18px;
     padding: 1.25rem 1.5rem;
     box-shadow: var(--shadow-card-sm);
+    max-height: 480px;
+    overflow-y: auto;
 }
 
 .adm-section__title {
