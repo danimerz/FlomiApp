@@ -34,16 +34,23 @@
     else
     {
         <div class="news-archive">
+            @{ var isFirst = true; }
             @foreach (var item in news)
             {
-                <article class="news-card">
-                    <div class="news-card__date">
-                        📅 @item.CreatedAt.ToString("dddd, dd. MMMM yyyy",
-                            new System.Globalization.CultureInfo("de-CH"))
+                <article class="news-card @(isFirst ? "news-card--latest" : "")">
+                    <div class="news-card__header">
+                        <span class="news-card__header-icon">📅</span>
+                        <span class="news-card__date">
+                            @item.CreatedAt.ToString("dddd, dd. MMMM yyyy",
+                                new System.Globalization.CultureInfo("de-CH"))
+                        </span>
                     </div>
-                    <h2 class="news-card__title">@item.Title</h2>
-                    <div class="news-card__content">@item.Content</div>
+                    <div class="news-card__body">
+                        <h2 class="news-card__title">@item.Title</h2>
+                        <p class="news-card__content">@item.Content</p>
+                    </div>
                 </article>
+                isFirst = false;
             }
         </div>
     }
