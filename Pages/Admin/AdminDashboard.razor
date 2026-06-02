@@ -241,17 +241,22 @@
 
     private async Task SetTab(DashTab tab)
     {
-        activeTab = tab;
-        if (tab == DashTab.Stats && !statsLoaded)
-        {
-            await LoadStatsData();
-            statsLoaded = true;
-        }
+        activeTab     = tab;
+        statsRendered = false;
         if (tab == DashTab.Stats)
         {
-            StateHasChanged();
-            await Task.Delay(50);
+            if (!statsLoaded)
+            {
+                statsLoading = true;
+                StateHasChanged();
+                await LoadStatsData();
+                statsLoading = false;
+                statsLoaded  = true;
+            }
+            StateHasChanged(); // DOM aufbauen lassen
+            await Task.Delay(80);
             await RenderCharts();
+            statsRendered = true;
         }
     }
 
@@ -292,6 +297,15 @@
     private List<AreaStat>               areaStats     = new();
     private List<FurniturePickupRequest> recentPickups = new();
     private List<ActivityItem>           activityFeed  = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (activeTab == DashTab.Stats && statsLoaded && !statsRendered)
+        {
+            statsRendered = true;
+            await RenderCharts();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -397,11 +411,15 @@
     // ── Stats Methoden ────────────────────────────────────────────────────────
     private async Task LoadAndRender()
     {
-        statsLoading = true; StateHasChanged();
+        statsLoading  = true;
+        statsRendered = false;
+        StateHasChanged();
         await LoadStatsData();
-        statsLoading = false; StateHasChanged();
-        await Task.Delay(50);
+        statsLoading = false;
+        StateHasChanged();
+        await Task.Delay(80);
         await RenderCharts();
+        statsRendered = true;
     }
 
     private async Task LoadStatsData()
