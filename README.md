@@ -11,10 +11,13 @@
   - [Benutzerverwaltung](#benutzerverwaltung)
   - [Anmeldung zu Bereichen](#anmeldung-zu-bereichen)
   - [Benutzerdashboard](#benutzerdashboard)
+  - [News & Mitteilungen](#news--mitteilungen)
   - [Möbel-Abholservice](#möbel-abholservice)
   - [Fahrzeugverwaltung](#fahrzeugverwaltung)
   - [Admin-Konfiguration](#admin-konfiguration)
+  - [Admin-Dashboard](#admin-dashboard)
   - [Admin-Anmeldeübersicht](#admin-anmeldeübersicht)
+  - [Admin-Benutzerverwaltung](#admin-benutzerverwaltung)
   - [Datenexport](#datenexport)
 - [Rollen & Berechtigungen](#rollen--berechtigungen)
 - [Installation & Setup](#installation--setup)
@@ -32,6 +35,7 @@
 | Authentifizierung | ASP.NET Core Identity |
 | E-Mail | SMTP (konfigurierbar) |
 | Excel-Export | ClosedXML |
+| Diagramme | Chart.js 4 (via CDN + JS Interop) |
 | UI | Custom CSS mit Design-Token-System (Light/Dark Mode) |
 
 ---
@@ -40,10 +44,11 @@
 
 ### Benutzerverwaltung
 
-- **Registrierung & Login** über ASP.NET Identity
+- **Registrierung & Login** über ASP.NET Identity mit Live-Passwort-Stärke-Anzeige und Anforderungs-Checkliste
 - **Benutzerprofil** mit Vorname, Nachname, Pfadiname, Stufe, Geburtstag, Telefon, E-Mail
 - **Familienmitglieder** können pro Konto hinterlegt werden (eigene Anmeldungen für Kinder / Begleitpersonen)
 - **E-Mail-Benachrichtigungen** können pro Benutzer aktiviert/deaktiviert werden
+- **Passwort vergessen**: Reset-Link per E-Mail, gestylte Reset-Seite mit PW-Generator und Stärke-Indikator
 - **Admin-Rolle**: Erweiterte Verwaltungsrechte für ausgewählte Benutzer
 
 ---
@@ -54,126 +59,122 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 
 **Bereichs-Stammdaten (Vorlagen)** werden einmalig erfasst und enthalten:
 - Name (z.B. «Geschirr», «Spielzeug», «Fahrer»)
-- Kategorie (z.B. Verkauf, Sammeln, Sortieren, Fahrer)
-- Mindestalter
-- Standort
+- Kategorie (z.B. Verkauf, Sammeln, Sortieren, Fahrer) — Reihenfolge der Kategorien frei konfigurierbar
+- Mindestalter, Standort
+- **Pflicht-Stufen**: Stufen die zwingend den Haupt-Zeitslot buchen müssen (z.B. «Pfadi,Pio,Leiter»)
 
 **Bereichs-Zuweisungen** verknüpfen eine Vorlage mit einem Event und definieren:
-- Datum, Zeitslot
-- Maximale Kapazität (oder «Unbegrenzt»)
+- Datum, Zeitslot, Maximale Kapazität (oder «Unbegrenzt»)
+- **Alternativer Zeitslot** (z.B. Halbtagsschicht): Kapazität und Zeit separat konfigurierbar
 
-**Anmelde-Regeln:**
-- Kapazitätsprüfung (volle Bereiche können nicht gebucht werden)
-- Altersminimum wird geprüft
-- Verkaufs-Kategorie: max. eine Anmeldung pro Person / Event
-- Zeitslot-Konflikt-Prüfung (keine doppelten Buchungen zur gleichen Zeit)
-- Optionaler **Kommentar** bei der Anmeldung (z.B. «Komme mit eigenem Auto»)
+**Anmeldung für Benutzer:**
+- Bestätigungs-Modal mit optionalem Kommentar vor der Buchung
+- Toggle-Switch für Halbtagsschicht (wenn konfiguriert, für freie Stufen)
+- Kapazitätsprüfung, Altersminimum, Zeitkonflikt-Prüfung
+- **Bestätigungs-E-Mail** mit Event, Bereich, Datum, Zeit und Kommentar nach erfolgreicher Anmeldung
 
 **Admin-Hilfsfunktionen:**
-- Bereiche können zwischen Events **kopiert** werden (alle Zuweisungen mit angepasstem Datum)
-- Filter und Sortierung in der Übersichtstabelle
+- Bereiche können zwischen Events **kopiert** werden (inkl. alternativer Zeitslot)
+- Filter, Sortierung und Event-Dropdown in der Übersicht
 
 ---
 
 ### Benutzerdashboard
 
-Das Dashboard zeigt dem eingeloggten Benutzer:
-
 - **Alle aktiven Anmeldungen** gruppiert nach Event und Datum (aufklappbar)
-- **Kalenderansicht** (umschaltbar per Toggle): Monatskalender mit Terminen und Möbelabholungen als farbige Chips
-- **Fahrzeugzuweisung**: Wurde der Benutzer durch den Admin einem Fahrzeug als Fahrer oder Beifahrer zugeteilt, erscheint das Fahrzeug (Halter-Name) direkt auf der Anmeldungskarte
-- **Möbel-Abholungsanfragen** des Benutzers mit Status und Admin-Notiz
+- **Kalenderansicht** (Toggle): Monatskalender mit Terminen und Möbelabholungen als farbige Chips
+- **Fahrzeugzuweisung**: Fahrzeughalter-Name direkt auf der Anmeldungskarte sichtbar
+- **Möbel-Abholungsanfragen** mit Status und Admin-Notiz
 - **Absagen** von Anmeldungen mit automatischer Stornierungsmail
 - **Kalender-Download** (.ics) für jeden Termin
 
 ---
 
+### News & Mitteilungen
+
+- **Startseite**: Neueste publizierte Meldung mit Datum, Titel und «Alle News»-Link
+- **Archivseite** `/news`: Alle publizierten Meldungen chronologisch, neueste zuerst mit blauem Highlight
+- **Admin** `/admin/news`: CRUD für News-Einträge — Titel, Inhalt, sofort publizieren oder als Entwurf speichern, Verbergen/Publizieren per Klick
+
+---
+
 ### Möbel-Abholservice
 
-Benutzer können Möbel zur Abholung anmelden.
-
 **Benutzerseite:**
-- Auswahl des Events
-- Eingabe: Name, Telefon, Adresse, Beschreibung der Möbel, gewünschtes Abholdatum
+- Auswahl des Events, Eingabe von Adresse, Möbel-Beschreibung, Abholdatum
 - **Bild-Upload** (bis zu 5 Fotos, je max. 5 MB)
-- Echtzeit-Anzeige der verfügbaren Plätze für den gewählten Tag
-- Datumssperre wenn der Tag voll ist
+- Echtzeit-Anzeige der verfügbaren Plätze; Datumssperre wenn Tag voll
 
 **Admin-Einstellungen pro Event:**
 - Abholservice aktivieren/deaktivieren
-- Frühestes / Spätestes Abholdatum (wird automatisch auf Event −8 bis −1 Tage vorgeschlagen)
-- **Maximale Abholungen pro Tag** (z.B. 5): Wenn ein Tag ausgebucht ist, wird der Benutzer informiert und der Submit gesperrt
-- Stornierung durch Admin gibt den Platz sofort wieder frei
+- Frühestes / Spätestes Abholdatum (automatisch Event −8 bis −1 Tage vorgeschlagen)
+- **Maximale Abholungen pro Tag**: Kapazitätslimit pro Tag; stornierte Anfragen geben Platz frei
+- «📅 Aus Event»-Button: Datumsbereich per Klick aus Event-Datum berechnen
 
 **Admin-Anfragenverwaltung:**
-- Alle eingegangenen Anfragen in einer Tabelle (sortierbar)
-- Detail-Modal mit Fotos, Adresse, Admin-Notiz
-- Status-Verwaltung: Ausstehend → Akzeptiert / Abgelehnt / Gelöscht
-- Automatische Stornierungsmail bei Ablehnung
+- Sortierbare Tabelle, Detail-Modal mit Fotos und Admin-Notiz
+- Status: Ausstehend → Akzeptiert / Abgelehnt / Gelöscht
 
 ---
 
 ### Fahrzeugverwaltung
 
-Verwaltung der Fahrzeuge, die für den Event eingesetzt werden.
-
-**Fahrzeug-Stammdaten:**
-- Fahrzeughalter (Name, Telefon, Kontakt/Bemerkung)
-- Sortierbare Übersichtstabelle
-
 **Fahrzeug-Zuweisungen:**
-- Fahrzeug einem Event zuweisen
-- Pro Einsatztag definierbar:
-  - **Fahrer (Benutzer)**: Dropdown zeigt nur Benutzer, die sich als «Fahrer» für diesen Tag angemeldet haben
-  - **Beifahrer (Benutzer)**: Dropdown zeigt nur Benutzer, die sich als «Beifahrer» für diesen Tag angemeldet haben
-  - Fahrer Telefon wird automatisch aus dem Benutzerprofil übernommen
-  - Manuelle Eingabe von Name/Telefon möglich (für externe Personen)
-  - Bereit-ab-Zeit, Abgeholt-durch, Zurückgebracht-durch
-- **Doppelbuchungsschutz**: Dieselbe Person kann pro Tag nur einem Fahrzeug zugeteilt werden
-- Wenn ein Benutzer seine Fahrer/Beifahrer-Anmeldung storniert, wird er automatisch aus der Fahrzeugzuweisung entfernt
+- Pro Einsatztag: Fahrer + Beifahrer aus gefilterten Dropdowns (nur Personen, die sich für «Fahrer» resp. «Beifahrer»-Bereiche am jeweiligen Tag angemeldet haben)
+- Telefonnummer wird automatisch aus dem Benutzerprofil übernommen
+- **Doppelbuchungsschutz**: Eine Person kann pro Tag nur einem Fahrzeug zugeteilt werden
+- Storniert ein Benutzer seinen Fahrer/Beifahrer-Bereich → automatische Entfernung aus der Fahrzeugzuweisung
 - Einsatztage: 8 Tage vor dem Event bis zum Eventtag
-
-**Dashboard-Integration:**
-- Benutzer sehen ihren Fahrzeugeinsatz direkt auf ihrer Anmeldungskarte
+- Benutzer sehen ihre Fahrzeugzuweisung direkt auf der Anmeldungskarte im Dashboard
 
 ---
 
 ### Admin-Konfiguration
 
-Zentrale Verwaltung unter `/admin/config`:
+Zentrale Verwaltung unter `/admin/config` mit 4 Tabs:
 
-**Events:**
-- CRUD für Events (Name, Datum, Beschreibung)
-- Aktivieren / Deaktivieren
+- **Events**: CRUD, Aktivieren/Deaktivieren
+- **Bereich-Vorlagen**: Stammdaten inkl. Pflicht-Stufen; Reihenfolge-Sortierung via ▲/▼
+- **Bereich-Zuweisungen**: Vorlage + Event + Datum/Zeit/Kapazität + alternativer Zeitslot; Kopierfunktion zwischen Events
+- **Kategorien**: Name, Reihenfolge frei sortierbar via ▲/▼
 
-**Bereich-Vorlagen:**
-- Stammdaten einmalig erfassen
-- Sortierbar nach Name, Kategorie, Mindestalter, Standort
+---
 
-**Bereich-Zuweisungen:**
-- Vorlage + Event + Datum/Zeit/Kapazität kombinieren
-- Filter nach Event und Kategorie
-- Sortierung aller Spalten
-- **Bereich-Kopierfunktion**: Alle Zuweisungen von einem Event auf ein anderes kopieren (Datum wird automatisch angepasst)
+### Admin-Dashboard
 
-**Kategorien:**
-- Verwaltung der Bereichs-Kategorien (Sammeln, Sortieren, Verkauf, Fahrer, Sonstiges …)
-- Löschen nur wenn keine Vorlagen verknüpft sind
+Übersichtsseite `/admin/dashboard` mit zwei Tabs:
+
+**Tab «Übersicht»:**
+- 6 KPI-Kacheln: Anmeldungen, Offene Plätze, Offene Abholungen, Fahrzeuge, Benutzer, Stornierungen
+- Bereichs-Auslastungsbalken (Top 8)
+- Aktivitäts-Feed: Chronologische Timeline (Heute/Gestern/Datum) aller Anmeldungen, Stornierungen und Möbelanfragen
+- Neueste ausstehende Möbelanfragen
+
+**Tab «Statistiken»:**
+- 4 interaktive Chart.js-Diagramme: Anmeldungen über Zeit (Line), Nach Kategorie (Donut), Nach Stufe (Bar), Belegungsrate pro Bereich (Horizontal Bar)
+- Event-Filter oben, KPI-Zusammenfassung
 
 ---
 
 ### Admin-Anmeldeübersicht
 
-Seite `/admin/appointments` mit Accordion-Ansicht:
+Seite `/admin/appointments`:
 
-- **Filter**: Event, Kategorie, Ansicht (Alle / Nur offene / Nur volle)
-- **KPI-Chips**: Angemeldet, Offene Plätze, Bereiche, Abgesagt
-- **Pro Bereich**: aufklappbarer Accordion-Eintrag mit:
-  - Belegungsbalken (blau → orange → grün)
-  - Badge: «⚠️ X offen», «✅ voll» oder «∞ Unbegrenzt»
-  - Tabelle mit Name, Pfadiname, Kommentar, Anmeldedatum aller Angemeldeten
-  - Abgesagte Anmeldungen (ausklappbar)
-- Bereiche mit `MaxCapacity ≥ 999` werden als «Unbegrenzt» dargestellt
+- Filter: Event, Kategorie, Ansicht (Alle / Nur offene / Nur volle) + «Alle öffnen/schliessen»-Button
+- Accordion pro Bereich/Zeitslot: Halbtagsschichten erscheinen als separate Einträge
+- Pro Person: 🗑️-Button zur Admin-Stornierung direkt in der Tabelle
+- Belegungsbalken, Badges, Abgesagte ausklappbar
+
+---
+
+### Admin-Benutzerverwaltung
+
+Seite `/admin/users`:
+
+- Tabelle mit allen Benutzern, Suche, Filter nach Stufe, sortierbare Spalten
+- Tabs: Alle / Admins / Gesperrt
+- **Anmeldungszähler**: Offene Anmeldungen pro Benutzer direkt in der Tabelle
+- Aktionen: Edit (Name/Mail/Stufe/Admin-Rolle), PW manuell setzen oder per 🔑 PW-Mail, Sperren/Entsperren, Löschen
 
 ---
 
@@ -181,11 +182,11 @@ Seite `/admin/appointments` mit Accordion-Ansicht:
 
 Excel-Export (.xlsx) unter `/admin/export`:
 
-- **Anmeldungen**: Alle Terminbuchungen gruppiert nach Kategorie, Bereich und Zeitslot mit Name, Pfadiname, Kommentar, Alter
-- **Möbel-Abholungen**: Alle Anfragen mit Adresse, Status und Admin-Notiz
-- **Benutzer**: Alle registrierten Konten mit Kontaktdaten
-- **Familienmitglieder**: Alle hinterlegten Familienmitglieder
-- **Event-Filter**: Alle Exporte können auf ein einzelnes Event eingeschränkt werden
+- **Anmeldungen Verkauf**: Kategorie «Verkauf», gruppiert nach Bereich — Ganz- und Halbtagsschichten mit Zeitslot-Spalte
+- **Anmeldungen Gastro**: Kategorie «Gastro», gleiche Struktur
+- **Fahrzeug-Einsätze**: Pro Datum eine Sektion mit Fahrzeughalter, Fahrer, Beifahrer, Bereit-ab, Abgeholt durch, Zurückgebracht durch
+- **Möbel-Abholungen**: Alle Anfragen mit Adresse, Status, Admin-Notiz
+- **Event-Filter**: Alle Exporte auf ein einzelnes Event einschränkbar
 
 ---
 
@@ -196,10 +197,14 @@ Excel-Export (.xlsx) unter `/admin/export`:
 | Eigene Anmeldungen verwalten | ✅ | ✅ |
 | Möbelabholung anmelden | ✅ | ✅ |
 | Dashboard (Kalender, Fahrzeug) | ✅ | ✅ |
+| News lesen | ✅ | ✅ |
+| Admin-Dashboard & Statistiken | ❌ | ✅ |
 | Admin-Konfiguration | ❌ | ✅ |
-| Anmeldeübersicht | ❌ | ✅ |
+| Anmeldeübersicht + Stornierung | ❌ | ✅ |
+| Benutzerverwaltung | ❌ | ✅ |
 | Fahrzeugverwaltung | ❌ | ✅ |
 | Möbel-Admin | ❌ | ✅ |
+| News verwalten | ❌ | ✅ |
 | Datenexport | ❌ | ✅ |
 
 Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.com` / `Admin123!`).
@@ -231,8 +236,7 @@ dotnet run
 Die App startet standardmässig auf `https://localhost:5001`.
 
 Beim ersten Start werden automatisch angelegt:
-- Admin-Rolle
-- Admin-Benutzer (`admin@flomiapp.com` / `Admin123!`)
+- Admin-Rolle und Admin-Benutzer (`admin@flomiapp.com` / `Admin123!`)
 - Basis-Bereichskategorien (Sammeln, Sortieren, Verkauf, Sonstiges)
 - Standard-Möbelabholungs-Setting
 
