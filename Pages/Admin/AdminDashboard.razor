@@ -2,6 +2,7 @@
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using System.Globalization
 @inject FlomiApp.Data.ApplicationDbContext Db
 @inject IAreaService AreaService
 @inject IFurniturePickupService FurniturePickupService
@@ -95,6 +96,45 @@
                 }
             </div>
 
+            <!-- Aktivitäts-Feed -->
+            <div class="adm-section adm-section--feed">
+                <h2 class="adm-section__title">
+                    📋 Letzte Aktivitäten
+                    <a href="/admin/appointments" class="adm-section__link">Alle →</a>
+                </h2>
+                @if (!activityFeed.Any())
+                {
+                    <p class="adm-empty">Noch keine Aktivitäten vorhanden.</p>
+                }
+                else
+                {
+                    @foreach (var dayGroup in activityFeed.GroupBy(a => a.Timestamp.Date).OrderByDescending(g => g.Key))
+                    {
+                        <div class="adm-feed-day">@DayLabel(dayGroup.Key)</div>
+                        @foreach (var item in dayGroup.OrderByDescending(a => a.Timestamp))
+                        {
+                            <div class="adm-feed-item">
+                                <div class="adm-feed-item__dot adm-feed-item__dot--@item.Type"></div>
+                                <div class="adm-feed-item__body">
+                                    <div class="adm-feed-item__time">@item.Timestamp.ToString("HH:mm")</div>
+                                    <div class="adm-feed-item__icon">@FeedIcon(item.Type)</div>
+                                    <div class="adm-feed-item__text">
+                                        <strong>@item.PersonName</strong>
+                                        <span class="adm-feed-item__action">@FeedAction(item.Type)</span>
+                                        <br />
+                                        <span class="adm-feed-item__detail">@item.Detail</span>
+                                        @if (!string.IsNullOrEmpty(item.SubDetail))
+                                        {
+                                            <span class="adm-feed-item__sub"> · @item.SubDetail</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+
             <!-- Neueste Möbel-Anfragen -->
             <div class="adm-section">
                 <h2 class="adm-section__title">🛋️ Neueste Möbel-Anfragen</h2>
@@ -142,8 +182,11 @@
     private int cancelledCount;
 
     private record AreaStat(string Name, string EventName, DateTime Date, int Reg, int Cap);
-    private List<AreaStat>                   areaStats    = new();
-    private List<FurniturePickupRequest>     recentPickups = new();
+    private record ActivityItem(DateTime Timestamp, string Type, string PersonName, string Detail, string? SubDetail = null);
+
+    private List<AreaStat>               areaStats     = new();
+    private List<FurniturePickupRequest> recentPickups = new();
+    private List<ActivityItem>           activityFeed  = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -200,6 +243,70 @@
 
         totalUsers = await Db.Users.CountAsync();
 
+        // Aktivitäts-Feed aufbauen
+        var feed = new List<ActivityItem>();
+
+        var recentAppts = await Db.Appointments
+            .Include(a => a.User)
+            .Include(a => a.FamilyMember)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
+            .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(30)
+            .AsNoTracking()
+            .ToListAsync();
+
+        foreach (var ap in recentAppts)
+        {
+            var person  = ap.FamilyMember != null
+                ? $"{ap.FamilyMember.FirstName} {ap.FamilyMember.LastName}"
+                : $"{ap.User?.FirstName} {ap.User?.LastName}";
+            var area    = ap.Area?.AreaTemplate?.Name ?? "–";
+            var date    = ap.Area?.Date.ToString("ddd dd.MM", new CultureInfo("de-CH")) ?? "";
+            var ev      = ap.Area?.Event?.Name ?? "";
+            var type    = ap.Status == AppointmentStatus.Cancelled ? "cancel" : "register";
+            feed.Add(new ActivityItem(ap.CreatedAt, type, person, $"{area} · {date}", ev));
+        }
+
+        var recentPickupsAll = await Db.FurniturePickupRequests
+            .Include(r => r.User)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(10)
+            .AsNoTracking()
+            .ToListAsync();
+
+        foreach (var r in recentPickupsAll)
+        {
+            var person = $"{r.FirstName} {r.LastName}";
+            feed.Add(new ActivityItem(r.CreatedAt, "pickup", person,
+                $"Möbelabholung {r.PickupDate:dd.MM.yyyy}", r.Status.ToString()));
+        }
+
+        activityFeed = feed.OrderByDescending(a => a.Timestamp).Take(40).ToList();
+
         isLoading = false;
     }
+
+    private string DayLabel(DateTime date)
+    {
+        if (date == DateTime.Today)              return "Heute";
+        if (date == DateTime.Today.AddDays(-1))  return "Gestern";
+        return date.ToString("dddd, dd. MMMM", new CultureInfo("de-CH"));
+    }
+
+    private static string FeedIcon(string type) => type switch
+    {
+        "register" => "🟢",
+        "cancel"   => "🔴",
+        "pickup"   => "🛋️",
+        _          => "📌"
+    };
+
+    private static string FeedAction(string type) => type switch
+    {
+        "register" => "hat sich angemeldet für",
+        "cancel"   => "hat storniert:",
+        "pickup"   => "beantragte Abholung:",
+        _          => ""
+    };
 }
