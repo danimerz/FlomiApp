@@ -1,6 +1,6 @@
 # FlomiApp
 
-**FlomiApp** ist eine webbasierte Verwaltungsapplikation für den Flomi-Markt – einen Flohmarkt der Pfadfinderabteilung. Die App wurde mit **ASP.NET Core 8 Blazor Server** entwickelt und deckt die gesamte Organisation des Events ab: von der Benutzeranmeldung über die Bereichszuweisung bis hin zur Fahrzeugverwaltung und Möbelabholung.
+**FlomiApp** ist eine webbasierte Verwaltungsapplikation für den Flomi-Markt – einen Flohmarkt der Pfadfinderabteilung. Die App wurde mit **ASP.NET Core 9 Blazor Server** entwickelt und deckt die gesamte Organisation des Events ab: von der Benutzeranmeldung über die Bereichszuweisung bis hin zur Fahrzeugverwaltung, Möbelabholung und QR-Code Check-in.
 
 ---
 
@@ -18,7 +18,9 @@
   - [Admin-Dashboard](#admin-dashboard)
   - [Admin-Anmeldeübersicht](#admin-anmeldeübersicht)
   - [Admin-Benutzerverwaltung](#admin-benutzerverwaltung)
-  - [Datenexport](#datenexport)
+  - [QR-Code Check-in](#qr-code-check-in)
+- [Chat](#chat)
+- [Datenexport](#datenexport)
 - [Rollen & Berechtigungen](#rollen--berechtigungen)
 - [Installation & Setup](#installation--setup)
 - [Konfiguration](#konfiguration)
@@ -29,11 +31,12 @@
 
 | Komponente | Technologie |
 |---|---|
-| Framework | ASP.NET Core 8 Blazor Server |
-| Datenbank | SQL Server (LocalDB / Full) |
-| ORM | Entity Framework Core 8 |
+| Framework | ASP.NET Core 9 Blazor Server |
+| Datenbank | MySQL 8 (Pomelo.EntityFrameworkCore.MySql) |
+| ORM | Entity Framework Core 9 |
 | Authentifizierung | ASP.NET Core Identity |
-| E-Mail | SMTP (konfigurierbar) |
+| E-Mail | SMTP via MailKit (konfigurierbar) |
+| QR-Code | QRCoder (PNG-Generierung) + jsQR (Browser-Scan) |
 | Excel-Export | ClosedXML |
 | Diagramme | Chart.js 4 (via CDN + JS Interop) |
 | UI | Custom CSS mit Design-Token-System (Light/Dark Mode) |
@@ -71,7 +74,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 - Bestätigungs-Modal mit optionalem Kommentar vor der Buchung
 - Toggle-Switch für Halbtagsschicht (wenn konfiguriert, für freie Stufen)
 - Kapazitätsprüfung, Altersminimum, Zeitkonflikt-Prüfung
-- **Bestätigungs-E-Mail** mit Event, Bereich, Datum, Zeit und Kommentar nach erfolgreicher Anmeldung
+- **Bestätigungs-E-Mail** mit Event, Bereich, Datum, Zeit und Kommentar nach erfolgreicher Anmeldung; enthält eingebetteten **QR-Code** wenn Check-in für das Event aktiviert ist (nur Kategorie Verkauf)
 
 **Admin-Hilfsfunktionen:**
 - Bereiche können zwischen Events **kopiert** werden (inkl. alternativer Zeitslot)
@@ -178,6 +181,35 @@ Seite `/admin/users`:
 
 ---
 
+### QR-Code Check-in
+
+Admin-Seite `/admin/checkin` für die Einscheibung am Einsatztag (nur Kategorie **Verkauf**):
+
+**Aktivierung:** Check-in wird pro Event ein-/ausgeschaltet. Nur aktive Events werden angezeigt.
+
+**4-Tab-Interface:**
+- **📷 QR-Scan**: Kamera öffnen und QR-Code von Dashboard oder E-Mail scannen; Modus-Toggle zwischen Check-in und Check-out
+- **🔍 Manuell**: Suchfeld filtert alle Verkauf-Anmeldungen nach Name; Ein- und Auscheck-Buttons je nach aktuellem Status
+- **👤 Walk-in**: Nicht registrierte Personen erfassen (Vorname, Nachname, Info); Liste der heutigen Walk-ins mit Auscheck-Funktion; Walk-ins werden in der Datenbank gespeichert
+- **📋 Übersicht**: Kombinierte Tabelle aller Anmeldungen + Walk-ins mit Statusfilter (Offen / Eingecheckt / Ausgecheckt); farblich codiert
+
+**Statistik-Karte** (immer sichtbar): Eingecheckt / Ausgecheckt / Ausstehend / Total-Zähler + Fortschrittsbalken + zuletzt aktive Personen.
+
+**Dashboard-QR**: Verkauf-Teilnehmer sehen ihren persönlichen QR-Code direkt auf der Anmeldungskarte, solange noch nicht eingecheckt.
+
+---
+
+### Chat
+
+Echtzeit-Chat unter `/admin/chat` (Admin) und `/user/dashboard` (User):
+
+- Direkte Nachrichten zwischen Admins und einzelnen Benutzern
+- Echtzeit-Aktualisierung via Blazor-Events (kein Polling)
+- Sidebar mit allen Konversationen, Ungelesene-Badge
+- Admins können Nachrichten löschen
+
+---
+
 ### Datenexport
 
 Excel-Export (.xlsx) unter `/admin/export`:
@@ -204,6 +236,7 @@ Excel-Export (.xlsx) unter `/admin/export`:
 | Benutzerverwaltung | ❌ | ✅ |
 | Fahrzeugverwaltung | ❌ | ✅ |
 | Möbel-Admin | ❌ | ✅ |
+| Check-in / Walk-in verwalten | ❌ | ✅ |
 | News verwalten | ❌ | ✅ |
 | Datenexport | ❌ | ✅ |
 
@@ -215,8 +248,8 @@ Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.c
 
 ### Voraussetzungen
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server (LocalDB reicht für Entwicklung)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- MySQL 8.0+ Server (lokal oder gehostet)
 - SMTP-Server (optional, für E-Mail-Benachrichtigungen)
 
 ### Schritte
@@ -226,17 +259,24 @@ Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.c
 git clone https://github.com/danimerz/FlomiApp.git
 cd FlomiApp
 
-# 2. Datenbank migrieren (LocalDB wird automatisch angelegt)
+# 2. MySQL-Verbindungsstring setzen (User Secrets empfohlen)
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
+  "Server=localhost;Port=3306;Database=FlomiApp;User Id=root;Password=secret;CharSet=utf8mb4;"
+
+# 3. Admin-Passwort setzen (optional, Standard: Admin123!)
+dotnet user-secrets set "AdminPassword" "DeinSicheresPasswort!"
+
+# 4. Datenbank migrieren
 dotnet ef database update
 
-# 3. App starten
+# 5. App starten
 dotnet run
 ```
 
 Die App startet standardmässig auf `https://localhost:5001`.
 
 Beim ersten Start werden automatisch angelegt:
-- Admin-Rolle und Admin-Benutzer (`admin@flomiapp.com` / `Admin123!`)
+- Admin-Rolle und Admin-Benutzer (`admin@flomiapp.com` / konfiguriertes Passwort)
 - Basis-Bereichskategorien (Sammeln, Sortieren, Verkauf, Sonstiges)
 - Standard-Möbelabholungs-Setting
 
@@ -249,11 +289,11 @@ Beim ersten Start werden automatisch angelegt:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=FlomiApp;Trusted_Connection=True;"
+    "DefaultConnection": "Server=localhost;Port=3306;Database=FlomiApp;User Id=root;Password=...;CharSet=utf8mb4;"
   },
   "Smtp": {
     "Host": "smtp.example.com",
-    "Port": 587,
+    "Port": 465,
     "Username": "user@example.com",
     "Password": "secret",
     "FromAddress": "noreply@flomiapp.com",
@@ -262,7 +302,7 @@ Beim ersten Start werden automatisch angelegt:
 }
 ```
 
-> **Hinweis:** Für Produktion sollten Credentials über Umgebungsvariablen oder einen Secret Manager verwaltet werden.
+> **Sicherheit:** Connection-String und SMTP-Credentials gehören **nicht** in `appsettings.json`. Für Entwicklung `.NET User Secrets` verwenden (`dotnet user-secrets set ...`), für Produktion Umgebungsvariablen oder einen Secret Manager.
 
 ---
 
