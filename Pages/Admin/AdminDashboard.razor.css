@@ -79,7 +79,7 @@
     border-radius: 18px;
     padding: 1.25rem 1.5rem;
     box-shadow: var(--shadow-card-sm);
-    max-height: 480px;
+    max-height: calc(100vh - 380px);
     overflow-y: auto;
 }
 
