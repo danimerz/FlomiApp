@@ -129,7 +129,7 @@ public class AppointmentService : IAppointmentService
 
         var sendQr = area.Event?.CheckInEnabled == true && IsVerkauf(area);
         await SendRegistrationMailsAsync(userId, familyMemberId, area, comment,
-            sendQr ? appointment.Id : null);
+            sendQr ? appointment.Id : null, useAlternativeSlot);
     }
 
     public async Task CancelAppointmentAsync(int appointmentId, string userId)
@@ -239,7 +239,7 @@ public class AppointmentService : IAppointmentService
     }
 
     private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area,
-        string? comment = null, int? appointmentId = null)
+        string? comment = null, int? appointmentId = null, bool useAlternativeSlot = false)
     {
         try
         {
@@ -250,6 +250,9 @@ public class AppointmentService : IAppointmentService
             var eventName  = area.Event?.Name ?? "";
             var areaName   = area.AreaTemplate?.Name ?? "";
             var forPerson  = await GetPersonNameAsync(userId, familyMemberId);
+            var timeSlot   = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
+                ? area.AlternativeTimeSlot
+                : area.TimeSlot;
 
             if (user.EmailNotificationsEnabled)
             {
@@ -259,7 +262,7 @@ public class AppointmentService : IAppointmentService
                     areaName,
                     eventName,
                     area.Date,
-                    area.TimeSlot,
+                    timeSlot,
                     comment,
                     appointmentId);
             }
@@ -269,7 +272,7 @@ public class AppointmentService : IAppointmentService
                 eventName,
                 forPerson ?? userName,
                 area.Date,
-                area.TimeSlot);
+                timeSlot);
         }
         catch (Exception ex)
         {
@@ -483,7 +486,7 @@ public class AppointmentService : IAppointmentService
         return await _context.Appointments
             .Include(a => a.User)
             .Include(a => a.FamilyMember)
-            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate).ThenInclude(t => t!.AreaCategory)
             .Include(a => a.Area).ThenInclude(ar => ar.Event)
             .FirstOrDefaultAsync(a => a.Id == appointmentId
                                    && a.Status == AppointmentStatus.Registered);
