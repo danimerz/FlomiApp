@@ -55,105 +55,183 @@
 
     @if (selectedEvent?.CheckInEnabled == true)
     {
+        <!-- ── Tabs ── -->
+        <div class="ci-tabs">
+            <button class="ci-tab @(activeTab == "scan" ? "ci-tab--active" : "")"
+                    @onclick='() => { activeTab = "scan"; lastResult = null; }'>📷 QR-Scan</button>
+            <button class="ci-tab @(activeTab == "manual" ? "ci-tab--active" : "")"
+                    @onclick='() => SetManualTab()'>🔍 Manuell</button>
+            <button class="ci-tab @(activeTab == "walkin" ? "ci-tab--active" : "")"
+                    @onclick='() => activeTab = "walkin"'>👤 Walk-in</button>
+        </div>
+
         <div class="ci-layout">
 
-            <!-- Scan -->
-            <div class="ci-card ci-scan-card">
-                <h3 class="ci-card__title">📷 Scan-Modus</h3>
-
-                <!-- Mode Toggle -->
-                <div class="ci-mode-toggle">
-                    <button class="ci-mode-btn @(checkOutMode ? "" : "ci-mode-btn--active")"
-                            @onclick="() => { checkOutMode = false; lastResult = null; }">
-                        ✅ Check-in
-                    </button>
-                    <button class="ci-mode-btn @(checkOutMode ? "ci-mode-btn--active ci-mode-btn--out" : "")"
-                            @onclick="() => { checkOutMode = true; lastResult = null; }">
-                        🏁 Check-out
-                    </button>
-                </div>
-
-                @if (!scanning)
-                {
-                    <button class="ci-scan-btn @(checkOutMode ? "ci-scan-btn--out" : "")" @onclick="StartScan">
-                        📷 @(checkOutMode ? "Check-out scannen" : "Check-in scannen")
-                    </button>
-                }
-                else
-                {
-                    <div class="ci-video-wrap">
-                        <video id="ci-video" autoplay muted playsinline class="ci-video"></video>
-                        <canvas id="ci-canvas" class="ci-canvas-hidden"></canvas>
+            @if (activeTab == "scan")
+            {
+                <!-- QR-Scan -->
+                <div class="ci-card ci-scan-card">
+                    <h3 class="ci-card__title">📷 Scan-Modus</h3>
+                    <div class="ci-mode-toggle">
+                        <button class="ci-mode-btn @(checkOutMode ? "" : "ci-mode-btn--active")"
+                                @onclick="() => { checkOutMode = false; lastResult = null; }">✅ Check-in</button>
+                        <button class="ci-mode-btn @(checkOutMode ? "ci-mode-btn--active ci-mode-btn--out" : "")"
+                                @onclick="() => { checkOutMode = true; lastResult = null; }">🏁 Check-out</button>
                     </div>
-                    <button class="ci-stop-btn" @onclick="StopScan">⏹ Stoppen</button>
-                }
+                    @if (!scanning)
+                    {
+                        <button class="ci-scan-btn @(checkOutMode ? "ci-scan-btn--out" : "")" @onclick="StartScan">
+                            📷 @(checkOutMode ? "Check-out scannen" : "Check-in scannen")
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="ci-video-wrap">
+                            <video id="ci-video" autoplay muted playsinline class="ci-video"></video>
+                            <canvas id="ci-canvas" class="ci-canvas-hidden"></canvas>
+                        </div>
+                        <button class="ci-stop-btn" @onclick="StopScan">⏹ Stoppen</button>
+                    }
+                    @if (lastResult != null)
+                    {
+                        <div class="ci-result ci-result--@(lastResult.Success ? "ok" : "err")">
+                            @if (lastResult.Success)
+                            {
+                                <div class="ci-result__icon">@(lastResult.isCheckOut ? "🏁" : "✅")</div>
+                                <div class="ci-result__text">
+                                    <strong>@lastResult.PersonName</strong><br/>
+                                    <span>@lastResult.AreaName · @lastResult.Date</span><br/>
+                                    <small>@(lastResult.isCheckOut ? "Ausgecheckt" : "Eingecheckt") @lastResult.Time</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="ci-result__icon">❌</div>
+                                <div class="ci-result__text">@lastResult.Message</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else if (activeTab == "manual")
+            {
+                <!-- Manuelle Suche -->
+                <div class="ci-card">
+                    <h3 class="ci-card__title">🔍 Manuelle Suche</h3>
+                    <div class="ci-mode-toggle" style="margin-bottom:.75rem">
+                        <button class="ci-mode-btn @(checkOutMode ? "" : "ci-mode-btn--active")"
+                                @onclick="() => checkOutMode = false">✅ Check-in</button>
+                        <button class="ci-mode-btn @(checkOutMode ? "ci-mode-btn--active ci-mode-btn--out" : "")"
+                                @onclick="() => checkOutMode = true">🏁 Check-out</button>
+                    </div>
+                    <input type="text" class="ci-search" placeholder="Name suchen..."
+                           @bind="manualSearch" @bind:event="oninput" />
 
-                @if (lastResult != null)
-                {
-                    <div class="ci-result ci-result--@(lastResult.Success ? "ok" : "err")">
-                        @if (lastResult.Success)
+                    <div class="ci-person-list">
+                        @foreach (var a in FilteredManualApts)
                         {
-                            <div class="ci-result__icon">@(lastResult.isCheckOut ? "🏁" : "✅")</div>
-                            <div class="ci-result__text">
-                                <strong>@lastResult.PersonName</strong><br/>
-                                <span>@lastResult.AreaName · @lastResult.Date</span><br/>
-                                <small>@(lastResult.isCheckOut ? "Ausgecheckt" : "Eingecheckt") @lastResult.Time</small>
+                            var pName = a.FamilyMember != null
+                                ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
+                                : $"{a.User?.FirstName} {a.User?.LastName}";
+                            var statusIcon = a.CheckedOutAt.HasValue ? "🏁" : a.CheckedInAt.HasValue ? "✅" : "○";
+                            var statusText = a.CheckedOutAt.HasValue
+                                ? $"Ausgecheckt {a.CheckedOutAt:HH:mm}"
+                                : a.CheckedInAt.HasValue
+                                    ? $"Eingecheckt {a.CheckedInAt:HH:mm}"
+                                    : "Noch offen";
+
+                            <div class="ci-person-row">
+                                <div class="ci-person-row__info">
+                                    <span class="ci-person-row__status">@statusIcon</span>
+                                    <div>
+                                        <strong>@pName</strong><br/>
+                                        <small>@(a.Area?.AreaTemplate?.Name) · @a.Area?.Date.ToString("dd.MM") · @statusText</small>
+                                    </div>
+                                </div>
+                                <div class="ci-person-row__actions">
+                                    @if (!checkOutMode && !a.CheckedInAt.HasValue)
+                                    {
+                                        <button class="ci-action-btn ci-action-btn--in" @onclick="() => ManualCheckIn(a.Id)">✅ Ein</button>
+                                    }
+                                    @if (checkOutMode && a.CheckedInAt.HasValue && !a.CheckedOutAt.HasValue)
+                                    {
+                                        <button class="ci-action-btn ci-action-btn--out" @onclick="() => ManualCheckOut(a.Id)">🏁 Aus</button>
+                                    }
+                                </div>
                             </div>
                         }
-                        else
+                        @if (!FilteredManualApts.Any())
                         {
-                            <div class="ci-result__icon">❌</div>
-                            <div class="ci-result__text">@lastResult.Message</div>
+                            <p style="color:var(--color-text-placeholder);font-size:.88rem;margin-top:.75rem">
+                                @(string.IsNullOrEmpty(manualSearch) ? "Alle Verkauf-Anmeldungen werden hier angezeigt." : "Keine Treffer.")
+                            </p>
                         }
                     </div>
-                }
-            </div>
+                </div>
+            }
+            else if (activeTab == "walkin")
+            {
+                <!-- Walk-in -->
+                <div class="ci-card">
+                    <h3 class="ci-card__title">👤 Walk-in erfassen</h3>
+                    <div class="ci-walkin-form">
+                        <div style="display:flex;gap:.75rem">
+                            <input type="text" class="ci-search" placeholder="Vorname *" @bind="walkInFirst" style="flex:1" />
+                            <input type="text" class="ci-search" placeholder="Nachname *" @bind="walkInLast" style="flex:1" />
+                        </div>
+                        <input type="text" class="ci-search" placeholder="Info (z.B. Tisch 3, schickt Sepp)" @bind="walkInInfo" style="margin-top:.5rem" />
+                        <button class="ci-scan-btn" style="margin-top:.75rem"
+                                @onclick="AddWalkIn"
+                                disabled="@(string.IsNullOrWhiteSpace(walkInFirst) || string.IsNullOrWhiteSpace(walkInLast))">
+                            ✅ Jetzt einchecken
+                        </button>
+                    </div>
 
-            <!-- Statistik -->
+                    @if (todayWalkIns.Any())
+                    {
+                        <div class="ci-recent" style="margin-top:1rem">
+                            <div class="ci-recent__title">Heute erfasste Walk-ins (@todayWalkIns.Count)</div>
+                            @foreach (var w in todayWalkIns)
+                            {
+                                <div class="ci-recent__item">
+                                    <span class="ci-recent__time">@(w.CheckedOutAt?.ToString("HH:mm") ?? w.CheckedInAt.ToString("HH:mm"))</span>
+                                    <span class="ci-recent__person">@(w.CheckedOutAt.HasValue ? "🏁" : "✅") @w.FirstName @w.LastName</span>
+                                    <span class="ci-recent__area">@(w.Info ?? "–")</span>
+                                    @if (!w.CheckedOutAt.HasValue)
+                                    {
+                                        <button class="ci-action-btn ci-action-btn--out" @onclick="() => CheckOutWalkIn(w.Id)">🏁</button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Statistik (immer sichtbar rechts) -->
             <div class="ci-card">
                 <h3 class="ci-card__title">📊 Übersicht Verkauf</h3>
                 <div class="ci-stats">
-                    <div class="ci-stat ci-stat--ok">
-                        <span class="ci-stat__num">@checkedIn</span>
-                        <span class="ci-stat__label">Eingecheckt</span>
-                    </div>
-                    <div class="ci-stat ci-stat--out">
-                        <span class="ci-stat__num">@checkedOut</span>
-                        <span class="ci-stat__label">Ausgecheckt</span>
-                    </div>
-                    <div class="ci-stat ci-stat--pending">
-                        <span class="ci-stat__num">@pending</span>
-                        <span class="ci-stat__label">Ausstehend</span>
-                    </div>
-                    <div class="ci-stat ci-stat--total">
-                        <span class="ci-stat__num">@total</span>
-                        <span class="ci-stat__label">Total</span>
-                    </div>
+                    <div class="ci-stat ci-stat--ok"><span class="ci-stat__num">@checkedIn</span><span class="ci-stat__label">Eingecheckt</span></div>
+                    <div class="ci-stat ci-stat--out"><span class="ci-stat__num">@checkedOut</span><span class="ci-stat__label">Ausgecheckt</span></div>
+                    <div class="ci-stat ci-stat--pending"><span class="ci-stat__num">@pending</span><span class="ci-stat__label">Ausstehend</span></div>
+                    <div class="ci-stat ci-stat--total"><span class="ci-stat__num">@(total + todayWalkIns.Count)</span><span class="ci-stat__label">Total</span></div>
                 </div>
-
                 <div class="ci-progress-bar">
                     <div class="ci-progress-fill" style="width:@(total > 0 ? checkedIn * 100 / total : 0)%"></div>
                 </div>
-
-                <!-- Zuletzt eingecheckt -->
                 @if (recentCheckIns.Any())
                 {
                     <div class="ci-recent">
-                        <div class="ci-recent__title">Zuletzt eingecheckt</div>
+                        <div class="ci-recent__title">Zuletzt</div>
                         @foreach (var a in recentCheckIns)
                         {
                             var person = a.FamilyMember != null
                                 ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
                                 : $"{a.User?.FirstName} {a.User?.LastName}";
                             <div class="ci-recent__item">
-                                <span class="ci-recent__time">
-                                    @(a.CheckedOutAt.HasValue
-                                        ? a.CheckedOutAt?.ToString("HH:mm")
-                                        : a.CheckedInAt?.ToString("HH:mm"))
-                                </span>
-                                <span class="ci-recent__person">
-                                    @(a.CheckedOutAt.HasValue ? "🏁" : "✅") @person
-                                </span>
+                                <span class="ci-recent__time">@(a.CheckedOutAt?.ToString("HH:mm") ?? a.CheckedInAt?.ToString("HH:mm"))</span>
+                                <span class="ci-recent__person">@(a.CheckedOutAt.HasValue ? "🏁" : "✅") @person</span>
                                 <span class="ci-recent__area">@(a.Area?.AreaTemplate?.Name) · @a.Area?.Date.ToString("dd.MM")</span>
                             </div>
                         }
@@ -182,6 +260,31 @@
     private bool             scanning      = false;
     private bool             checkOutMode  = false;
 
+    // ── Tabs ────────────────────────────────────────────────
+    private string activeTab = "scan";
+
+    // ── Manuell Tab ─────────────────────────────────────────
+    private string             manualSearch   = "";
+    private List<Appointment>  allVerkaufApts = new();
+
+    private IEnumerable<Appointment> FilteredManualApts =>
+        string.IsNullOrWhiteSpace(manualSearch)
+            ? allVerkaufApts
+            : allVerkaufApts.Where(a =>
+            {
+                var name = a.FamilyMember != null
+                    ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
+                    : $"{a.User?.FirstName} {a.User?.LastName}";
+                return name.Contains(manualSearch, StringComparison.OrdinalIgnoreCase);
+            });
+
+    // ── Walk-in Tab ─────────────────────────────────────────
+    private string          walkInFirst   = "";
+    private string          walkInLast    = "";
+    private string          walkInInfo    = "";
+    private List<WalkIn>    todayWalkIns  = new();
+
+    // ── Stats ────────────────────────────────────────────────
     private int checkedIn;
     private int checkedOut;
     private int pending;
@@ -215,12 +318,67 @@
                      && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf")
             .AsNoTracking().ToListAsync();
 
-        total      = apts.Count;
-        checkedIn  = apts.Count(a => a.CheckedInAt.HasValue);
-        checkedOut = apts.Count(a => a.CheckedOutAt.HasValue);
-        pending    = total - checkedIn;
+        allVerkaufApts = apts;
+        total          = apts.Count;
+        checkedIn      = apts.Count(a => a.CheckedInAt.HasValue);
+        checkedOut     = apts.Count(a => a.CheckedOutAt.HasValue);
+        pending        = total - checkedIn;
         recentCheckIns = apts.Where(a => a.CheckedInAt.HasValue || a.CheckedOutAt.HasValue)
             .OrderByDescending(a => a.CheckedOutAt ?? a.CheckedInAt).Take(5).ToList();
+
+        var today = DateTime.Today;
+        todayWalkIns = await Db.WalkIns
+            .Where(w => w.EventId == selectedEventId && w.CheckedInAt >= today)
+            .OrderByDescending(w => w.CheckedInAt)
+            .AsNoTracking().ToListAsync();
+    }
+
+    private void SetManualTab()
+    {
+        activeTab    = "manual";
+        manualSearch = "";
+    }
+
+    private async Task ManualCheckIn(int aptId)
+    {
+        await AppointmentService.CheckInAsync(aptId);
+        await LoadStats();
+    }
+
+    private async Task ManualCheckOut(int aptId)
+    {
+        await AppointmentService.CheckOutAsync(aptId);
+        await LoadStats();
+    }
+
+    private async Task AddWalkIn()
+    {
+        if (string.IsNullOrWhiteSpace(walkInFirst) || string.IsNullOrWhiteSpace(walkInLast)) return;
+        var w = new WalkIn
+        {
+            EventId     = selectedEventId,
+            FirstName   = walkInFirst.Trim(),
+            LastName    = walkInLast.Trim(),
+            Info        = string.IsNullOrWhiteSpace(walkInInfo) ? null : walkInInfo.Trim(),
+            CheckedInAt = DateTime.Now
+        };
+        Db.WalkIns.Add(w);
+        await Db.SaveChangesAsync();
+        walkInFirst = "";
+        walkInLast  = "";
+        walkInInfo  = "";
+        await LoadStats();
+    }
+
+    private async Task CheckOutWalkIn(int walkInId)
+    {
+        var w = await Db.WalkIns.FindAsync(walkInId);
+        if (w != null && !w.CheckedOutAt.HasValue)
+        {
+            w.CheckedOutAt = DateTime.Now;
+            await Db.SaveChangesAsync();
+            await LoadStats();
+        }
     }
 
     private async Task ToggleCheckIn()

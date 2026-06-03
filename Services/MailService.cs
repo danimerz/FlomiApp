@@ -3,6 +3,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using QRCoder;
 
 namespace FlomiApp.Services;
 
@@ -50,11 +51,29 @@ public class MailService : IMailService
     public async Task SendRegistrationConfirmationAsync(
         string toEmail, string toName, string areaName,
         string eventName, DateTime date, string timeSlot,
-        string? comment = null)
+        string? comment = null, int? appointmentId = null)
     {
         var subject = $"✅ Anmeldebestätigung – {areaName} · {eventName}";
         var commentRow = string.IsNullOrEmpty(comment) ? "" :
             $"<tr><td style='padding:6px 12px;color:#64748b;'>Dein Kommentar:</td><td style='padding:6px 12px;font-style:italic;'>{comment}</td></tr>";
+
+        var qrSection = "";
+        if (appointmentId.HasValue)
+        {
+            var qrData   = $"flomi-apt:{appointmentId.Value}";
+            var qrGen    = new QRCodeGenerator();
+            var qrCodeData = qrGen.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
+            var qrCode   = new PngByteQRCode(qrCodeData);
+            var qrPng    = qrCode.GetGraphic(6);
+            var qrBase64 = Convert.ToBase64String(qrPng);
+            qrSection = $"""
+                <div style="margin-top:20px;text-align:center;padding:20px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;">
+                  <p style="margin:0 0 12px;font-weight:800;color:#1d4ed8;font-size:.95rem;text-transform:uppercase;letter-spacing:.04em;">📷 Dein Check-in QR-Code</p>
+                  <img src="data:image/png;base64,{qrBase64}" style="width:180px;height:180px;border-radius:8px;" alt="QR-Code" />
+                  <p style="margin:10px 0 0;font-size:.8rem;color:#64748b;">Zeige diesen Code beim Check-in vor. Er ist auch im Dashboard verfügbar.</p>
+                </div>
+                """;
+        }
 
         var body = $"""
             <div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
@@ -73,7 +92,8 @@ public class MailService : IMailService
                   <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Zeit:</td><td style="padding:6px 12px;font-weight:700;">{timeSlot}</td></tr>
                   {commentRow}
                 </table>
-                <p style="color:#64748b;font-size:.9rem;">Du kannst deine Anmeldungen jederzeit im <a href="/user/dashboard" style="color:#2563eb;">Dashboard</a> einsehen oder stornieren.</p>
+                {qrSection}
+                <p style="color:#64748b;font-size:.9rem;margin-top:16px;">Du kannst deine Anmeldungen jederzeit im <a href="/user/dashboard" style="color:#2563eb;">Dashboard</a> einsehen oder stornieren.</p>
                 <p style="color:#374151;font-weight:700;margin-bottom:0;">Wir freuen uns auf dich! 🙌</p>
               </div>
             </div>

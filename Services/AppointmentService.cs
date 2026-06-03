@@ -127,7 +127,9 @@ public class AppointmentService : IAppointmentService
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
 
-        await SendRegistrationMailsAsync(userId, familyMemberId, area, comment);
+        var sendQr = area.Event?.CheckInEnabled == true && IsVerkauf(area);
+        await SendRegistrationMailsAsync(userId, familyMemberId, area, comment,
+            sendQr ? appointment.Id : null);
     }
 
     public async Task CancelAppointmentAsync(int appointmentId, string userId)
@@ -236,7 +238,8 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area, string? comment = null)
+    private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area,
+        string? comment = null, int? appointmentId = null)
     {
         try
         {
@@ -257,7 +260,8 @@ public class AppointmentService : IAppointmentService
                     eventName,
                     area.Date,
                     area.TimeSlot,
-                    comment);
+                    comment,
+                    appointmentId);
             }
 
             await _mailService.SendAdminNewRegistrationAsync(
