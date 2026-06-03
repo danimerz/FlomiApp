@@ -168,6 +168,7 @@
                                                                 </div>
                                                             }
                                                             @if (appointment.Area?.Event?.CheckInEnabled == true
+                                                                 && appointment.Area?.AreaTemplate?.AreaCategory?.Name == "Verkauf"
                                                                  && appointment.CheckedInAt == null)
                                                             {
                                                                 <div class="appointment-qr">
