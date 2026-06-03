@@ -218,6 +218,7 @@
 .adm-feed-item__dot--register { background: var(--color-success-text); }
 .adm-feed-item__dot--cancel   { background: var(--color-error-text); }
 .adm-feed-item__dot--pickup   { background: var(--color-warning-text); }
+.adm-feed-item__dot--checkin  { background: var(--color-primary); }
 
 .adm-feed-item__body {
     display: flex;

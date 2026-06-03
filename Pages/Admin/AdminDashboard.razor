@@ -404,6 +404,28 @@
                 $"Möbelabholung {r.PickupDate:dd.MM.yyyy}", r.Status.ToString()));
         }
 
+        // Check-ins
+        var recentCheckIns = await Db.Appointments
+            .Include(a => a.User).Include(a => a.FamilyMember)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
+            .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .Where(a => a.CheckedInAt.HasValue)
+            .OrderByDescending(a => a.CheckedInAt)
+            .Take(20)
+            .AsNoTracking()
+            .ToListAsync();
+
+        foreach (var ap in recentCheckIns)
+        {
+            var person = ap.FamilyMember != null
+                ? $"{ap.FamilyMember.FirstName} {ap.FamilyMember.LastName}"
+                : $"{ap.User?.FirstName} {ap.User?.LastName}";
+            var area = ap.Area?.AreaTemplate?.Name ?? "–";
+            var date = ap.Area?.Date.ToString("ddd dd.MM", new CultureInfo("de-CH")) ?? "";
+            var ev   = ap.Area?.Event?.Name ?? "";
+            feed.Add(new ActivityItem(ap.CheckedInAt!.Value, "checkin", person, $"{area} · {date}", ev));
+        }
+
         activityFeed = feed.OrderByDescending(a => a.Timestamp).Take(40).ToList();
 
         isLoading = false;
@@ -494,6 +516,7 @@
         "register" => "🟢",
         "cancel"   => "🔴",
         "pickup"   => "🛋️",
+        "checkin"  => "🎫",
         _          => "📌"
     };
 
@@ -502,6 +525,7 @@
         "register" => "hat sich angemeldet für",
         "cancel"   => "hat storniert:",
         "pickup"   => "beantragte Abholung:",
+        "checkin"  => "wurde eingecheckt:",
         _          => ""
     };
 }
