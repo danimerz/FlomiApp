@@ -63,7 +63,60 @@
                     @onclick='() => SetManualTab()'>🔍 Manuell</button>
             <button class="ci-tab @(activeTab == "walkin" ? "ci-tab--active" : "")"
                     @onclick='() => activeTab = "walkin"'>👤 Walk-in</button>
+            <button class="ci-tab @(activeTab == "overview" ? "ci-tab--active" : "")"
+                    @onclick='() => activeTab = "overview"'>📋 Übersicht</button>
         </div>
+
+        @if (activeTab == "overview")
+        {
+            <div class="ci-card ci-card--full">
+                <div class="ci-ov-header">
+                    <h3 class="ci-card__title" style="margin:0">📋 Alle Teilnehmer</h3>
+                    <div class="ci-ov-filters">
+                        <button class="ci-ov-filter @(overviewFilter == "" ? "ci-ov-filter--active" : "")"         @onclick='() => overviewFilter = ""'>Alle (@OverviewRows.Count())</button>
+                        <button class="ci-ov-filter @(overviewFilter == "open" ? "ci-ov-filter--active" : "")"     @onclick='() => overviewFilter = "open"'>○ Offen (@OverviewRows.Count(r => r.Status == "open"))</button>
+                        <button class="ci-ov-filter @(overviewFilter == "in" ? "ci-ov-filter--active" : "")"       @onclick='() => overviewFilter = "in"'>✅ Eingecheckt (@OverviewRows.Count(r => r.Status == "in"))</button>
+                        <button class="ci-ov-filter @(overviewFilter == "out" ? "ci-ov-filter--active" : "")"      @onclick='() => overviewFilter = "out"'>🏁 Ausgecheckt (@OverviewRows.Count(r => r.Status == "out"))</button>
+                    </div>
+                </div>
+
+                <div class="ci-ov-table-wrap">
+                    <table class="ci-ov-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Name</th>
+                                <th>Bereich / Typ</th>
+                                <th>Datum</th>
+                                <th>Zeit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in FilteredOverviewRows)
+                            {
+                                <tr class="ci-ov-row ci-ov-row--@row.Status">
+                                    <td>
+                                        @if (row.Status == "out")      { <span class="ci-ov-badge ci-ov-badge--out">🏁 Ausgecheckt</span> }
+                                        else if (row.Status == "in")   { <span class="ci-ov-badge ci-ov-badge--in">✅ Eingecheckt</span> }
+                                        else                           { <span class="ci-ov-badge ci-ov-badge--open">○ Offen</span> }
+                                    </td>
+                                    <td class="ci-ov-name">@row.Name <small class="ci-ov-type">@(row.IsWalkIn ? "Walk-in" : "")</small></td>
+                                    <td>@row.AreaName</td>
+                                    <td>@row.Date</td>
+                                    <td>@row.StatusTime</td>
+                                </tr>
+                            }
+                            @if (!FilteredOverviewRows.Any())
+                            {
+                                <tr><td colspan="5" style="text-align:center;color:var(--color-text-placeholder);padding:1.5rem">Keine Einträge.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else
+        {
 
         <div class="ci-layout">
 
@@ -239,6 +292,7 @@
                 }
             </div>
         </div>
+        } <!-- end else (non-overview tabs) -->
     }
     else if (selectedEvent != null)
     {
@@ -283,6 +337,45 @@
     private string          walkInLast    = "";
     private string          walkInInfo    = "";
     private List<WalkIn>    todayWalkIns  = new();
+
+    // ── Übersicht Tab ────────────────────────────────────────
+    private string overviewFilter = "";
+
+    private record OverviewRow(string Name, string AreaName, string Date, string Status, string StatusTime, bool IsWalkIn);
+
+    private IEnumerable<OverviewRow> OverviewRows
+    {
+        get
+        {
+            var aptRows = allVerkaufApts.Select(a =>
+            {
+                var name   = a.FamilyMember != null
+                    ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
+                    : $"{a.User?.FirstName} {a.User?.LastName}";
+                var status = a.CheckedOutAt.HasValue ? "out" : a.CheckedInAt.HasValue ? "in" : "open";
+                var time   = a.CheckedOutAt?.ToString("HH:mm") ?? a.CheckedInAt?.ToString("HH:mm") ?? "–";
+                return new OverviewRow(name, a.Area?.AreaTemplate?.Name ?? "–",
+                    a.Area?.Date.ToString("dd.MM.yyyy") ?? "–", status, time, false);
+            });
+
+            var walkRows = todayWalkIns.Select(w =>
+            {
+                var status = w.CheckedOutAt.HasValue ? "out" : "in";
+                var time   = w.CheckedOutAt?.ToString("HH:mm") ?? w.CheckedInAt.ToString("HH:mm");
+                return new OverviewRow($"{w.FirstName} {w.LastName}", w.Info ?? "–",
+                    w.CheckedInAt.ToString("dd.MM.yyyy"), status, time, true);
+            });
+
+            return aptRows.Concat(walkRows)
+                .OrderBy(r => r.Status == "open" ? 0 : r.Status == "in" ? 1 : 2)
+                .ThenBy(r => r.Name);
+        }
+    }
+
+    private IEnumerable<OverviewRow> FilteredOverviewRows =>
+        string.IsNullOrEmpty(overviewFilter)
+            ? OverviewRows
+            : OverviewRows.Where(r => r.Status == overviewFilter);
 
     // ── Stats ────────────────────────────────────────────────
     private int checkedIn;

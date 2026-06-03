@@ -210,5 +210,90 @@
 .ci-action-btn--out { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
 .ci-action-btn:hover { filter: brightness(.93); }
 
+/* ── Übersicht Tab ────────────────────────────────────────── */
+.ci-card--full { grid-column: 1 / -1; }
+
+.ci-ov-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 2px solid var(--color-border-soft);
+}
+
+.ci-ov-filters {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.ci-ov-filter {
+    padding: .3rem .85rem;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 999px;
+    background: var(--color-surface-card-soft);
+    color: var(--color-text-medium);
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+}
+
+.ci-ov-filter:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.ci-ov-filter--active { background: var(--color-info-bg); border-color: var(--color-primary); color: var(--color-primary); }
+
+.ci-ov-table-wrap { overflow-x: auto; }
+
+.ci-ov-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+}
+
+.ci-ov-table thead th {
+    padding: .5rem .75rem;
+    text-align: left;
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--color-text-light);
+    border-bottom: 2px solid var(--color-border-soft);
+    white-space: nowrap;
+}
+
+.ci-ov-table tbody td {
+    padding: .55rem .75rem;
+    border-bottom: 1px solid var(--color-border-soft);
+    color: var(--color-text);
+    vertical-align: middle;
+}
+
+.ci-ov-table tbody tr:last-child td { border-bottom: none; }
+
+.ci-ov-row--open  { background: transparent; }
+.ci-ov-row--in    { background: color-mix(in srgb, var(--color-success-bg) 40%, transparent); }
+.ci-ov-row--out   { background: color-mix(in srgb, #f5f3ff 40%, transparent); }
+
+.ci-ov-badge {
+    display: inline-flex;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ci-ov-badge--in   { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
+.ci-ov-badge--out  { background: #f5f3ff; color: #7c3aed; border: 1px solid #c4b5fd; }
+.ci-ov-badge--open { background: var(--color-surface-card-soft); color: var(--color-text-medium); border: 1px solid var(--color-border-soft); }
+
+.ci-ov-name { font-weight: 700; color: var(--color-text-strong); }
+.ci-ov-type { font-weight: 600; color: var(--color-primary); font-size: .75rem; margin-left: .35rem; }
+
 @media (max-width: 768px) { .ci-layout { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .ci-tabs { flex-wrap: wrap; } }
