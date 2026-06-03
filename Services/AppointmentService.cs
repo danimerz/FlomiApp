@@ -34,6 +34,7 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.User)
             .Include(a => a.FamilyMember)
             .Where(a => a.UserId == userId)
+            .OrderBy(a => a.Area.Date)
             .ToListAsync();
     }
 
@@ -471,5 +472,25 @@ public class AppointmentService : IAppointmentService
             .AnyAsync(a => a.Area.AreaTemplate != null
                         && a.Area.AreaTemplate.AreaCategory != null
                         && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
+    }
+
+    public async Task<Appointment?> GetByIdForCheckInAsync(int appointmentId)
+    {
+        return await _context.Appointments
+            .Include(a => a.User)
+            .Include(a => a.FamilyMember)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
+            .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId
+                                   && a.Status == AppointmentStatus.Registered);
+    }
+
+    public async Task<bool> CheckInAsync(int appointmentId)
+    {
+        var apt = await _context.Appointments.FindAsync(appointmentId);
+        if (apt == null || apt.Status != AppointmentStatus.Registered) return false;
+        apt.CheckedInAt = DateTime.Now;
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

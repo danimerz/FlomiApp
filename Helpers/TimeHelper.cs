@@ -48,7 +48,7 @@ public static class TimeHelper
             var from = FormatTime(input[..idx].Trim());
             var to   = FormatTime(input[(idx + 1)..].Trim());
             if (from != null && to != null)
-                return $"{from} - {to}";
+                return $"{from}-{to}";
         }
 
         return FormatTime(input);

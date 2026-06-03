@@ -7,6 +7,7 @@
 @inject IFurniturePickupService FurniturePickupService
 @inject IVehicleService VehicleService
 @using FlomiApp.Data.Models
+@using QRCoder
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -164,6 +165,24 @@
                                                                 <div class="appointment-info-item">
                                                                     <span class="label">Fahrzeug</span>
                                                                     <span class="value">🚗 @va.Assignment.Vehicle.OwnerName</span>
+                                                                </div>
+                                                            }
+                                                            @if (appointment.Area?.Event?.CheckInEnabled == true
+                                                                 && appointment.CheckedInAt == null)
+                                                            {
+                                                                <div class="appointment-qr">
+                                                                    <div class="appointment-qr__label">🎫 Einlass-QR</div>
+                                                                    <img src="@GetQrDataUrl(appointment.Id)"
+                                                                         class="appointment-qr__img"
+                                                                         alt="QR Check-in" />
+                                                                    <small>Beim Einlass scannen lassen</small>
+                                                                </div>
+                                                            }
+                                                            @if (appointment.CheckedInAt.HasValue)
+                                                            {
+                                                                <div class="appointment-info-item">
+                                                                    <span class="label">✅ Eingecheckt</span>
+                                                                    <span class="value">@appointment.CheckedInAt?.ToString("HH:mm") Uhr</span>
                                                                 </div>
                                                             }
                                                             <div class="appointment-info-item">
@@ -462,6 +481,15 @@
 
             return cells;
         }
+    }
+
+    private string GetQrDataUrl(int appointmentId)
+    {
+        using var gen   = new QRCodeGenerator();
+        var data        = gen.CreateQrCode($"flomi-apt:{appointmentId}", QRCodeGenerator.ECCLevel.M);
+        using var qr    = new PngByteQRCode(data);
+        var bytes       = qr.GetGraphic(6);
+        return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
     }
 
     private void CalPrev() { if (--calMonth < 1) { calMonth = 12; calYear--; } }

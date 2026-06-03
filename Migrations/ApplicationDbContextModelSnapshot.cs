@@ -118,6 +118,9 @@ namespace FlomiApp.Migrations
                     b.Property<int>("AreaId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("CheckedInAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Comment")
                         .HasColumnType("longtext");
 
@@ -361,6 +364,9 @@ namespace FlomiApp.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CheckInEnabled")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");

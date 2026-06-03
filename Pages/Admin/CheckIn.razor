@@ -1,0 +1,277 @@
+@page "/admin/checkin"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@implements IAsyncDisposable
+@inject IAppointmentService AppointmentService
+@inject IAreaService AreaService
+@inject FlomiApp.Data.ApplicationDbContext Db
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Admin,FahrzeugAdmin,MoebelAdmin,BereichsAdmin")]
+
+<PageTitle>Check-in – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>📷 Check-in</h1>
+            <p>QR-Codes scannen und Einsätze bestätigen.</p>
+        </div>
+    </section>
+
+    <!-- Event + Toggle -->
+    <div class="ci-toolbar">
+        <div class="ci-field">
+            <label>Event</label>
+            <select class="ci-select" @bind="selectedEventId" @bind:after="LoadStats">
+                <option value="0">– Bitte wählen –</option>
+                @foreach (var ev in events)
+                {
+                    <option value="@ev.Id">
+                        @ev.Name — @(ev.CheckInEnabled ? "✅ Check-in aktiv" : "⚫ Check-in inaktiv")
+                    </option>
+                }
+            </select>
+        </div>
+
+        @if (selectedEvent != null)
+        {
+            <div class="ci-toggle-wrap">
+                <span class="ci-toggle-label">🎫 Check-in</span>
+                <label class="toggle-switch">
+                    <input type="checkbox"
+                           checked="@selectedEvent.CheckInEnabled"
+                           @onchange="ToggleCheckIn" />
+                    <span class="slider round"></span>
+                </label>
+                <span class="@(selectedEvent.CheckInEnabled ? "ci-status ci-status--on" : "ci-status ci-status--off")">
+                    @(selectedEvent.CheckInEnabled ? "Aktiv" : "Inaktiv")
+                </span>
+            </div>
+        }
+    </div>
+
+    @if (selectedEvent?.CheckInEnabled == true)
+    {
+        <div class="ci-layout">
+
+            <!-- Scan -->
+            <div class="ci-card ci-scan-card">
+                <h3 class="ci-card__title">📷 Scan-Modus</h3>
+
+                @if (!scanning)
+                {
+                    <button class="ci-scan-btn" @onclick="StartScan">
+                        📷 Kamera starten
+                    </button>
+                }
+                else
+                {
+                    <div class="ci-video-wrap">
+                        <video id="ci-video" autoplay muted playsinline class="ci-video"></video>
+                        <canvas id="ci-canvas" class="ci-canvas-hidden"></canvas>
+                    </div>
+                    <button class="ci-stop-btn" @onclick="StopScan">⏹ Stoppen</button>
+                }
+
+                @if (lastResult != null)
+                {
+                    <div class="ci-result ci-result--@(lastResult.Success ? "ok" : "err")">
+                        @if (lastResult.Success)
+                        {
+                            <div class="ci-result__icon">✅</div>
+                            <div class="ci-result__text">
+                                <strong>@lastResult.PersonName</strong><br/>
+                                <span>@lastResult.AreaName · @lastResult.Date</span><br/>
+                                <small>Eingecheckt @lastResult.Time</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="ci-result__icon">❌</div>
+                            <div class="ci-result__text">@lastResult.Message</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Statistik -->
+            <div class="ci-card">
+                <h3 class="ci-card__title">📊 Übersicht</h3>
+                <div class="ci-stats">
+                    <div class="ci-stat ci-stat--ok">
+                        <span class="ci-stat__num">@checkedIn</span>
+                        <span class="ci-stat__label">Eingecheckt</span>
+                    </div>
+                    <div class="ci-stat ci-stat--pending">
+                        <span class="ci-stat__num">@pending</span>
+                        <span class="ci-stat__label">Ausstehend</span>
+                    </div>
+                    <div class="ci-stat ci-stat--total">
+                        <span class="ci-stat__num">@total</span>
+                        <span class="ci-stat__label">Total</span>
+                    </div>
+                </div>
+
+                <div class="ci-progress-bar">
+                    <div class="ci-progress-fill" style="width:@(total > 0 ? checkedIn * 100 / total : 0)%"></div>
+                </div>
+
+                <!-- Zuletzt eingecheckt -->
+                @if (recentCheckIns.Any())
+                {
+                    <div class="ci-recent">
+                        <div class="ci-recent__title">Zuletzt eingecheckt</div>
+                        @foreach (var a in recentCheckIns)
+                        {
+                            var person = a.FamilyMember != null
+                                ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
+                                : $"{a.User?.FirstName} {a.User?.LastName}";
+                            <div class="ci-recent__item">
+                                <span class="ci-recent__time">@a.CheckedInAt?.ToString("HH:mm")</span>
+                                <span class="ci-recent__person">✅ @person</span>
+                                <span class="ci-recent__area">@(a.Area?.AreaTemplate?.Name) · @a.Area?.Date.ToString("dd.MM")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (selectedEvent != null)
+    {
+        <div class="state-card state-card--info" style="margin-top:1.5rem">
+            <div class="state-card__icon">⚫</div>
+            <div class="state-card__content">
+                <h3>Check-in ist deaktiviert</h3>
+                <p>Aktiviere den Check-in für dieses Event mit dem Toggle oben.</p>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<Event>      events        = new();
+    private Event?           selectedEvent = null;
+    private int              selectedEventId = 0;
+    private bool             scanning      = false;
+
+    private int checkedIn;
+    private int pending;
+    private int total;
+    private List<Appointment> recentCheckIns = new();
+
+    private record ScanResult(bool Success, string PersonName = "", string AreaName = "",
+        string Date = "", string Time = "", string Message = "");
+    private ScanResult? lastResult = null;
+
+    private DotNetObjectReference<CheckIn>? selfRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await AreaService.GetAllEventsAsync();
+        selfRef = DotNetObjectReference.Create(this);
+    }
+
+    private async Task LoadStats()
+    {
+        selectedEvent = events.FirstOrDefault(e => e.Id == selectedEventId);
+        if (selectedEventId == 0 || selectedEvent == null) return;
+
+        var apts = await Db.Appointments
+            .Include(a => a.User).Include(a => a.FamilyMember)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
+            .Where(a => a.Area.EventId == selectedEventId && a.Status == AppointmentStatus.Registered)
+            .AsNoTracking().ToListAsync();
+
+        total      = apts.Count;
+        checkedIn  = apts.Count(a => a.CheckedInAt.HasValue);
+        pending    = total - checkedIn;
+        recentCheckIns = apts.Where(a => a.CheckedInAt.HasValue)
+            .OrderByDescending(a => a.CheckedInAt).Take(5).ToList();
+    }
+
+    private async Task ToggleCheckIn()
+    {
+        if (selectedEvent == null) return;
+        await AreaService.ToggleCheckInAsync(selectedEvent.Id);
+        events        = await AreaService.GetAllEventsAsync();
+        selectedEvent = events.FirstOrDefault(e => e.Id == selectedEventId);
+        StateHasChanged();
+    }
+
+    private async Task StartScan()
+    {
+        scanning    = true;
+        lastResult  = null;
+        StateHasChanged();
+        await Task.Delay(100);
+        await JS.InvokeVoidAsync("qrScanner.start", "ci-video", "ci-canvas", selfRef);
+    }
+
+    private async Task StopScan()
+    {
+        await JS.InvokeVoidAsync("qrScanner.stop");
+        scanning = false;
+    }
+
+    [JSInvokable]
+    public async Task OnQrDetected(string data)
+    {
+        await JS.InvokeVoidAsync("qrScanner.stop");
+        scanning = false;
+
+        if (!int.TryParse(data.Replace("flomi-apt:", ""), out var aptId))
+        {
+            lastResult = new ScanResult(false, Message: "Ungültiger QR-Code.");
+            StateHasChanged();
+            return;
+        }
+
+        var apt = await AppointmentService.GetByIdForCheckInAsync(aptId);
+        if (apt == null)
+        {
+            lastResult = new ScanResult(false, Message: "Anmeldung nicht gefunden oder bereits storniert.");
+            StateHasChanged();
+            return;
+        }
+
+        if (apt.CheckedInAt.HasValue)
+        {
+            lastResult = new ScanResult(false, Message: $"Bereits eingecheckt um {apt.CheckedInAt:HH:mm} Uhr.");
+            StateHasChanged();
+            return;
+        }
+
+        var success = await AppointmentService.CheckInAsync(aptId);
+        var person  = apt.FamilyMember != null
+            ? $"{apt.FamilyMember.FirstName} {apt.FamilyMember.LastName}"
+            : $"{apt.User?.FirstName} {apt.User?.LastName}";
+
+        lastResult = success
+            ? new ScanResult(true, person, apt.Area?.AreaTemplate?.Name ?? "–",
+                apt.Area?.Date.ToString("dd.MM.yyyy") ?? "", DateTime.Now.ToString("HH:mm"))
+            : new ScanResult(false, Message: "Check-in fehlgeschlagen.");
+
+        await LoadStats();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task OnScanError(string msg)
+    {
+        lastResult = new ScanResult(false, Message: $"Kamera-Fehler: {msg}");
+        scanning   = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (scanning) await JS.InvokeVoidAsync("qrScanner.stop");
+        selfRef?.Dispose();
+    }
+}

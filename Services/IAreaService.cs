@@ -25,6 +25,7 @@ public interface IAreaService
     // ── Events ────────────────────────────────────────────────────────────────
     Task<List<Event>> GetAllEventsAsync();
     Task<Event>       GetEventByIdAsync(int id);
+    Task              ToggleCheckInAsync(int eventId);
     Task              CreateEventAsync(Event evt);
     Task              UpdateEventAsync(Event evt);
     Task              DeleteEventAsync(int id);

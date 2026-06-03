@@ -204,6 +204,14 @@ public class AreaService : IAreaService
             ?? throw new InvalidOperationException($"Event with id {id} not found.");
     }
 
+    public async Task ToggleCheckInAsync(int eventId)
+    {
+        var evt = await _context.Events.FindAsync(eventId);
+        if (evt == null) return;
+        evt.CheckInEnabled = !evt.CheckInEnabled;
+        await _context.SaveChangesAsync();
+    }
+
     public async Task CreateEventAsync(Event evt)
     {
         _context.Events.Add(evt);

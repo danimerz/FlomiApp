@@ -105,6 +105,11 @@
                                            id="activeCheck" class="ac-checkbox" />
                             <label for="activeCheck">Event aktiv</label>
                         </div>
+                        <div class="ac-checkbox-row">
+                            <InputCheckbox @bind-Value="currentEvent.CheckInEnabled"
+                                           id="checkinCheck" class="ac-checkbox" />
+                            <label for="checkinCheck">🎫 QR Check-in aktivieren</label>
+                        </div>
 
                         <div class="ac-form-actions">
                             <button type="submit" class="ac-submit-btn">
@@ -1189,11 +1194,12 @@
         showEventForm  = true;
         currentEvent   = new Event
         {
-            Id          = evt.Id,
-            Name        = evt.Name,
-            Date        = evt.Date,
-            Description = evt.Description,
-            IsActive    = evt.IsActive
+            Id             = evt.Id,
+            Name           = evt.Name,
+            Date           = evt.Date,
+            Description    = evt.Description,
+            IsActive       = evt.IsActive,
+            CheckInEnabled = evt.CheckInEnabled
         };
     }
 

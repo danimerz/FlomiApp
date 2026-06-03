@@ -10,6 +10,8 @@ public interface IAppointmentService
     Task UpdateFamilyMemberAsync(int familyMemberId, string userId, FamilyMember familyMember);
     Task DeleteFamilyMemberAsync(int familyMemberId, string userId);
     Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null, bool useAlternativeSlot = false);
+    Task<Appointment?> GetByIdForCheckInAsync(int appointmentId);
+    Task<bool>         CheckInAsync(int appointmentId);
     Task CancelAppointmentAsync(int appointmentId, string userId);
     Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false);
 }

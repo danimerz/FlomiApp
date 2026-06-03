@@ -21,7 +21,8 @@ public class Appointment
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Registered;
 
     public string? Comment             { get; set; }
-    public bool    UseAlternativeSlot  { get; set; } = false;
+    public bool       UseAlternativeSlot  { get; set; } = false;
+    public DateTime?  CheckedInAt         { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

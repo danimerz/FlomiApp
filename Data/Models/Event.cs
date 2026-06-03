@@ -13,7 +13,8 @@ public class Event
 
     public string Description { get; set; } = string.Empty;
 
-    public bool IsActive { get; set; } = true;
+    public bool IsActive        { get; set; } = true;
+    public bool CheckInEnabled  { get; set; } = false;
 
     public ICollection<Area> Areas { get; set; } = new List<Area>();
 }

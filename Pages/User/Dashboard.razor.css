@@ -527,6 +527,39 @@ input:checked + .slider:before {
     border-radius: 50%;
 }
 
+/* ── Appointment QR Code ──────────────────────────────────────────────────── */
+.appointment-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+    padding: .85rem;
+    border-radius: 14px;
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
+    text-align: center;
+}
+
+.appointment-qr__label {
+    font-size: .82rem;
+    font-weight: 800;
+    color: var(--color-info-text);
+    letter-spacing: .03em;
+}
+
+.appointment-qr__img {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    border: 3px solid var(--color-info-border);
+}
+
+.appointment-qr small {
+    font-size: .75rem;
+    color: var(--color-text-light);
+}
+
 /* ── View-Toggle Switch ───────────────────────────────────────────────────── */
 .cal-view-toggle {
     display: inline-flex;
