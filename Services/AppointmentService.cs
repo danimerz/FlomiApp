@@ -493,4 +493,13 @@ public class AppointmentService : IAppointmentService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> CheckOutAsync(int appointmentId)
+    {
+        var apt = await _context.Appointments.FindAsync(appointmentId);
+        if (apt == null || !apt.CheckedInAt.HasValue || apt.CheckedOutAt.HasValue) return false;
+        apt.CheckedOutAt = DateTime.Now;
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

@@ -12,6 +12,7 @@ public interface IAppointmentService
     Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null, bool useAlternativeSlot = false);
     Task<Appointment?> GetByIdForCheckInAsync(int appointmentId);
     Task<bool>         CheckInAsync(int appointmentId);
+    Task<bool>         CheckOutAsync(int appointmentId);
     Task CancelAppointmentAsync(int appointmentId, string userId);
     Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false);
 }

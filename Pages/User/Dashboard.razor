@@ -186,6 +186,13 @@
                                                                     <span class="value">@appointment.CheckedInAt?.ToString("HH:mm") Uhr</span>
                                                                 </div>
                                                             }
+                                                            @if (appointment.CheckedOutAt.HasValue)
+                                                            {
+                                                                <div class="appointment-info-item">
+                                                                    <span class="label">🏁 Ausgecheckt</span>
+                                                                    <span class="value">@appointment.CheckedOutAt?.ToString("HH:mm") Uhr</span>
+                                                                </div>
+                                                            }
                                                             <div class="appointment-info-item">
                                                                 <span class="label">Status</span>
                                                                 <span class="value">

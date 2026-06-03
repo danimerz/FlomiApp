@@ -22,7 +22,8 @@ public class Appointment
 
     public string? Comment             { get; set; }
     public bool       UseAlternativeSlot  { get; set; } = false;
-    public DateTime?  CheckedInAt         { get; set; }
+    public DateTime?  CheckedInAt          { get; set; }
+    public DateTime?  CheckedOutAt         { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

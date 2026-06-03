@@ -351,5 +351,5 @@ C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\ref\FlomiApp.dll
 C:\Users\merzd\source\repos\FlomiApp\bin\Debug\net9.0\QRCoder.dll
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\scopedcss\Pages\Admin\CheckIn.razor.rz.scp.css
 C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\compressed\m9r1pqd2rr-{0}-33e3rtq47j-33e3rtq47j.gz
-C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\compressed\72s838ph74-{0}-iabflgt44x-iabflgt44x.gz
-C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\compressed\04oziy9wvr-{0}-iabflgt44x-iabflgt44x.gz
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\compressed\72s838ph74-{0}-3ucryz7386-3ucryz7386.gz
+C:\Users\merzd\source\repos\FlomiApp\obj\Debug\net9.0\compressed\04oziy9wvr-{0}-3ucryz7386-3ucryz7386.gz

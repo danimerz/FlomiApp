@@ -61,10 +61,22 @@
             <div class="ci-card ci-scan-card">
                 <h3 class="ci-card__title">📷 Scan-Modus</h3>
 
+                <!-- Mode Toggle -->
+                <div class="ci-mode-toggle">
+                    <button class="ci-mode-btn @(checkOutMode ? "" : "ci-mode-btn--active")"
+                            @onclick="() => { checkOutMode = false; lastResult = null; }">
+                        ✅ Check-in
+                    </button>
+                    <button class="ci-mode-btn @(checkOutMode ? "ci-mode-btn--active ci-mode-btn--out" : "")"
+                            @onclick="() => { checkOutMode = true; lastResult = null; }">
+                        🏁 Check-out
+                    </button>
+                </div>
+
                 @if (!scanning)
                 {
-                    <button class="ci-scan-btn" @onclick="StartScan">
-                        📷 Kamera starten
+                    <button class="ci-scan-btn @(checkOutMode ? "ci-scan-btn--out" : "")" @onclick="StartScan">
+                        📷 @(checkOutMode ? "Check-out scannen" : "Check-in scannen")
                     </button>
                 }
                 else
@@ -81,11 +93,11 @@
                     <div class="ci-result ci-result--@(lastResult.Success ? "ok" : "err")">
                         @if (lastResult.Success)
                         {
-                            <div class="ci-result__icon">✅</div>
+                            <div class="ci-result__icon">@(lastResult.isCheckOut ? "🏁" : "✅")</div>
                             <div class="ci-result__text">
                                 <strong>@lastResult.PersonName</strong><br/>
                                 <span>@lastResult.AreaName · @lastResult.Date</span><br/>
-                                <small>Eingecheckt @lastResult.Time</small>
+                                <small>@(lastResult.isCheckOut ? "Ausgecheckt" : "Eingecheckt") @lastResult.Time</small>
                             </div>
                         }
                         else
@@ -104,6 +116,10 @@
                     <div class="ci-stat ci-stat--ok">
                         <span class="ci-stat__num">@checkedIn</span>
                         <span class="ci-stat__label">Eingecheckt</span>
+                    </div>
+                    <div class="ci-stat ci-stat--out">
+                        <span class="ci-stat__num">@checkedOut</span>
+                        <span class="ci-stat__label">Ausgecheckt</span>
                     </div>
                     <div class="ci-stat ci-stat--pending">
                         <span class="ci-stat__num">@pending</span>
@@ -130,8 +146,14 @@
                                 ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
                                 : $"{a.User?.FirstName} {a.User?.LastName}";
                             <div class="ci-recent__item">
-                                <span class="ci-recent__time">@a.CheckedInAt?.ToString("HH:mm")</span>
-                                <span class="ci-recent__person">✅ @person</span>
+                                <span class="ci-recent__time">
+                                    @(a.CheckedOutAt.HasValue
+                                        ? a.CheckedOutAt?.ToString("HH:mm")
+                                        : a.CheckedInAt?.ToString("HH:mm"))
+                                </span>
+                                <span class="ci-recent__person">
+                                    @(a.CheckedOutAt.HasValue ? "🏁" : "✅") @person
+                                </span>
                                 <span class="ci-recent__area">@(a.Area?.AreaTemplate?.Name) · @a.Area?.Date.ToString("dd.MM")</span>
                             </div>
                         }
@@ -158,14 +180,16 @@
     private Event?           selectedEvent = null;
     private int              selectedEventId = 0;
     private bool             scanning      = false;
+    private bool             checkOutMode  = false;
 
     private int checkedIn;
+    private int checkedOut;
     private int pending;
     private int total;
     private List<Appointment> recentCheckIns = new();
 
     private record ScanResult(bool Success, string PersonName = "", string AreaName = "",
-        string Date = "", string Time = "", string Message = "");
+        string Date = "", string Time = "", string Message = "", bool isCheckOut = false);
     private ScanResult? lastResult = null;
 
     private DotNetObjectReference<CheckIn>? selfRef;
@@ -193,9 +217,10 @@
 
         total      = apts.Count;
         checkedIn  = apts.Count(a => a.CheckedInAt.HasValue);
+        checkedOut = apts.Count(a => a.CheckedOutAt.HasValue);
         pending    = total - checkedIn;
-        recentCheckIns = apts.Where(a => a.CheckedInAt.HasValue)
-            .OrderByDescending(a => a.CheckedInAt).Take(5).ToList();
+        recentCheckIns = apts.Where(a => a.CheckedInAt.HasValue || a.CheckedOutAt.HasValue)
+            .OrderByDescending(a => a.CheckedOutAt ?? a.CheckedInAt).Take(5).ToList();
     }
 
     private async Task ToggleCheckIn()
@@ -245,27 +270,48 @@
 
         if (apt.Area?.AreaTemplate?.AreaCategory?.Name != "Verkauf")
         {
-            lastResult = new ScanResult(false, Message: "Check-in nur für Verkauf-Bereiche möglich.");
+            lastResult = new ScanResult(false, Message: "Check-in/out nur für Verkauf-Bereiche möglich.");
             StateHasChanged();
             return;
         }
 
-        if (apt.CheckedInAt.HasValue)
-        {
-            lastResult = new ScanResult(false, Message: $"Bereits eingecheckt um {apt.CheckedInAt:HH:mm} Uhr.");
-            StateHasChanged();
-            return;
-        }
-
-        var success = await AppointmentService.CheckInAsync(aptId);
-        var person  = apt.FamilyMember != null
+        var person = apt.FamilyMember != null
             ? $"{apt.FamilyMember.FirstName} {apt.FamilyMember.LastName}"
             : $"{apt.User?.FirstName} {apt.User?.LastName}";
+        var areaName = apt.Area?.AreaTemplate?.Name ?? "–";
+        var date     = apt.Area?.Date.ToString("dd.MM.yyyy") ?? "";
 
-        lastResult = success
-            ? new ScanResult(true, person, apt.Area?.AreaTemplate?.Name ?? "–",
-                apt.Area?.Date.ToString("dd.MM.yyyy") ?? "", DateTime.Now.ToString("HH:mm"))
-            : new ScanResult(false, Message: "Check-in fehlgeschlagen.");
+        if (checkOutMode)
+        {
+            // ── Check-out ──────────────────────────────────────────────────────
+            if (!apt.CheckedInAt.HasValue)
+            {
+                lastResult = new ScanResult(false, Message: $"{person} ist noch nicht eingecheckt.");
+                StateHasChanged(); return;
+            }
+            if (apt.CheckedOutAt.HasValue)
+            {
+                lastResult = new ScanResult(false, Message: $"Bereits ausgecheckt um {apt.CheckedOutAt:HH:mm} Uhr.");
+                StateHasChanged(); return;
+            }
+            var outOk = await AppointmentService.CheckOutAsync(aptId);
+            lastResult = outOk
+                ? new ScanResult(true, person, areaName, date, DateTime.Now.ToString("HH:mm"), isCheckOut: true)
+                : new ScanResult(false, Message: "Check-out fehlgeschlagen.");
+        }
+        else
+        {
+            // ── Check-in ───────────────────────────────────────────────────────
+            if (apt.CheckedInAt.HasValue)
+            {
+                lastResult = new ScanResult(false, Message: $"Bereits eingecheckt um {apt.CheckedInAt:HH:mm} Uhr.");
+                StateHasChanged(); return;
+            }
+            var inOk = await AppointmentService.CheckInAsync(aptId);
+            lastResult = inOk
+                ? new ScanResult(true, person, areaName, date, DateTime.Now.ToString("HH:mm"))
+                : new ScanResult(false, Message: "Check-in fehlgeschlagen.");
+        }
 
         await LoadStats();
         StateHasChanged();

@@ -404,7 +404,7 @@
                 $"Möbelabholung {r.PickupDate:dd.MM.yyyy}", r.Status.ToString()));
         }
 
-        // Check-ins
+        // Check-ins + Check-outs
         var recentCheckIns = await Db.Appointments
             .Include(a => a.User).Include(a => a.FamilyMember)
             .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
@@ -424,6 +424,8 @@
             var date = ap.Area?.Date.ToString("ddd dd.MM", new CultureInfo("de-CH")) ?? "";
             var ev   = ap.Area?.Event?.Name ?? "";
             feed.Add(new ActivityItem(ap.CheckedInAt!.Value, "checkin", person, $"{area} · {date}", ev));
+            if (ap.CheckedOutAt.HasValue)
+                feed.Add(new ActivityItem(ap.CheckedOutAt.Value, "checkout", person, $"{area} · {date}", ev));
         }
 
         activityFeed = feed.OrderByDescending(a => a.Timestamp).Take(40).ToList();
@@ -517,6 +519,7 @@
         "cancel"   => "🔴",
         "pickup"   => "🛋️",
         "checkin"  => "🎫",
+        "checkout" => "🏁",
         _          => "📌"
     };
 
@@ -526,6 +529,7 @@
         "cancel"   => "hat storniert:",
         "pickup"   => "beantragte Abholung:",
         "checkin"  => "wurde eingecheckt:",
+        "checkout" => "wurde ausgecheckt:",
         _          => ""
     };
 }

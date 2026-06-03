@@ -218,6 +218,8 @@
 .adm-feed-item__dot--register[b-e9fi6fqsh2] { background: var(--color-success-text); }
 .adm-feed-item__dot--cancel[b-e9fi6fqsh2]   { background: var(--color-error-text); }
 .adm-feed-item__dot--pickup[b-e9fi6fqsh2]   { background: var(--color-warning-text); }
+.adm-feed-item__dot--checkin[b-e9fi6fqsh2]  { background: var(--color-primary); }
+.adm-feed-item__dot--checkout[b-e9fi6fqsh2] { background: #7c3aed; }
 
 .adm-feed-item__body[b-e9fi6fqsh2] {
     display: flex;
