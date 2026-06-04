@@ -264,7 +264,8 @@ public class AppointmentService : IAppointmentService
                     area.Date,
                     timeSlot,
                     comment,
-                    appointmentId);
+                    appointmentId,
+                    forPerson);
             }
 
             await _mailService.SendAdminNewRegistrationAsync(

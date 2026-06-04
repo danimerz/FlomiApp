@@ -51,11 +51,13 @@ public class MailService : IMailService
     public async Task SendRegistrationConfirmationAsync(
         string toEmail, string toName, string areaName,
         string eventName, DateTime date, string timeSlot,
-        string? comment = null, int? appointmentId = null)
+        string? comment = null, int? appointmentId = null, string? forPerson = null)
     {
         var subject = $"✅ Anmeldebestätigung – {areaName} · {eventName}";
         var commentRow = string.IsNullOrEmpty(comment) ? "" :
             $"<tr><td style='padding:6px 12px;color:#64748b;'>Dein Kommentar:</td><td style='padding:6px 12px;font-style:italic;'>{comment}</td></tr>";
+        var forPersonRow = string.IsNullOrEmpty(forPerson) ? "" :
+            $"<tr style='background:#fef9c3;'><td style='padding:8px 12px;color:#854d0e;font-weight:700;'>Angemeldet für:</td><td style='padding:8px 12px;font-weight:800;color:#854d0e;'>{forPerson}</td></tr>";
 
         var qrSection = "";
         if (appointmentId.HasValue)
@@ -86,6 +88,7 @@ public class MailService : IMailService
                   <tr style="background:#dbeafe;">
                     <td colspan="2" style="padding:10px 12px;font-weight:800;color:#1d4ed8;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;">Dein Einsatz</td>
                   </tr>
+                  {forPersonRow}
                   <tr><td style="padding:6px 12px;color:#64748b;width:40%">Event:</td><td style="padding:6px 12px;font-weight:700;">{eventName}</td></tr>
                   <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Bereich:</td><td style="padding:6px 12px;font-weight:700;">{areaName}</td></tr>
                   <tr><td style="padding:6px 12px;color:#64748b;">Datum:</td><td style="padding:6px 12px;font-weight:700;">{date:dddd, dd. MMMM yyyy}</td></tr>
