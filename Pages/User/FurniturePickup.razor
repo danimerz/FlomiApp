@@ -1,11 +1,10 @@
 @page "/user/furniture-pickup"
+@page "/furniture-pickup"
 @using FlomiApp.Data.Models
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IFurniturePickupService FurniturePickupService
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
-@attribute [Authorize]
 
 <PageTitle>Möbel Abholservice</PageTitle>
 
@@ -19,6 +18,17 @@
             <p>Melde deine Möbel zur Abholung an. Wir kommen zu dir!</p>
         </div>
     </section>
+
+    @if (!isLoggedIn)
+    {
+        <div class="state-card state-card--info" style="margin-bottom:1rem">
+            <div class="state-card__icon">💡</div>
+            <div class="state-card__content">
+                <h3>Nicht angemeldet</h3>
+                <p>Du kannst das Formular auch ohne Konto ausfüllen. <a href="/Identity/Account/Login?returnUrl=/furniture-pickup">Melde dich an</a>, damit deine Kontaktdaten automatisch eingetragen werden.</p>
+            </div>
+        </div>
+    }
 
     @if (availableEvents == null)
     {
@@ -128,21 +138,24 @@
                             <label>Vorname</label>
                             <InputText @bind-Value="model.FirstName"
                                        class="form-control-modern"
-                                       readonly />
+                                       readonly="@isLoggedIn"
+                                       placeholder="z.B. Max" />
                         </div>
 
                         <div class="pickup-field">
                             <label>Nachname</label>
                             <InputText @bind-Value="model.LastName"
                                        class="form-control-modern"
-                                       readonly />
+                                       readonly="@isLoggedIn"
+                                       placeholder="z.B. Mustermann" />
                         </div>
 
                         <div class="pickup-field">
                             <label>E-Mail</label>
-                                <InputText @bind-Value="model.Email"
-                                        class="form-control-modern"
-                                       readonly />
+                            <InputText @bind-Value="model.Email"
+                                       class="form-control-modern"
+                                       readonly="@isLoggedIn"
+                                       placeholder="z.B. max@beispiel.ch" />
                         </div>
 
                         <div class="pickup-field">
@@ -329,6 +342,7 @@
     private bool    submitted                  = false;
     private bool    isSubmitting               = false;
     private bool    showConsentError           = false;
+    private bool    isLoggedIn                 = false;
     private int     createdOrderNumber         = 0;
     private string? imageError;
 
@@ -374,6 +388,7 @@
 
         if (user.Identity?.IsAuthenticated == true)
         {
+            isLoggedIn = true;
             var userId  = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                           ?? string.Empty;
             var appUser = await UserManager.FindByIdAsync(userId);
