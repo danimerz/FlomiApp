@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @inject FlomiApp.Services.ThemeState ThemeState
 @inject FlomiApp.Services.IChatService ChatService
+@inject FlomiApp.Services.IFurniturePickupService FurniturePickupService
 @inject UserManager<FlomiApp.Data.Models.ApplicationUser> NavUserManager
 @inject AuthenticationStateProvider NavAuthStateProvider
 @inject NavigationManager NavManager
@@ -20,12 +21,15 @@
                     </NavLink>
                 </div>
 
-                <div class="navmenu-item">
-                    <NavLink class="navmenu-link" href="furniture-pickup">
-                        <span class="navmenu-icon">🛋</span>
-                        <span>Möbel Abholservice</span>
-                    </NavLink>
-                </div>
+                @if (furniturePickupAvailable)
+                {
+                    <div class="navmenu-item">
+                        <NavLink class="navmenu-link" href="furniture-pickup">
+                            <span class="navmenu-icon">🛋</span>
+                            <span>Möbel Abholservice</span>
+                        </NavLink>
+                    </div>
+                }
             </div>
 
             <AuthorizeView Context="authState">
@@ -253,9 +257,10 @@
     public EventCallback OnNavLinkClicked { get; set; }
 
     // ── Unread counts ─────────────────────────────────────────────────────────
-    private int    userUnreadCount  = 0;
-    private int    adminUnreadCount = 0;
-    private string currentUserId   = string.Empty;
+    private int    userUnreadCount         = 0;
+    private int    adminUnreadCount        = 0;
+    private string currentUserId          = string.Empty;
+    private bool   furniturePickupAvailable = false;
 
     protected override void OnInitialized()
     {
@@ -283,6 +288,9 @@
         if (!firstRender) return;
         try
         {
+            var availableEvents = await FurniturePickupService.GetAvailableEventsAsync();
+            furniturePickupAvailable = availableEvents.Any();
+
             var auth = await NavAuthStateProvider.GetAuthenticationStateAsync();
             var user = await NavUserManager.GetUserAsync(auth.User);
             if (user == null) return;
