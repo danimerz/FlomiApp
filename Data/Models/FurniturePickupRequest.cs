@@ -7,9 +7,8 @@ public class FurniturePickupRequest
 {
     public int Id { get; set; }
 
-    [Required]
-    public string UserId { get; set; } = string.Empty;
-    public ApplicationUser User { get; set; } = null!;
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
 
     // Auftragsnummer ab 1000
     public int OrderNumber { get; set; }
