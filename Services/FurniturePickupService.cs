@@ -8,10 +8,15 @@ namespace FlomiApp.Services;
 public class FurniturePickupService : IFurniturePickupService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMailService         _mailService;
+    private readonly ILogger<FurniturePickupService> _logger;
 
-    public FurniturePickupService(ApplicationDbContext context)
+    public FurniturePickupService(ApplicationDbContext context,
+        IMailService mailService, ILogger<FurniturePickupService> logger)
     {
-        _context = context;
+        _context     = context;
+        _mailService = mailService;
+        _logger      = logger;
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -78,6 +83,8 @@ public class FurniturePickupService : IFurniturePickupService
         request.Status    = status;
         request.AdminNote = adminNote;
         await _context.SaveChangesAsync();
+
+        await SendStatusMailAsync(request);
     }
 
     public async Task DeleteRequestAsync(int id)
@@ -89,6 +96,63 @@ public class FurniturePickupService : IFurniturePickupService
         {
             request.Status = PickupRequestStatus.Deleted;
             await _context.SaveChangesAsync();
+
+            await SendStatusMailAsync(request);
+        }
+    }
+
+    private async Task SendStatusMailAsync(FurniturePickupRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Email)) return;
+
+        var name        = $"{request.FirstName} {request.LastName}".Trim();
+        var orderNum    = $"#{request.OrderNumber}";
+        var pickupDate  = request.PickupDate.ToString("dd. MMMM yyyy",
+                            new System.Globalization.CultureInfo("de-CH"));
+        var noteSection = string.IsNullOrEmpty(request.AdminNote) ? "" :
+            $"<tr style='background:#f8fafc;'><td style='padding:6px 12px;color:#64748b;'>Notiz vom Admin:</td><td style='padding:6px 12px;font-style:italic;'>{request.AdminNote}</td></tr>";
+
+        var (icon, statusText, color, bgColor) = request.Status switch
+        {
+            PickupRequestStatus.Accepted => ("✅", "Akzeptiert",  "#15803d", "#dcfce7"),
+            PickupRequestStatus.Rejected => ("❌", "Abgelehnt",   "#b91c1c", "#fee2e2"),
+            PickupRequestStatus.Deleted  => ("🗑️", "Storniert",  "#64748b", "#f1f5f9"),
+            _                            => ("⏳", "Ausstehend",  "#92400e", "#fef9c3")
+        };
+
+        var subject = $"{icon} Möbelabholung {orderNum} – {statusText}";
+        var body = $"""
+            <div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:16px 16px 0 0;padding:28px 32px;">
+                <h1 style="margin:0;color:#fff;font-size:1.5rem;">Möbel Abholservice {icon}</h1>
+              </div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;">
+                <p style="color:#374151;margin-top:0;">Hallo <strong>{name}</strong>,<br>der Status deiner Möbelabholung hat sich geändert.</p>
+                <div style="display:inline-block;padding:.4rem 1rem;border-radius:999px;background:{bgColor};color:{color};font-weight:800;font-size:1rem;margin-bottom:1.25rem;">
+                  {icon} {statusText}
+                </div>
+                <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 16px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+                  <tr style="background:#dbeafe;">
+                    <td colspan="2" style="padding:10px 12px;font-weight:800;color:#1d4ed8;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;">Deine Anfrage</td>
+                  </tr>
+                  <tr><td style="padding:6px 12px;color:#64748b;width:45%">Auftragsnummer:</td><td style="padding:6px 12px;font-weight:700;">{orderNum}</td></tr>
+                  <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Abholdatum:</td><td style="padding:6px 12px;font-weight:700;">{pickupDate}</td></tr>
+                  <tr><td style="padding:6px 12px;color:#64748b;">Adresse:</td><td style="padding:6px 12px;font-weight:700;">{request.Street}, {request.PostalCode} {request.City}</td></tr>
+                  {noteSection}
+                </table>
+                <p style="color:#64748b;font-size:.9rem;">Bei Fragen kannst du dich direkt beim Flomi-Team melden.</p>
+                <p style="color:#374151;font-weight:700;margin-bottom:0;">Freundliche Grüsse, das Flomi-Team 🙌</p>
+              </div>
+            </div>
+            """;
+
+        try
+        {
+            await _mailService.SendAsync(request.Email, name, subject, body);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fehler beim Senden der Status-Mail für Anfrage #{OrderNumber}", request.OrderNumber);
         }
     }
 
