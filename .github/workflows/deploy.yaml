@@ -47,7 +47,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             ${{ secrets.JUMP_USER }}@${{ secrets.JUMP_HOST }} \
             "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
-            >> ~/.ssh/known_hosts
+            2>/dev/null >> ~/.ssh/known_hosts
 
           # SSH Config schreiben
           {
