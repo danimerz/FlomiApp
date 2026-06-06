@@ -3,7 +3,7 @@ name: Build & Deploy Blazor Server App (via Jump Host)
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
