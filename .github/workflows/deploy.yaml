@@ -45,37 +45,43 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
 
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
           ssh-keyscan -p "$JUMP_PORT_1" "$JUMP_HOST_1" >> ~/.ssh/known_hosts
 
-          {
-            echo "Host jump1"
-            echo "  HostName $JUMP_HOST_1"
-            echo "  User $JUMP_USER_1"
-            echo "  Port $JUMP_PORT_1"
-            echo "  IdentityFile ~/.ssh/id_ed25519"
-            echo "  StrictHostKeyChecking no"
-            echo ""
-            echo "Host jump2"
-            echo "  HostName $JUMP_HOST_2"
-            echo "  User $JUMP_USER_2"
-            echo "  Port $JUMP_PORT_2"
-            echo "  IdentityFile ~/.ssh/id_ed25519"
-            echo "  ProxyJump jump1"
-            echo "  StrictHostKeyChecking no"
-            echo ""
-            echo "Host target"
-            echo "  HostName $SSH_HOST"
-            echo "  User $SSH_USER"
-            echo "  Port $SSH_PORT"
-            echo "  IdentityFile ~/.ssh/id_ed25519"
-            echo "  ProxyJump jump2"
-            echo "  StrictHostKeyChecking no"
-          } >> ~/.ssh/config
+          # Config als Variable, dann schreiben
+          CONFIG="Host jump1
+  HostName $JUMP_HOST_1
+  User $JUMP_USER_1
+  Port $JUMP_PORT_1
+  IdentityFile ~/.ssh/id_ed25519
+  StrictHostKeyChecking no
+
+Host jump2
+  HostName $JUMP_HOST_2
+  User $JUMP_USER_2
+  Port $JUMP_PORT_2
+  IdentityFile ~/.ssh/id_ed25519
+  ProxyJump jump1
+  StrictHostKeyChecking no
+
+Host target
+  HostName $SSH_HOST
+  User $SSH_USER
+  Port $SSH_PORT
+  IdentityFile ~/.ssh/id_ed25519
+  ProxyJump jump2
+  StrictHostKeyChecking no"
+
+          printf '%s\n' "$CONFIG" > ~/.ssh/config
           chmod 600 ~/.ssh/config
+
+          # Prüfen ob Config existiert
+          echo "Config inhalt:"
+          cat ~/.ssh/config
 
           # Deploy
           rsync -avz --delete \
