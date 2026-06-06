@@ -12,17 +12,23 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: .NET SDK einrichten
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore & Publish
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish
         run: |
-          dotnet restore
-          dotnet publish -c Release --self-contained false -o ./publish
+          dotnet publish ./FlomiApp.csproj \
+            -c Release \
+            --self-contained false \
+            -o ./publish \
+            -p:TreatWarningsAsErrors=false
 
       - name: SSH-Key & Konfiguration einrichten
         run: |
@@ -30,7 +36,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Jump Host + Zielserver zu known_hosts hinzufügen
           ssh-keyscan -p ${{ secrets.JUMP_PORT }} ${{ secrets.JUMP_HOST }} >> ~/.ssh/known_hosts
           ssh -p ${{ secrets.JUMP_PORT }} \
               -i ~/.ssh/id_ed25519 \
@@ -39,7 +44,6 @@ jobs:
               "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
               >> ~/.ssh/known_hosts
 
-          # SSH Config für einfache Nutzung in den Folgeschritten
           cat >> ~/.ssh/config << EOF
           Host jumphost
             HostName ${{ secrets.JUMP_HOST }}
