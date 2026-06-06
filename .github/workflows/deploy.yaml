@@ -44,27 +44,26 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+          mkdir -p $HOME/.ssh
+          chmod 700 $HOME/.ssh
 
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_PRIVATE_KEY" > $HOME/.ssh/id_ed25519
+          chmod 600 $HOME/.ssh/id_ed25519
 
-          ssh-keyscan -p "$JUMP_PORT_1" "$JUMP_HOST_1" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$JUMP_PORT_1" "$JUMP_HOST_1" >> $HOME/.ssh/known_hosts
 
-          # Config als Variable, dann schreiben
           CONFIG="Host jump1
-          HostName $JUMP_HOST_1
+            HostName $JUMP_HOST_1
             User $JUMP_USER_1
             Port $JUMP_PORT_1
-            IdentityFile ~/.ssh/id_ed25519
+            IdentityFile $HOME/.ssh/id_ed25519
             StrictHostKeyChecking no
           
           Host jump2
             HostName $JUMP_HOST_2
             User $JUMP_USER_2
             Port $JUMP_PORT_2
-            IdentityFile ~/.ssh/id_ed25519
+            IdentityFile $HOME/.ssh/id_ed25519
             ProxyJump jump1
             StrictHostKeyChecking no
           
@@ -72,22 +71,19 @@ jobs:
             HostName $SSH_HOST
             User $SSH_USER
             Port $SSH_PORT
-            IdentityFile ~/.ssh/id_ed25519
+            IdentityFile $HOME/.ssh/id_ed25519
             ProxyJump jump2
             StrictHostKeyChecking no"
           
-                    printf '%s\n' "$CONFIG" > ~/.ssh/config
-                    #chmod 600 ~/.ssh/config
+                    printf '%s\n' "$CONFIG" > $HOME/.ssh/config
+                    chmod 600 $HOME/.ssh/config
           
-                    # Prüfen ob Config existiert
-                    echo "Config inhalt:"
-                    cat ~/.ssh/config
+                    echo "HOME ist: $HOME"
+                    echo "Config existiert: $(ls -la $HOME/.ssh/config)"
           
-                    # Deploy
                     rsync -avz --delete \
-                      -e "ssh -F ~/.ssh/config" \
+                      -e "ssh -F $HOME/.ssh/config" \
                       ./publish/ \
                       target:/var/www/webapp/
           
-                    # Service neu starten
-                    ssh -F ~/.ssh/config target "sudo systemctl restart flomi"
+                    ssh -F $HOME/.ssh/config target "sudo systemctl restart flomi"
