@@ -1,56 +1,67 @@
-name: Build & Deploy Blazor Server App
+name: Build & Deploy Blazor Server App (via Jump Host)
 
 on:
   push:
     branches:
-      - main          # nur bei Push auf main deployen
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Code auschecken
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. .NET SDK einrichten
       - name: .NET SDK einrichten
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # 3. Abhängigkeiten wiederherstellen
-      - name: Restore
-        run: dotnet restore
-
-      # 4. App publishen
-      - name: Publish
+      - name: Restore & Publish
         run: |
-          dotnet publish -c Release \
-            --self-contained false \
-            -o ./publish
+          dotnet restore
+          dotnet publish -c Release --self-contained false -o ./publish
 
-      # 5. SSH-Key einrichten
-      - name: SSH-Key einrichten
+      - name: SSH-Key & Konfiguration einrichten
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      # 6. Dateien auf Server übertragen
+          # Jump Host + Zielserver zu known_hosts hinzufügen
+          ssh-keyscan -p ${{ secrets.JUMP_PORT }} ${{ secrets.JUMP_HOST }} >> ~/.ssh/known_hosts
+          ssh -p ${{ secrets.JUMP_PORT }} \
+              -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.JUMP_USER }}@${{ secrets.JUMP_HOST }} \
+              "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
+              >> ~/.ssh/known_hosts
+
+          # SSH Config für einfache Nutzung in den Folgeschritten
+          cat >> ~/.ssh/config << EOF
+          Host jumphost
+            HostName ${{ secrets.JUMP_HOST }}
+            User ${{ secrets.JUMP_USER }}
+            Port ${{ secrets.JUMP_PORT }}
+            IdentityFile ~/.ssh/id_ed25519
+
+          Host target
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            Port ${{ secrets.SSH_PORT }}
+            IdentityFile ~/.ssh/id_ed25519
+            ProxyJump jumphost
+          EOF
+          chmod 600 ~/.ssh/config
+
       - name: Deploy via rsync
         run: |
           rsync -avz --delete \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519" \
+            -e "ssh -F ~/.ssh/config" \
             ./publish/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/meinapp/
+            target:/var/www/meinapp/
 
-      # 7. Service neu starten
       - name: Service neu starten
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} \
-              -i ~/.ssh/id_ed25519 \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "sudo systemctl restart meinapp"
+          ssh -F ~/.ssh/config target "sudo systemctl restart meinapp"
