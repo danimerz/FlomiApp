@@ -60,8 +60,8 @@ jobs:
           rsync -avz --delete \
             -e "ssh -F ~/.ssh/config" \
             ./publish/ \
-            target:/var/www/meinapp/
+            target:/var/www/webapp/
 
       - name: Service neu starten
         run: |
-          ssh -F ~/.ssh/config target "sudo systemctl restart meinapp"
+          ssh -F ~/.ssh/config target "sudo systemctl restart flomi"
