@@ -42,26 +42,19 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
-
-          # Key korrekt schreiben (printf statt echo)
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-
-          # Key-Format prüfen
           ssh-keygen -l -f ~/.ssh/id_ed25519
 
-          # Jump Host scannen
           ssh-keyscan -p "$JUMP_PORT" "$JUMP_HOST" >> ~/.ssh/known_hosts
 
-          # Zielserver über Jump Host scannen
-          ssh \
+          # MIT -v für verbose Output
+          ssh -v \
             -i ~/.ssh/id_ed25519 \
             -p "$JUMP_PORT" \
             -o StrictHostKeyChecking=no \
             "$JUMP_USER@$JUMP_HOST" \
-            "ssh-keyscan -p $SSH_PORT $SSH_HOST" \
-            2>/dev/null >> ~/.ssh/known_hosts
-
+            "echo verbindung_ok" || true
           # SSH Config schreiben
           {
             echo "Host jumphost"
