@@ -27,7 +27,7 @@ jobs:
         run: |
           dotnet publish ./FlomiApp.csproj \
             -c Release \
-            --self-contained false \
+            --self-contained \
             -o ./publish \
             -p:TreatWarningsAsErrors=false
 
