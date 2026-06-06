@@ -1,0 +1,56 @@
+name: Build & Deploy Blazor Server App
+
+on:
+  push:
+    branches:
+      - main          # nur bei Push auf main deployen
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Code auschecken
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. .NET SDK einrichten
+      - name: .NET SDK einrichten
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # 3. Abhängigkeiten wiederherstellen
+      - name: Restore
+        run: dotnet restore
+
+      # 4. App publishen
+      - name: Publish
+        run: |
+          dotnet publish -c Release \
+            --self-contained false \
+            -o ./publish
+
+      # 5. SSH-Key einrichten
+      - name: SSH-Key einrichten
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      # 6. Dateien auf Server übertragen
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -p ${{ secrets.SSH_PORT }} -i ~/.ssh/id_ed25519" \
+            ./publish/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/meinapp/
+
+      # 7. Service neu starten
+      - name: Service neu starten
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} \
+              -i ~/.ssh/id_ed25519 \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+              "sudo systemctl restart meinapp"
