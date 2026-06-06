@@ -36,28 +36,33 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
+          # Jump Host scannen
           ssh-keyscan -p ${{ secrets.JUMP_PORT }} ${{ secrets.JUMP_HOST }} >> ~/.ssh/known_hosts
-          ssh -p ${{ secrets.JUMP_PORT }} \
-              -i ~/.ssh/id_ed25519 \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.JUMP_USER }}@${{ secrets.JUMP_HOST }} \
-              "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
-              >> ~/.ssh/known_hosts
 
-          cat >> ~/.ssh/config << EOF
-          Host jumphost
-            HostName ${{ secrets.JUMP_HOST }}
-            User ${{ secrets.JUMP_USER }}
-            Port ${{ secrets.JUMP_PORT }}
-            IdentityFile ~/.ssh/id_ed25519
+          # Zielserver über Jump Host scannen
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -p ${{ secrets.JUMP_PORT }} \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.JUMP_USER }}@${{ secrets.JUMP_HOST }} \
+            "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
+            >> ~/.ssh/known_hosts
 
-          Host target
-            HostName ${{ secrets.SSH_HOST }}
-            User ${{ secrets.SSH_USER }}
-            Port ${{ secrets.SSH_PORT }}
-            IdentityFile ~/.ssh/id_ed25519
-            ProxyJump jumphost
-          EOF
+          # SSH Config schreiben
+          {
+            echo "Host jumphost"
+            echo "  HostName ${{ secrets.JUMP_HOST }}"
+            echo "  User ${{ secrets.JUMP_USER }}"
+            echo "  Port ${{ secrets.JUMP_PORT }}"
+            echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo ""
+            echo "Host target"
+            echo "  HostName ${{ secrets.SSH_HOST }}"
+            echo "  User ${{ secrets.SSH_USER }}"
+            echo "  Port ${{ secrets.SSH_PORT }}"
+            echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo "  ProxyJump jumphost"
+          } >> ~/.ssh/config
           chmod 600 ~/.ssh/config
 
       - name: Deploy via rsync
