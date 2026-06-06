@@ -31,7 +31,7 @@ jobs:
             -o ./publish \
             -p:TreatWarningsAsErrors=false
 
-      - name: SSH-Key & Konfiguration einrichten
+      - name: SSH einrichten, Deploy & Restart
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           JUMP_HOST_1: ${{ secrets.JUMP_HOST_1 }}
@@ -45,13 +45,12 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
+
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Alle Hosts scannen
           ssh-keyscan -p "$JUMP_PORT_1" "$JUMP_HOST_1" >> ~/.ssh/known_hosts
 
-          # SSH Config mit zweistufigem ProxyJump
           {
             echo "Host jump1"
             echo "  HostName $JUMP_HOST_1"
@@ -78,16 +77,11 @@ jobs:
           } >> ~/.ssh/config
           chmod 600 ~/.ssh/config
 
-          # Verbindung testen
-          ssh -F ~/.ssh/config target "echo verbindung_ok"
-
-      - name: Deploy via rsync
-        run: |
+          # Deploy
           rsync -avz --delete \
             -e "ssh -F ~/.ssh/config" \
             ./publish/ \
             target:/var/www/webapp/
 
-      - name: Service neu starten
-        run: |
+          # Service neu starten
           ssh -F ~/.ssh/config target "sudo systemctl restart flomi"
