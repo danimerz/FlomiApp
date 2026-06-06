@@ -77,7 +77,7 @@ jobs:
             StrictHostKeyChecking no"
           
                     printf '%s\n' "$CONFIG" > ~/.ssh/config
-                    chmod 600 ~/.ssh/config
+                    #chmod 600 ~/.ssh/config
           
                     # Prüfen ob Config existiert
                     echo "Config inhalt:"
