@@ -32,37 +32,52 @@ jobs:
             -p:TreatWarningsAsErrors=false
 
       - name: SSH-Key & Konfiguration einrichten
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          JUMP_HOST: ${{ secrets.JUMP_HOST }}
+          JUMP_PORT: ${{ secrets.JUMP_PORT }}
+          JUMP_USER: ${{ secrets.JUMP_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+
+          # Key korrekt schreiben (printf statt echo)
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
+          # Key-Format prüfen
+          ssh-keygen -l -f ~/.ssh/id_ed25519
+
           # Jump Host scannen
-          ssh-keyscan -p ${{ secrets.JUMP_PORT }} ${{ secrets.JUMP_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$JUMP_PORT" "$JUMP_HOST" >> ~/.ssh/known_hosts
 
           # Zielserver über Jump Host scannen
           ssh \
             -i ~/.ssh/id_ed25519 \
-            -p ${{ secrets.JUMP_PORT }} \
+            -p "$JUMP_PORT" \
             -o StrictHostKeyChecking=no \
-            ${{ secrets.JUMP_USER }}@${{ secrets.JUMP_HOST }} \
-            "ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }}" \
+            "$JUMP_USER@$JUMP_HOST" \
+            "ssh-keyscan -p $SSH_PORT $SSH_HOST" \
             2>/dev/null >> ~/.ssh/known_hosts
 
           # SSH Config schreiben
           {
             echo "Host jumphost"
-            echo "  HostName ${{ secrets.JUMP_HOST }}"
-            echo "  User ${{ secrets.JUMP_USER }}"
-            echo "  Port ${{ secrets.JUMP_PORT }}"
+            echo "  HostName $JUMP_HOST"
+            echo "  User $JUMP_USER"
+            echo "  Port $JUMP_PORT"
             echo "  IdentityFile ~/.ssh/id_ed25519"
+            echo "  StrictHostKeyChecking no"
             echo ""
             echo "Host target"
-            echo "  HostName ${{ secrets.SSH_HOST }}"
-            echo "  User ${{ secrets.SSH_USER }}"
-            echo "  Port ${{ secrets.SSH_PORT }}"
+            echo "  HostName $SSH_HOST"
+            echo "  User $SSH_USER"
+            echo "  Port $SSH_PORT"
             echo "  IdentityFile ~/.ssh/id_ed25519"
             echo "  ProxyJump jumphost"
+            echo "  StrictHostKeyChecking no"
           } >> ~/.ssh/config
           chmod 600 ~/.ssh/config
 
