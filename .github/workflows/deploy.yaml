@@ -54,40 +54,40 @@ jobs:
 
           # Config als Variable, dann schreiben
           CONFIG="Host jump1
-  HostName $JUMP_HOST_1
-  User $JUMP_USER_1
-  Port $JUMP_PORT_1
-  IdentityFile ~/.ssh/id_ed25519
-  StrictHostKeyChecking no
-
-Host jump2
-  HostName $JUMP_HOST_2
-  User $JUMP_USER_2
-  Port $JUMP_PORT_2
-  IdentityFile ~/.ssh/id_ed25519
-  ProxyJump jump1
-  StrictHostKeyChecking no
-
-Host target
-  HostName $SSH_HOST
-  User $SSH_USER
-  Port $SSH_PORT
-  IdentityFile ~/.ssh/id_ed25519
-  ProxyJump jump2
-  StrictHostKeyChecking no"
-
-          printf '%s\n' "$CONFIG" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
-
-          # Prüfen ob Config existiert
-          echo "Config inhalt:"
-          cat ~/.ssh/config
-
-          # Deploy
-          rsync -avz --delete \
-            -e "ssh -F ~/.ssh/config" \
-            ./publish/ \
-            target:/var/www/webapp/
-
-          # Service neu starten
-          ssh -F ~/.ssh/config target "sudo systemctl restart flomi"
+          HostName $JUMP_HOST_1
+            User $JUMP_USER_1
+            Port $JUMP_PORT_1
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+          
+          Host jump2
+            HostName $JUMP_HOST_2
+            User $JUMP_USER_2
+            Port $JUMP_PORT_2
+            IdentityFile ~/.ssh/id_ed25519
+            ProxyJump jump1
+            StrictHostKeyChecking no
+          
+          Host target
+            HostName $SSH_HOST
+            User $SSH_USER
+            Port $SSH_PORT
+            IdentityFile ~/.ssh/id_ed25519
+            ProxyJump jump2
+            StrictHostKeyChecking no"
+          
+                    printf '%s\n' "$CONFIG" > ~/.ssh/config
+                    chmod 600 ~/.ssh/config
+          
+                    # Prüfen ob Config existiert
+                    echo "Config inhalt:"
+                    cat ~/.ssh/config
+          
+                    # Deploy
+                    rsync -avz --delete \
+                      -e "ssh -F ~/.ssh/config" \
+                      ./publish/ \
+                      target:/var/www/webapp/
+          
+                    # Service neu starten
+                    ssh -F ~/.ssh/config target "sudo systemctl restart flomi"
