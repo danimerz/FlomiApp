@@ -140,7 +140,16 @@
                         @{ var apptCount = appointmentCounts.GetValueOrDefault(u.Id, 0); }
                         @if (apptCount > 0)
                         {
-                            <span class="usr-badge usr-badge--user">📋 @apptCount</span>
+                            var details = appointmentDetails.GetValueOrDefault(u.Id, new List<string>());
+                            <span class="usr-tooltip-wrap">
+                                <span class="usr-badge usr-badge--user">📋 @apptCount</span>
+                                <span class="usr-tooltip">
+                                    @foreach (var line in details)
+                                    {
+                                        <span class="usr-tooltip__row">@line</span>
+                                    }
+                                </span>
+                            </span>
                         }
                         else
                         {
@@ -339,6 +348,7 @@
     private List<ApplicationUser>             users              = new();
     private HashSet<string>                   adminIds           = new();
     private Dictionary<string, int>           appointmentCounts  = new();
+    private Dictionary<string, List<string>>  appointmentDetails = new();
     private Dictionary<string, List<string>>  allUserRoles       = new();
 
     private string searchText  = string.Empty;
@@ -429,12 +439,29 @@
             if (roles.Contains("Admin")) adminIds.Add(u.Id);
         }
 
-        appointmentCounts = await Db.Appointments
+        var rawApts = await Db.Appointments
             .Include(a => a.Area).ThenInclude(ar => ar.Event)
+            .Include(a => a.Area).ThenInclude(ar => ar.AreaTemplate)
             .Where(a => a.Status == AppointmentStatus.Registered && a.Area.Event.IsActive)
+            .Select(a => new {
+                a.UserId,
+                EventName = a.Area.Event.Name,
+                AreaName  = a.Area.AreaTemplate != null ? a.Area.AreaTemplate.Name : "–",
+                a.Area.Date
+            })
+            .ToListAsync();
+
+        appointmentCounts = rawApts
             .GroupBy(a => a.UserId)
-            .Select(g => new { UserId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.UserId, x => x.Count);
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        appointmentDetails = rawApts
+            .GroupBy(a => a.UserId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(a => a.Date)
+                       .Select(a => $"{a.EventName} · {a.AreaName} · {a.Date:dd.MM.yy}")
+                       .ToList());
     }
 
     // ── Sort ──────────────────────────────────────────────────────────────────

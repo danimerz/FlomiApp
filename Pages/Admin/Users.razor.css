@@ -173,6 +173,60 @@
 .usr-badge--active { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border); }
 .usr-badge--locked { background: var(--color-error-bg);   color: var(--color-error-text);   border: 1px solid var(--color-error-border); }
 
+/* ── Anmeldungs-Tooltip ───────────────────────────────────────────────────── */
+.usr-tooltip-wrap {
+    position: relative;
+    display: inline-block;
+    cursor: default;
+}
+
+.usr-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f8fafc;
+    border-radius: 10px;
+    padding: .5rem .8rem;
+    font-size: .78rem;
+    font-weight: 400;
+    z-index: 200;
+    flex-direction: column;
+    gap: .22rem;
+    min-width: 200px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.usr-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+
+.usr-tooltip-wrap:hover .usr-tooltip {
+    display: flex;
+}
+
+.usr-tooltip__row {
+    display: block;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    padding-bottom: .2rem;
+}
+
+.usr-tooltip__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
 /* ── Action Buttons ───────────────────────────────────────────────────────── */
 .usr-actions {
     display: flex;
