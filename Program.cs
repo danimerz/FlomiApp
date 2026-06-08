@@ -65,8 +65,6 @@ builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddSingleton<IChatService, ChatService>();
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<IAddressSearchService, AddressSearchService>();
 
 var app = builder.Build();
 
