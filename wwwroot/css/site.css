@@ -736,6 +736,122 @@ a, .btn-link {
     border-color: var(--color-border-light);
 }
 
+/* ── Toolbar ──────────────────────────────────────────────────────────────── */
+.ac-toolbar, .av-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+/* ── Checkbox Row ─────────────────────────────────────────────────────────── */
+.ac-checkbox-row, .av-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .75rem;
+    font-size: .95rem;
+    color: var(--color-text-medium);
+}
+
+.ac-checkbox, .av-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+}
+
+/* ── Form Actions ─────────────────────────────────────────────────────────── */
+.ac-form-actions, .av-form-actions {
+    display: flex;
+    gap: .75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+
+/* ── Action Buttons (Tabellenzeilen) ──────────────────────────────────────── */
+.ac-actions, .av-actions {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+}
+
+.ac-btn, .av-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .75rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform .15s, filter .15s;
+    white-space: nowrap;
+}
+
+.ac-btn:hover, .av-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+}
+
+.ac-btn:active, .av-btn:active { transform: translateY(0); }
+
+.ac-btn--edit, .av-btn--edit {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border-color: var(--color-warning-border);
+}
+
+.ac-btn--delete, .av-btn--delete {
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
+    border-color: var(--color-error-border);
+}
+
+.ac-btn--activate, .av-btn--activate {
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+    border-color: var(--color-success-border);
+}
+
+.ac-btn--deactivate, .av-btn--deactivate {
+    background: var(--color-surface-muted);
+    color: var(--color-text-medium);
+    border-color: var(--color-border-input);
+}
+
+.ac-btn--pin, .av-btn--pin {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde68a;
+}
+
+/* ── Pinned Badge ─────────────────────────────────────────────────────────── */
+.ac-badge--pinned {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde68a;
+}
+
+/* ── Pinned Notice Box ────────────────────────────────────────────────────── */
+.notice-box--pinned {
+    border-color: #fde68a;
+    background: #fefce8;
+}
+
+.notice-box__pin {
+    display: inline-block;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #854d0e;
+    background: #fef9c3;
+    border: 1px solid #fde68a;
+    border-radius: 999px;
+    padding: .1rem .55rem;
+    margin-right: .4rem;
+}
+
 /* ── Modal Backdrop ───────────────────────────────────────────────────────── */
 .afp-modal-backdrop, .av-modal-backdrop {
     position: fixed;

@@ -54,8 +54,9 @@
             else
             {
                 var n = latestNews[0];
-                <div class="notice-box">
+                <div class="notice-box @(n.IsPinned ? "notice-box--pinned" : "")">
                     <div class="notice-box__date">
+                        @if (n.IsPinned) { <span class="notice-box__pin">📌 Wichtig</span> }
                         📅 @n.CreatedAt.ToString("dd. MMMM yyyy", new System.Globalization.CultureInfo("de-CH"))
                     </div>
                     <strong class="notice-box__title">@n.Title</strong>

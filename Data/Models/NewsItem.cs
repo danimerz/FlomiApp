@@ -14,4 +14,5 @@ public class NewsItem
 
     public DateTime CreatedAt   { get; set; } = DateTime.Now;
     public bool     IsPublished { get; set; } = true;
+    public bool     IsPinned    { get; set; } = false;
 }

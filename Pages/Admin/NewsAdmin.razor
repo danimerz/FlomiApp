@@ -50,6 +50,10 @@
                         <InputCheckbox @bind-Value="current.IsPublished" id="pubCheck" class="ac-checkbox" />
                         <label for="pubCheck">Sofort veröffentlichen</label>
                     </div>
+                    <div class="ac-checkbox-row">
+                        <InputCheckbox @bind-Value="current.IsPinned" id="pinCheck" class="ac-checkbox" />
+                        <label for="pinCheck">📌 Als wichtig markieren (wird zuerst angezeigt)</label>
+                    </div>
 
                     <div class="ac-form-actions">
                         <button type="submit" class="ac-submit-btn" disabled="@isSaving">
@@ -102,7 +106,13 @@
                 @foreach (var item in news)
                 {
                     <tr>
-                        <td><strong>@item.Title</strong></td>
+                        <td>
+                            @if (item.IsPinned)
+                            {
+                                <span class="ac-badge ac-badge--pinned" style="margin-right:.4rem">📌 Wichtig</span>
+                            }
+                            <strong>@item.Title</strong>
+                        </td>
                         <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                         <td>
                             @if (item.IsPublished)
@@ -122,6 +132,11 @@
                                 <button class="ac-btn @(item.IsPublished ? "ac-btn--deactivate" : "ac-btn--activate")"
                                         @onclick="() => Toggle(item.Id)">
                                     @(item.IsPublished ? "⏸ Verbergen" : "▶ Publizieren")
+                                </button>
+                                <button class="ac-btn @(item.IsPinned ? "ac-btn--deactivate" : "ac-btn--pin")"
+                                        @onclick="() => Pin(item.Id)"
+                                        title="@(item.IsPinned ? "Wichtig-Markierung entfernen" : "Als wichtig markieren")">
+                                    @(item.IsPinned ? "📌 Lösen" : "📌 Anpinnen")
                                 </button>
                                 <button class="ac-btn ac-btn--delete" @onclick="() => Delete(item.Id)">
                                     🗑️ Löschen
@@ -161,7 +176,7 @@
 
     private void Edit(NewsItem item)
     {
-        current   = new NewsItem { Id = item.Id, Title = item.Title, Content = item.Content, IsPublished = item.IsPublished };
+        current   = new NewsItem { Id = item.Id, Title = item.Title, Content = item.Content, IsPublished = item.IsPublished, IsPinned = item.IsPinned };
         isEditing = true;
         showForm  = true;
         successMsg = null;
@@ -204,6 +219,12 @@
     private async Task Delete(int id)
     {
         await NewsService.DeleteAsync(id);
+        await Load();
+    }
+
+    private async Task Pin(int id)
+    {
+        await NewsService.TogglePinnedAsync(id);
         await Load();
     }
 }

@@ -26,7 +26,8 @@ public class NewsService : INewsService
         await using var db = await _dbFactory.CreateDbContextAsync();
         return await db.NewsItems
             .Where(n => n.IsPublished)
-            .OrderByDescending(n => n.CreatedAt)
+            .OrderByDescending(n => n.IsPinned)
+            .ThenByDescending(n => n.CreatedAt)
             .ToListAsync();
     }
 
@@ -55,6 +56,7 @@ public class NewsService : INewsService
         existing.Title       = item.Title;
         existing.Content     = item.Content;
         existing.IsPublished = item.IsPublished;
+        existing.IsPinned    = item.IsPinned;
         await db.SaveChangesAsync();
     }
 
@@ -73,6 +75,15 @@ public class NewsService : INewsService
         var item = await db.NewsItems.FindAsync(id);
         if (item is null) return;
         item.IsPublished = !item.IsPublished;
+        await db.SaveChangesAsync();
+    }
+
+    public async Task TogglePinnedAsync(int id)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var item = await db.NewsItems.FindAsync(id);
+        if (item is null) return;
+        item.IsPinned = !item.IsPinned;
         await db.SaveChangesAsync();
     }
 }

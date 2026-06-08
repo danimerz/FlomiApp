@@ -11,4 +11,5 @@ public interface INewsService
     Task                 UpdateAsync(NewsItem item);
     Task                 DeleteAsync(int id);
     Task                 TogglePublishedAsync(int id);
+    Task                 TogglePinnedAsync(int id);
 }
