@@ -474,6 +474,12 @@
     transform: translateY(0);
 }
 
+.ics-icon-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ── Toggle Switch ────────────────────────────────────────────────────────── */
 .toggle-switch {
     position: relative;

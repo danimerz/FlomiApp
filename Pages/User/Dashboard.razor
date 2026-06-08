@@ -1,12 +1,14 @@
 @page "/user/dashboard"
 @using FlomiApp.Data.Models
 @using System.Text
+@using Microsoft.AspNetCore.Identity
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAppointmentService AppointmentService
 @inject IJSRuntime JS
 @inject IFurniturePickupService FurniturePickupService
 @inject IVehicleService VehicleService
-@using FlomiApp.Data.Models
+@inject IMailQueue MailQueue
+@inject UserManager<ApplicationUser> UserManager
 @using QRCoder
 
 <PageTitle>Dashboard</PageTitle>
@@ -52,6 +54,23 @@
                     <span class="appointments-section__count">
                         @FilteredAppointments.Count Anmeldungen
                     </span>
+                    <button class="ics-icon-btn dash-mail-btn"
+                            title="@(mailSent ? "Mail wurde versendet ✅" : "Einsatz-Übersicht per Mail erhalten")"
+                            @onclick="SendOverviewMailAsync"
+                            disabled="@sendingMail">
+                        @if (sendingMail)
+                        {
+                            <span class="btn-spinner btn-spinner--blue"></span>
+                        }
+                        else if (mailSent)
+                        {
+                            <span>✅</span>
+                        }
+                        else
+                        {
+                            <span>📧</span>
+                        }
+                    </button>
                     <label class="toggle-switch" title="Abgesagte anzeigen">
                         <input type="checkbox" @bind="showCancelledAppointments" />
                         <span class="slider round"></span>
@@ -531,8 +550,11 @@
     }
 
     // ── Loading State ─────────────────────────────────────────────────────────
-    private int? cancellingId    = null;
+    private int? cancellingId     = null;
     private int? deletingPickupId = null;
+    private bool sendingMail      = false;
+    private bool mailSent         = false;
+    private ApplicationUser? currentUser;
 
     // ── Vehicle Assignments ───────────────────────────────────────────────────
     private List<AssignmentDate> vehicleAssignments = new();
@@ -647,6 +669,7 @@
             userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                      ?? string.Empty;
 
+            currentUser         = await UserManager.GetUserAsync(user);
             pickupRequests      = await FurniturePickupService.GetUserRequestsAsync(userId);
             vehicleAssignments  = await VehicleService.GetVehicleAssignmentsForUserAsync(userId);
             await LoadAppointments();
@@ -763,6 +786,47 @@
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
         return text.Length <= maxLength ? text : text[..maxLength] + "...";
+    }
+
+    // ── Einsatz-Übersicht per Mail ────────────────────────────────────────────
+    private async Task SendOverviewMailAsync()
+    {
+        if (sendingMail || currentUser == null) return;
+
+        sendingMail = true;
+        StateHasChanged();
+
+        var items = FilteredAppointments
+            .Where(a => a.Status == AppointmentStatus.Registered)
+            .OrderBy(a => a.Area?.Date)
+            .Select(a => new AppointmentSummaryItem
+            {
+                EventName = a.Area?.Event?.Name ?? "–",
+                AreaName  = a.Area?.AreaTemplate?.Name ?? "–",
+                Date      = a.Area?.Date ?? DateTime.MinValue,
+                TimeSlot  = a.UseAlternativeSlot && !string.IsNullOrEmpty(a.Area?.AlternativeTimeSlot)
+                                ? a.Area!.AlternativeTimeSlot!
+                                : a.Area?.TimeSlot ?? "–",
+                Category  = a.Area?.AreaTemplate?.AreaCategory?.Name ?? string.Empty,
+                Location  = a.Area?.AreaTemplate?.Location,
+                ForPerson = a.FamilyMember != null
+                                ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
+                                : null
+            })
+            .ToList();
+
+        var toEmail = currentUser.Email ?? string.Empty;
+        var toName  = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+
+        MailQueue.Enqueue(m => m.SendAppointmentSummaryAsync(toEmail, toName, items));
+
+        sendingMail = false;
+        mailSent    = true;
+        StateHasChanged();
+
+        await Task.Delay(2500);
+        mailSent = false;
+        StateHasChanged();
     }
 
     // ── Pickup löschen mit Loading ────────────────────────────────────────────

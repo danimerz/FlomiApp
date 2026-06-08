@@ -129,33 +129,72 @@ public class MailService : IMailService
         string toEmail, string toName,
         List<AppointmentSummaryItem> appointments)
     {
-        var subject = "Deine Anmeldungen – Übersicht";
+        var subject = "📋 Deine Einsatz-Übersicht";
 
-        var rows = string.Join("\n", appointments.Select(a => $"""
-            <tr>
-                <td>{a.EventName}</td>
-                <td>{a.AreaName}</td>
-                <td>{a.Date:dd.MM.yyyy}</td>
-                <td>{a.TimeSlot}</td>
-            </tr>
-            """));
+        var grouped = appointments
+            .GroupBy(a => a.EventName)
+            .OrderBy(g => g.Key);
 
-        var body = $"""
-            <h2>Hallo {toName}!</h2>
-            <p>Hier ist deine aktuelle Anmeldungsübersicht:</p>
-            <table cellpadding="8" border="1" style="border-collapse:collapse;">
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Bereich</th>
-                        <th>Datum</th>
-                        <th>Zeit</th>
+        var sections = new System.Text.StringBuilder();
+        foreach (var group in grouped)
+        {
+            var rows = new System.Text.StringBuilder();
+            int i = 0;
+            foreach (var a in group.OrderBy(x => x.Date))
+            {
+                var bg         = i++ % 2 == 0 ? "" : "background:#f8fafc;";
+                var personCell = string.IsNullOrEmpty(a.ForPerson)
+                    ? ""
+                    : $"<td style='padding:6px 12px;color:#374151;'>{a.ForPerson}</td>";
+                rows.Append($"""
+                    <tr style="{bg}">
+                      <td style='padding:6px 12px;font-weight:600;color:#1e293b;'>{a.AreaName}</td>
+                      <td style='padding:6px 12px;color:#374151;'>{a.Date.ToString("dd.MM.yyyy", new System.Globalization.CultureInfo("de-CH"))}</td>
+                      <td style='padding:6px 12px;color:#374151;'>{a.TimeSlot}</td>
+                      <td style='padding:6px 12px;color:#374151;'>{a.Location ?? "–"}</td>
+                      {personCell}
                     </tr>
-                </thead>
-                <tbody>
+                    """);
+            }
+
+            var hasPersonCol = group.Any(a => !string.IsNullOrEmpty(a.ForPerson));
+            var personHeader = hasPersonCol
+                ? "<th style='padding:8px 12px;text-align:left;color:#374151;font-size:.8rem;font-weight:700;'>Person</th>"
+                : "";
+
+            sections.Append($"""
+                <div style="margin-bottom:1.5rem;">
+                  <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+                    <tr style="background:#dbeafe;">
+                      <td colspan="5" style="padding:10px 12px;font-weight:800;color:#1d4ed8;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;">🎪 {group.Key}</td>
+                    </tr>
+                    <tr style="background:#eff6ff;border-bottom:2px solid #bfdbfe;">
+                      <th style="padding:8px 12px;text-align:left;color:#374151;font-size:.8rem;font-weight:700;">Bereich</th>
+                      <th style="padding:8px 12px;text-align:left;color:#374151;font-size:.8rem;font-weight:700;">Datum</th>
+                      <th style="padding:8px 12px;text-align:left;color:#374151;font-size:.8rem;font-weight:700;">Zeit</th>
+                      <th style="padding:8px 12px;text-align:left;color:#374151;font-size:.8rem;font-weight:700;">Ort</th>
+                      {personHeader}
+                    </tr>
                     {rows}
-                </tbody>
-            </table>
+                  </table>
+                </div>
+                """);
+        }
+
+        var totalCount = appointments.Count;
+        var body = $"""
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:16px 16px 0 0;padding:28px 32px;">
+                <h1 style="margin:0;color:#fff;font-size:1.5rem;">📋 Einsatz-Übersicht</h1>
+                <p style="margin:.5rem 0 0;color:#bfdbfe;font-size:.95rem;">{totalCount} aktive Anmeldung{(totalCount == 1 ? "" : "en")}</p>
+              </div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;">
+                <p style="color:#374151;margin-top:0;">Hallo <strong>{toName}</strong>,<br>hier ist deine aktuelle Übersicht aller angemeldeten Einsätze.</p>
+                {sections}
+                <p style="color:#64748b;font-size:.9rem;margin-top:1rem;">Bei Fragen kannst du dich direkt beim Flomi-Team melden.</p>
+                <p style="color:#374151;font-weight:700;margin-bottom:0;">Freundliche Grüsse, das Flomi-Team 🙌</p>
+              </div>
+            </div>
             """;
 
         await SendAsync(toEmail, toName, subject, body);
