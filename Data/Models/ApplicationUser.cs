@@ -20,6 +20,6 @@ public class ApplicationUser : IdentityUser
 
     public ICollection<FamilyMember> FamilyMembers { get; set; } = new List<FamilyMember>();
 
-    // ✅ NEU:
-    public bool EmailNotificationsEnabled { get; set; } = true;
+    public bool    EmailNotificationsEnabled { get; set; } = true;
+    public string? PreferredTheme            { get; set; }
 }

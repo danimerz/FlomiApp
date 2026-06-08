@@ -711,7 +711,10 @@
 
     private string BuildIcsContent(Appointment appointment)
     {
-        var (startTime, endTime) = ParseTimeSlot(appointment.Area.TimeSlot, appointment.Area.Date);
+        var timeSlot = appointment.UseAlternativeSlot && !string.IsNullOrEmpty(appointment.Area?.AlternativeTimeSlot)
+            ? appointment.Area!.AlternativeTimeSlot!
+            : appointment.Area?.TimeSlot ?? string.Empty;
+        var (startTime, endTime) = ParseTimeSlot(timeSlot, appointment.Area?.Date ?? DateTime.Today);
 
         var now     = DateTime.UtcNow.ToString("yyyyMMddTHHmmssZ");
         var dtStart = startTime.ToString("yyyyMMddTHHmmssZ");

@@ -1,6 +1,10 @@
 ﻿@inherits LayoutComponentBase
 @implements IDisposable
+@using Microsoft.AspNetCore.Identity
+@using FlomiApp.Data.Models
 @inject FlomiApp.Services.ThemeState ThemeState
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <PageTitle>FlomiApp</PageTitle>
 
@@ -73,8 +77,9 @@
 </div>
 
 @code {
-    private bool _themeInitialized;
-    private bool mobileNavOpen = false;
+    private bool             _themeInitialized;
+    private bool             mobileNavOpen = false;
+    private ApplicationUser? _appUser;
 
     private void ToggleMobileNav()
     {
@@ -96,13 +101,31 @@
         if (firstRender && !_themeInitialized)
         {
             _themeInitialized = true;
+
+            // 1. localStorage als Basis laden
             await ThemeState.InitializeAsync();
+
+            // 2. Falls eingeloggt: DB-Einstellung hat Vorrang (geräteübergreifend)
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                _appUser = await UserManager.GetUserAsync(authState.User);
+                if (_appUser?.PreferredTheme != null)
+                    await ThemeState.SetThemeAsync(_appUser.PreferredTheme);
+            }
         }
     }
 
     private async Task ToggleTheme()
     {
         await ThemeState.ToggleAsync();
+
+        // Neue Einstellung in DB persistieren
+        if (_appUser != null)
+        {
+            _appUser.PreferredTheme = ThemeState.CurrentTheme;
+            await UserManager.UpdateAsync(_appUser);
+        }
     }
 
     private void HandleThemeChanged()
