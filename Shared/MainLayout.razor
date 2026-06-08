@@ -1,10 +1,11 @@
 ﻿@inherits LayoutComponentBase
 @implements IDisposable
-@using Microsoft.AspNetCore.Identity
 @using FlomiApp.Data.Models
+@using FlomiApp.Data
+@using Microsoft.EntityFrameworkCore
 @inject FlomiApp.Services.ThemeState ThemeState
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 
 <PageTitle>FlomiApp</PageTitle>
 
@@ -77,9 +78,9 @@
 </div>
 
 @code {
-    private bool             _themeInitialized;
-    private bool             mobileNavOpen = false;
-    private ApplicationUser? _appUser;
+    private bool   _themeInitialized;
+    private bool   mobileNavOpen = false;
+    private string? _userId;
 
     private void ToggleMobileNav()
     {
@@ -109,9 +110,14 @@
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             if (authState.User.Identity?.IsAuthenticated == true)
             {
-                _appUser = await UserManager.GetUserAsync(authState.User);
-                if (_appUser?.PreferredTheme != null)
-                    await ThemeState.SetThemeAsync(_appUser.PreferredTheme);
+                _userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (_userId != null)
+                {
+                    await using var db = await DbFactory.CreateDbContextAsync();
+                    var user = await db.Users.FindAsync(_userId);
+                    if (user?.PreferredTheme != null)
+                        await ThemeState.SetThemeAsync(user.PreferredTheme);
+                }
             }
         }
     }
@@ -121,10 +127,15 @@
         await ThemeState.ToggleAsync();
 
         // Neue Einstellung in DB persistieren
-        if (_appUser != null)
+        if (_userId != null)
         {
-            _appUser.PreferredTheme = ThemeState.CurrentTheme;
-            await UserManager.UpdateAsync(_appUser);
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var user = await db.Users.FindAsync(_userId);
+            if (user != null)
+            {
+                user.PreferredTheme = ThemeState.CurrentTheme;
+                await db.SaveChangesAsync();
+            }
         }
     }
 
