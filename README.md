@@ -35,7 +35,7 @@
 | Datenbank | MySQL 8 (Pomelo.EntityFrameworkCore.MySql) |
 | ORM | Entity Framework Core 9 |
 | Authentifizierung | ASP.NET Core Identity |
-| E-Mail | SMTP via MailKit (konfigurierbar) |
+| E-Mail | SMTP via MailKit; asynchrone Mail-Queue als `IHostedService` (`Channel<T>`) |
 | QR-Code | QRCoder (PNG-Generierung) + jsQR (Browser-Scan) |
 | Excel-Export | ClosedXML |
 | Diagramme | Chart.js 4 (via CDN + JS Interop) |

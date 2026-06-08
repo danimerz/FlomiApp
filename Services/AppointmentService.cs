@@ -8,18 +8,18 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IAreaService _areaService;
-    private readonly IMailService _mailService;
+    private readonly IMailQueue _mailQueue;
     private readonly ILogger<AppointmentService> _logger;
 
     public AppointmentService(
         ApplicationDbContext context,
         IAreaService areaService,
-        IMailService mailService,
+        IMailQueue mailQueue,
         ILogger<AppointmentService> logger)
     {
         _context     = context;
         _areaService = areaService;
-        _mailService = mailService;
+        _mailQueue   = mailQueue;
         _logger      = logger;
     }
 
@@ -241,81 +241,56 @@ public class AppointmentService : IAppointmentService
     private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area,
         string? comment = null, int? appointmentId = null, bool useAlternativeSlot = false)
     {
-        try
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Email == null) return;
+
+        var userName  = $"{user.FirstName} {user.LastName}";
+        var eventName = area.Event?.Name ?? "";
+        var areaName  = area.AreaTemplate?.Name ?? "";
+        var forPerson = await GetPersonNameAsync(userId, familyMemberId);
+        var timeSlot  = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
+            ? area.AlternativeTimeSlot
+            : area.TimeSlot;
+        var notifications = user.EmailNotificationsEnabled;
+
+        // Capture all values; lambdas must not close over EF entities
+        var email       = user.Email;
+        var date        = area.Date;
+        var aptId       = appointmentId;
+        var person      = forPerson;
+        var adminEmail  = default(string?); // resolved inside queue via IMailService
+
+        if (notifications)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user?.Email == null) return;
-
-            var userName   = $"{user.FirstName} {user.LastName}";
-            var eventName  = area.Event?.Name ?? "";
-            var areaName   = area.AreaTemplate?.Name ?? "";
-            var forPerson  = await GetPersonNameAsync(userId, familyMemberId);
-            var timeSlot   = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
-                ? area.AlternativeTimeSlot
-                : area.TimeSlot;
-
-            if (user.EmailNotificationsEnabled)
-            {
-                await _mailService.SendRegistrationConfirmationAsync(
-                    user.Email,
-                    userName,
-                    areaName,
-                    eventName,
-                    area.Date,
-                    timeSlot,
-                    comment,
-                    appointmentId,
-                    forPerson);
-            }
-
-            await _mailService.SendAdminNewRegistrationAsync(
-                areaName,
-                eventName,
-                forPerson ?? userName,
-                area.Date,
-                timeSlot);
+            _mailQueue.Enqueue(m => m.SendRegistrationConfirmationAsync(
+                email, userName, areaName, eventName, date, timeSlot, comment, aptId, person));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "MAIL FEHLER DETAIL: {Message}", ex.Message);
-        }
+
+        _mailQueue.Enqueue(m => m.SendAdminNewRegistrationAsync(
+            areaName, eventName, person ?? userName, date, timeSlot));
     }
 
     private async Task SendCancellationMailAsync(string userId, Appointment appointment)
     {
-        try
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Email == null) return;
+
+        var userName  = $"{user.FirstName} {user.LastName}";
+        var email     = user.Email;
+        var areaName  = appointment.Area?.AreaTemplate?.Name ?? "";
+        var eventName = appointment.Area?.Event?.Name ?? "";
+        var date      = appointment.Area?.Date ?? DateTime.MinValue;
+        var timeSlot  = appointment.Area?.TimeSlot ?? "";
+        var notifications = user.EmailNotificationsEnabled;
+
+        if (notifications)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user?.Email == null) return;
-
-            var userName  = $"{user.FirstName} {user.LastName}";
-            var areaName  = appointment.Area?.AreaTemplate?.Name ?? "";
-            var eventName = appointment.Area?.Event?.Name ?? "";
-            var date      = appointment.Area?.Date ?? DateTime.MinValue;
-            var timeSlot  = appointment.Area?.TimeSlot ?? "";
-
-            if (user.EmailNotificationsEnabled)
-            {
-                await _mailService.SendCancellationConfirmationAsync(
-                    user.Email,
-                    userName,
-                    areaName,
-                    eventName,
-                    date,
-                    timeSlot);
-            }
-
-            await _mailService.SendAdminCancellationAsync(
-                areaName,
-                eventName,
-                userName,
-                date,
-                timeSlot);
+            _mailQueue.Enqueue(m => m.SendCancellationConfirmationAsync(
+                email, userName, areaName, eventName, date, timeSlot));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Fehler beim Senden der Storno-Mail für UserId {UserId}", userId);
-        }
+
+        _mailQueue.Enqueue(m => m.SendAdminCancellationAsync(
+            areaName, eventName, userName, date, timeSlot));
     }
 
     private async Task<string?> GetPersonNameAsync(string userId, int? familyMemberId)

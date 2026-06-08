@@ -8,15 +8,15 @@ namespace FlomiApp.Services;
 public class FurniturePickupService : IFurniturePickupService
 {
     private readonly ApplicationDbContext _context;
-    private readonly IMailService         _mailService;
+    private readonly IMailQueue           _mailQueue;
     private readonly ILogger<FurniturePickupService> _logger;
 
     public FurniturePickupService(ApplicationDbContext context,
-        IMailService mailService, ILogger<FurniturePickupService> logger)
+        IMailQueue mailQueue, ILogger<FurniturePickupService> logger)
     {
-        _context     = context;
-        _mailService = mailService;
-        _logger      = logger;
+        _context   = context;
+        _mailQueue = mailQueue;
+        _logger    = logger;
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -84,7 +84,7 @@ public class FurniturePickupService : IFurniturePickupService
         request.AdminNote = adminNote;
         await _context.SaveChangesAsync();
 
-        await SendStatusMailAsync(request);
+        SendStatusMailAsync(request);
     }
 
     public async Task DeleteRequestAsync(int id)
@@ -97,11 +97,11 @@ public class FurniturePickupService : IFurniturePickupService
             request.Status = PickupRequestStatus.Deleted;
             await _context.SaveChangesAsync();
 
-            await SendStatusMailAsync(request);
+            SendStatusMailAsync(request);
         }
     }
 
-    private async Task SendStatusMailAsync(FurniturePickupRequest request)
+    private void SendStatusMailAsync(FurniturePickupRequest request)
     {
         if (string.IsNullOrEmpty(request.Email)) return;
 
@@ -146,14 +146,7 @@ public class FurniturePickupService : IFurniturePickupService
             </div>
             """;
 
-        try
-        {
-            await _mailService.SendAsync(request.Email, name, subject, body);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Fehler beim Senden der Status-Mail für Anfrage #{OrderNumber}", request.OrderNumber);
-        }
+        _mailQueue.Enqueue(m => m.SendAsync(request.Email, name, subject, body));
     }
 
     // ════════════════════════════════════════════════════════════════════════

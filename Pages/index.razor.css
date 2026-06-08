@@ -123,6 +123,18 @@
     transform: translateY(-1px);
 }
 
+.home-secondary-btn--primary {
+    background: #ffffff;
+    color: #1d4ed8;
+    border-color: #ffffff;
+    font-weight: 800;
+}
+
+.home-secondary-btn--primary:hover {
+    background: #f0f6ff;
+    color: #1d4ed8;
+}
+
 .home-card {
     border: 1px solid var(--color-border-card);
     border-radius: 22px;
