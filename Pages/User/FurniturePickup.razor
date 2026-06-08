@@ -346,6 +346,24 @@
     private int     createdOrderNumber         = 0;
     private string? imageError;
 
+    // Profildaten separat gespeichert, damit ResetForm ein frisches Model bauen kann
+    private string? _userId;
+    private string  _firstName   = string.Empty;
+    private string  _lastName    = string.Empty;
+    private string  _email       = string.Empty;
+    private string? _phoneNumber;
+    private string? _pfadiname;
+
+    private FurniturePickupRequest CreateFreshModel() => new FurniturePickupRequest
+    {
+        UserId      = _userId,
+        FirstName   = _firstName,
+        LastName    = _lastName,
+        Email       = _email,
+        PhoneNumber = _phoneNumber,
+        Pfadiname   = _pfadiname,
+    };
+
     // ── Event-Auswahl ─────────────────────────────────────────────────────────
     private List<Event>?             availableEvents = null;
     private int?                     selectedEventId = null;
@@ -395,12 +413,13 @@
 
             if (appUser != null)
             {
-                model.UserId      = userId;
-                model.FirstName   = appUser.FirstName;
-                model.LastName    = appUser.LastName;
-                model.Email       = appUser.Email ?? string.Empty;
-                model.PhoneNumber = appUser.PhoneNumber;
-                model.Pfadiname   = appUser.Pfadiname;
+                _userId      = userId;
+                _firstName   = appUser.FirstName;
+                _lastName    = appUser.LastName;
+                _email       = appUser.Email ?? string.Empty;
+                _phoneNumber = appUser.PhoneNumber;
+                _pfadiname   = appUser.Pfadiname;
+                model        = CreateFreshModel();
             }
         }
     }
@@ -537,16 +556,11 @@
     // ── Reset ─────────────────────────────────────────────────────────────────
     private void ResetForm()
     {
-        submitted                = false;
-        uploadedImages           = new();
-        imageError               = null;
-        showConsentError         = false;
-
-        model.Street             = string.Empty;
-        model.PostalCode         = string.Empty;
-        model.City               = string.Empty;
-        model.Description        = string.Empty;
-        model.AcceptsDisposalFee = false;
+        submitted        = false;
+        uploadedImages   = new();
+        imageError       = null;
+        showConsentError = false;
+        model            = CreateFreshModel(); // frisches Objekt, Id=0, kein EF-Tracking-Konflikt
 
         ResetEventSelection();
     }

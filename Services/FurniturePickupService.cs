@@ -45,6 +45,7 @@ public class FurniturePickupService : IFurniturePickupService
 
         _context.FurniturePickupRequests.Add(request);
         await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear(); // verhindert dass dasselbe Objekt beim nächsten Submit neu getrackt wird
         return request;
     }
 
