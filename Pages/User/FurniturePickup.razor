@@ -182,18 +182,17 @@
 
                         <div class="pickup-field pickup-field--full">
                             <label>
-                                Strasse & Hausnummer
-                                <span class="pickup-label-hint">(Adresse eingeben für Vorschläge)</span>
+                                Adresse
+                                <span class="pickup-label-hint">(Strasse, PLZ und Ort eingeben für Vorschläge)</span>
                             </label>
                             <div class="addr-wrap">
                                 <input type="text"
-                                       @key="@($"addr-street-{_addrKey}")"
+                                       @key="_addrKey"
                                        class="form-control-modern"
-                                       placeholder="z.B. Musterstrasse 12"
-                                       @bind-value="model.Street"
-                                       @bind-value:event="oninput"
-                                       @bind-value:after="OnStreetChanged"
-                                       @onblur="OnStreetBlur"
+                                       placeholder="z.B. Musterstrasse 12 8000 Zürich"
+                                       value="@_addressDisplay"
+                                       @oninput="OnAddressInput"
+                                       @onblur="OnAddressBlur"
                                        autocomplete="off" />
                                 @if (isAddrSearching)
                                 {
@@ -213,26 +212,6 @@
                                     </ul>
                                 }
                             </div>
-                        </div>
-
-                        <div class="pickup-field">
-                            <label>PLZ</label>
-                            <input type="text"
-                                   @key="@($"addr-plz-{_addrKey}")"
-                                   class="form-control-modern"
-                                   placeholder="z.B. 8000"
-                                   @bind-value="model.PostalCode"
-                                   @bind-value:event="onchange" />
-                        </div>
-
-                        <div class="pickup-field">
-                            <label>Ort</label>
-                            <input type="text"
-                                   @key="@($"addr-city-{_addrKey}")"
-                                   class="form-control-modern"
-                                   placeholder="z.B. Zürich"
-                                   @bind-value="model.City"
-                                   @bind-value:event="onchange" />
                         </div>
 
                     </div>
@@ -411,15 +390,20 @@
     private bool    dateIsFull           = false;
 
     // ── Adresse Autocomplete ──────────────────────────────────────────────────
+    private string                   _addressDisplay     = string.Empty;
     private List<AddressSuggestion>  addrSuggestions     = new();
     private bool                     showAddrSuggestions = false;
     private bool                     isAddrSearching     = false;
     private int                      _addrKey            = 0;
     private CancellationTokenSource? _addrSearchCts;
 
-    private async Task OnStreetChanged()
+    private async Task OnAddressInput(ChangeEventArgs e)
     {
-        var text = model.Street;
+        var text = e.Value?.ToString() ?? "";
+        _addressDisplay  = text;
+        model.Street     = text;
+        model.PostalCode = string.Empty;
+        model.City       = string.Empty;
 
         _addrSearchCts?.Cancel();
         _addrSearchCts = new CancellationTokenSource();
@@ -459,6 +443,7 @@
 
     private void SelectAddress(AddressSuggestion s)
     {
+        _addressDisplay     = s.Label;
         model.Street        = s.Street;
         model.PostalCode    = s.PostalCode;
         model.City          = s.City;
@@ -467,7 +452,7 @@
         _addrKey++;
     }
 
-    private void OnStreetBlur()
+    private void OnAddressBlur()
     {
         showAddrSuggestions = false;
     }
@@ -659,6 +644,8 @@
         showConsentError    = false;
         addrSuggestions     = new();
         showAddrSuggestions = false;
+        _addressDisplay     = string.Empty;
+        _addrKey++;
         model               = CreateFreshModel(); // frisches Objekt, Id=0, kein EF-Tracking-Konflikt
 
         ResetEventSelection();
