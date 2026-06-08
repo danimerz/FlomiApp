@@ -54,7 +54,6 @@
             @if (pickupRequests != null)
             {
                 var cnt = pickupRequests.Count(r =>
-                    r.Status == PickupRequestStatus.Pending ||
                     r.Status == PickupRequestStatus.Accepted);
                 if (cnt > 0) { <span class="av-tab__badge">@cnt</span> }
             }
@@ -1019,7 +1018,7 @@
 
     private IEnumerable<FurniturePickupRequest> RoutePickups =>
         (pickupRequests ?? new())
-        .Where(r => r.Status == PickupRequestStatus.Pending || r.Status == PickupRequestStatus.Accepted)
+        .Where(r => r.Status == PickupRequestStatus.Accepted)
         .Where(r => routeEventId == 0 || r.EventId == routeEventId)
         .Where(r => routeDate == null || r.PickupDate.Date == routeDate.Value.Date)
         .OrderBy(r => r.PostalCode)
@@ -1027,7 +1026,7 @@
 
     private List<DateTime> RouteAvailableDates =>
         (pickupRequests ?? new())
-        .Where(r => r.Status == PickupRequestStatus.Pending || r.Status == PickupRequestStatus.Accepted)
+        .Where(r => r.Status == PickupRequestStatus.Accepted)
         .Where(r => routeEventId == 0 || r.EventId == routeEventId)
         .Select(r => r.PickupDate.Date)
         .Distinct()
