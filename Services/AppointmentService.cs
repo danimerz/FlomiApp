@@ -98,11 +98,21 @@ public class AppointmentService : IAppointmentService
             throw new InvalidOperationException(
                 $"Person erfüllt das Mindestalter von {minAge} Jahren nicht.");
 
-        if (!await CanRegisterAsync(userId, areaId, familyMemberId))
+        if (!await CanRegisterAsync(userId, areaId, familyMemberId, useAlternativeSlot))
         {
-            var message = IsVerkauf(area) ? "Du kannst dich nur für einen Verkauf-Bereich registrieren."
-                        : IsKuchen(area)  ? "Du kannst dich pro Tag nur einmal für Kuchen anmelden."
-                                          : "Der Bereich ist voll.";
+            var slotCurrent = await _areaService.GetCurrentRegistrationsAsync(areaId, useAlternativeSlot);
+            var slotCap     = useAlternativeSlot && area.AlternativeMaxCapacity.HasValue
+                                ? area.AlternativeMaxCapacity.Value
+                                : area.MaxCapacity;
+            string message;
+            if (slotCurrent >= slotCap)
+                message = "Der Bereich ist voll.";
+            else if (IsVerkauf(area))
+                message = "Du kannst dich nur für einen Verkauf-Bereich registrieren.";
+            else if (IsKuchen(area))
+                message = "Du kannst dich pro Tag nur einmal für Kuchen anmelden.";
+            else
+                message = "Registrierung aktuell nicht möglich.";
             throw new InvalidOperationException(message);
         }
 

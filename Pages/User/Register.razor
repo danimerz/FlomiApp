@@ -236,7 +236,7 @@
                                                 {
                                                     <button class="register-btn"
                                                             @onclick="() => OpenConfirmModal(area)"
-                                                            disabled="@(registeringAreaId.HasValue || (isAlt ? dispReg >= dispCap : !canRegister[area.Id]))">
+                                                            disabled="@(registeringAreaId.HasValue || (isAlt ? !canRegisterAlt.GetValueOrDefault(area.Id, false) : !canRegister[area.Id]))">
                                                         Jetzt registrieren
                                                     </button>
                                                 }
@@ -363,6 +363,7 @@
     // ── Alternative Zeitslot-Auswahl ──────────────────────────────────────────
     private Dictionary<int, bool>  useAltSlot       = new(); // areaId → true = alternativ
     private Dictionary<int, int>   altRegistrations = new(); // areaId → Anzahl
+    private Dictionary<int, bool>  canRegisterAlt   = new(); // areaId → canRegister für Alt-Slot
 
     private void OpenConfirmModal(Area area)
     {
@@ -482,14 +483,15 @@
 
         currentRegistrations.Clear();
         canRegister.Clear();
+        canRegisterAlt.Clear();
 
         foreach (var area in areas)
         {
             currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id, false);
             altRegistrations[area.Id]     = await AreaService.GetCurrentRegistrationsAsync(area.Id, true);
-            canRegister[area.Id]          = await AppointmentService.CanRegisterAsync(
-                userId, area.Id,
-                selectedMemberId == 0 ? null : selectedMemberId);
+            var memberId = selectedMemberId == 0 ? (int?)null : selectedMemberId;
+            canRegister[area.Id]    = await AppointmentService.CanRegisterAsync(userId, area.Id, memberId);
+            canRegisterAlt[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, memberId, true);
         }
 
         collapsedCategories = areas
@@ -559,6 +561,28 @@
     // ── Hinweis-Text pro Area-Karte ───────────────────────────────────────────
     private string GetRegistrationNote(Area area)
     {
+        var isAltActive = useAltSlot.GetValueOrDefault(area.Id, false);
+
+        if (isAltActive)
+        {
+            if (canRegisterAlt.TryGetValue(area.Id, out var canAlt) && canAlt)
+                return string.Empty;
+
+            var altReg = altRegistrations.GetValueOrDefault(area.Id, 0);
+            var altCap = area.AlternativeMaxCapacity ?? 0;
+            if (altReg >= altCap)
+                return "Bereich ist bereits belegt.";
+
+            if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
+                return "Nur eine Verkauf-Registrierung ist möglich.";
+
+            if (area.AreaTemplate?.AreaCategory?.Name == "Kuchen")
+                return "Pro Tag ist nur eine Kuchen-Anmeldung möglich.";
+
+            return "Registrierung aktuell nicht möglich.";
+        }
+
+        // ── Ganztags-Slot ─────────────────────────────────────────────────────
         if (canRegister.TryGetValue(area.Id, out var can) && can)
             return string.Empty;
 
@@ -566,14 +590,14 @@
         if (minAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < minAge)
             return $"Mindestalter {minAge} Jahre erforderlich.";
 
+        if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
+            return "Bereich ist bereits belegt.";
+
         if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
             return "Nur eine Verkauf-Registrierung ist möglich.";
 
         if (area.AreaTemplate?.AreaCategory?.Name == "Kuchen")
             return "Pro Tag ist nur eine Kuchen-Anmeldung möglich.";
-
-        if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
-            return "Bereich ist derzeit voll.";
 
         return "Registrierung aktuell nicht möglich.";
     }
