@@ -40,4 +40,7 @@ public interface IFurniturePickupService
 
     /// <summary>Zählt bestehende Abholungen (Pending/Accepted) für ein Datum + Event</summary>
     Task<int> GetPickupCountForDateAsync(int eventId, DateTime date);
+
+    /// <summary>Weist einer Abholung ein Fahrzeug zu (null = Zuweisung aufheben)</summary>
+    Task AssignVehicleAsync(int requestId, int? vehicleId);
 }

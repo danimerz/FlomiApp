@@ -63,6 +63,7 @@ public class FurniturePickupService : IFurniturePickupService
         return await _context.FurniturePickupRequests
             .Include(r => r.User)
             .Include(r => r.Images)
+            .Include(r => r.AssignedVehicle)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
@@ -210,10 +211,11 @@ public class FurniturePickupService : IFurniturePickupService
             // ── Neu anlegen ────────────────────────────────────────────────
             var newEntry = new FurniturePickupSettings
             {
-                IsEnabled      = settings.IsEnabled,
-                PickupDateFrom = settings.PickupDateFrom,
-                PickupDateTo   = settings.PickupDateTo,
-                EventId        = settings.EventId
+                IsEnabled        = settings.IsEnabled,
+                PickupDateFrom   = settings.PickupDateFrom,
+                PickupDateTo     = settings.PickupDateTo,
+                EventId          = settings.EventId,
+                DepartureAddress = settings.DepartureAddress
             };
             await _context.FurniturePickupSettings.AddAsync(newEntry);
         }
@@ -228,19 +230,21 @@ public class FurniturePickupService : IFurniturePickupService
                 // Fallback: Falls Id nicht gefunden → neu anlegen
                 var newEntry = new FurniturePickupSettings
                 {
-                    IsEnabled      = settings.IsEnabled,
-                    PickupDateFrom = settings.PickupDateFrom,
-                    PickupDateTo   = settings.PickupDateTo,
-                    EventId        = settings.EventId
+                    IsEnabled        = settings.IsEnabled,
+                    PickupDateFrom   = settings.PickupDateFrom,
+                    PickupDateTo     = settings.PickupDateTo,
+                    EventId          = settings.EventId,
+                    DepartureAddress = settings.DepartureAddress
                 };
                 await _context.FurniturePickupSettings.AddAsync(newEntry);
             }
             else
             {
-                existing.IsEnabled      = settings.IsEnabled;
-                existing.PickupDateFrom = settings.PickupDateFrom;
-                existing.PickupDateTo   = settings.PickupDateTo;
-                existing.EventId        = settings.EventId;
+                existing.IsEnabled        = settings.IsEnabled;
+                existing.PickupDateFrom   = settings.PickupDateFrom;
+                existing.PickupDateTo     = settings.PickupDateTo;
+                existing.EventId          = settings.EventId;
+                existing.DepartureAddress = settings.DepartureAddress;
 
                 _context.FurniturePickupSettings.Update(existing);
             }
@@ -314,5 +318,13 @@ public class FurniturePickupService : IFurniturePickupService
                      && (r.Status == PickupRequestStatus.Pending
                       || r.Status == PickupRequestStatus.Accepted))
             .CountAsync();
+    }
+
+    public async Task AssignVehicleAsync(int requestId, int? vehicleId)
+    {
+        var request = await _context.FurniturePickupRequests.FindAsync(requestId);
+        if (request == null) return;
+        request.AssignedVehicleId = vehicleId;
+        await _context.SaveChangesAsync();
     }
 }

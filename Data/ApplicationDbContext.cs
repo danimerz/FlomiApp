@@ -57,6 +57,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(s => s.EventId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ── FurniturePickupRequest → Vehicle (optional, Fahrzeugzuweisung) ────
+        modelBuilder.Entity<FurniturePickupRequest>()
+            .HasOne(r => r.AssignedVehicle)
+            .WithMany()
+            .HasForeignKey(r => r.AssignedVehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // ── AreaTemplate → AreaCategory ───────────────────────────────────────
         modelBuilder.Entity<AreaTemplate>()
             .HasOne(t => t.AreaCategory)

@@ -614,18 +614,15 @@
     ════════════════════════════════════════════════════════════════════════ -->
     @if (activeTab == Tab.Route)
     {
+        <!-- Filter Bar -->
         <div class="av-toolbar">
             <div class="av-field" style="min-width:280px">
                 <label>Event auswählen</label>
-                <select class="av-input"
-                        value="@routeEventId"
-                        @onchange="OnRouteEventChanged">
+                <select class="av-input" value="@routeEventId" @onchange="OnRouteEventChanged">
                     <option value="0">– Alle Events –</option>
                     @foreach (var ev in events ?? new())
                     {
-                        <option value="@ev.Id">
-                            @ev.Name (@ev.Date.ToShortDateString())
-                        </option>
+                        <option value="@ev.Id">@ev.Name (@ev.Date.ToShortDateString())</option>
                     }
                 </select>
             </div>
@@ -636,29 +633,45 @@
                     <label>Abholdatum</label>
                     <div class="av-day-filter">
                         <button class="av-day-filter-btn @(routeDate == null ? "av-day-filter-btn--active" : "")"
-                                @onclick="() => routeDate = null">
-                            Alle
-                        </button>
+                                @onclick="() => routeDate = null">Alle</button>
                         @foreach (var d in RouteAvailableDates)
                         {
-                            var date = d;
-                            <button class="av-day-filter-btn @(routeDate == date ? "av-day-filter-btn--active" : "")"
-                                    @onclick="() => routeDate = date">
-                                @date.ToString("ddd dd.MM", new CultureInfo("de-CH"))
+                            var rdate = d;
+                            <button class="av-day-filter-btn @(routeDate == rdate ? "av-day-filter-btn--active" : "")"
+                                    @onclick="() => routeDate = rdate">
+                                @rdate.ToString("ddd dd.MM", new CultureInfo("de-CH"))
                             </button>
                         }
                     </div>
                 </div>
             }
-
-            @if (RoutePickups.Any())
-            {
-                <a href="@BuildMapsUrl()" target="_blank" rel="noopener noreferrer"
-                   class="av-maps-btn">
-                    🗺️ In Google Maps öffnen
-                </a>
-            }
         </div>
+
+        <!-- Startadresse + Auto-verteilen (nur wenn Datum gewählt) -->
+        @if (routeDate.HasValue && RoutePickups.Any())
+        {
+            <div class="av-route-controls">
+                <div class="av-field" style="flex:1;max-width:420px">
+                    <label>🚩 Startadresse</label>
+                    <input type="text" class="av-input"
+                           placeholder="z.B. Pfadistrasse 1, 6300 Zug"
+                           @bind="routeStartAddress" />
+                    @if (!string.IsNullOrEmpty(routeSettings?.DepartureAddress))
+                    {
+                        <small style="color:var(--color-text-light)">
+                            Standard: @routeSettings.DepartureAddress
+                        </small>
+                    }
+                </div>
+                @if (VehiclesOnRouteDay.Any())
+                {
+                    <button class="av-auto-btn" @onclick="AutoDistribute" disabled="@isAutoDistributing">
+                        @if (isAutoDistributing) { <span>⏳ Verteile...</span> }
+                        else { <span>⚡ Auto-verteilen</span> }
+                    </button>
+                }
+            </div>
+        }
 
         @if (pickupRequests == null)
         {
@@ -677,74 +690,94 @@
                 </div>
             </div>
         }
+        else if (!routeDate.HasValue)
+        {
+            @* FLACHE ANSICHT: kein Datum gewählt *@
+            var flatList = RoutePickups.ToList();
+            <div class="av-route-summary">
+                <span>📦 <strong>@flatList.Count</strong> Abholungen</span>
+                <span class="av-route-summary__hint">Bitte Datum wählen für Fahrzeugaufteilung</span>
+                <a href="@BuildMapsUrl()" target="_blank" rel="noopener noreferrer" class="av-maps-btn av-maps-btn--sm" style="margin-left:auto">
+                    🗺️ In Google Maps
+                </a>
+            </div>
+            @RouteTable(flatList, showVehicleColumn: false)
+        }
         else
         {
-            var routeList = RoutePickups.ToList();
-            <div class="av-route-summary">
-                <span>📦 <strong>@routeList.Count</strong> Abholungen</span>
-                <span class="av-route-summary__hint">Sortiert nach Postleitzahl – optimale Reihenfolge für die Fahrt</span>
-            </div>
+            @* GRUPPIERTE ANSICHT: nach Fahrzeug aufgeteilt *@
+            var allPickups  = RoutePickups.ToList();
+            var dayVehicles = VehiclesOnRouteDay;
+            var unassigned  = allPickups
+                .Where(r => r.AssignedVehicleId == null ||
+                            !dayVehicles.Any(v => v.Id == r.AssignedVehicleId))
+                .OrderBy(r => r.PostalCode).ToList();
 
-            <table class="av-table">
-                <thead>
-                    <tr>
-                        <th style="width:2.5rem">#</th>
-                        <th>Auftrag</th>
-                        <th>Name / Kontakt</th>
-                        <th>Adresse</th>
-                        <th>Möbel</th>
-                        <th>Status</th>
-                        <th>Notiz</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < routeList.Count; i++)
+            @if (!dayVehicles.Any())
+            {
+                <div class="av-state-card av-state-card--info">
+                    <div class="av-state-card__icon">🚗</div>
+                    <div class="av-state-card__content">
+                        <h3>Keine Fahrzeuge für diesen Tag erfasst</h3>
+                        <p>Weise im Tab «Zuweisungen» Fahrzeuge für dieses Datum zu, damit die automatische Aufteilung funktioniert.</p>
+                    </div>
+                </div>
+            }
+
+            @foreach (var v in dayVehicles)
+            {
+                var veh     = v;
+                var vPickups = allPickups.Where(r => r.AssignedVehicleId == veh.Id).OrderBy(r => r.PostalCode).ToList();
+                <div class="av-vehicle-group">
+                    <div class="av-vehicle-group__header">
+                        <div class="av-vehicle-group__info">
+                            <span>🚗</span>
+                            <strong>@veh.OwnerName</strong>
+                            @if (!string.IsNullOrEmpty(veh.OwnerPhone))
+                            {
+                                <span style="font-size:.85rem">📞 @veh.OwnerPhone</span>
+                            }
+                            @if (!string.IsNullOrEmpty(veh.OwnerContact))
+                            {
+                                <small style="color:var(--color-text-light)">@veh.OwnerContact</small>
+                            }
+                            <span class="av-badge av-badge--driver">@vPickups.Count Stopps</span>
+                        </div>
+                        @if (vPickups.Any())
+                        {
+                            <a href="@BuildVehicleMapsUrl(veh.Id)" target="_blank" rel="noopener noreferrer"
+                               class="av-maps-btn av-maps-btn--sm">
+                                🗺️ Route öffnen
+                            </a>
+                        }
+                    </div>
+
+                    @if (!vPickups.Any())
                     {
-                        var req = routeList[i];
-                        var idx = i + 1;
-                        <tr>
-                            <td><span class="av-route-index">@idx</span></td>
-                            <td><strong>#@req.OrderNumber</strong></td>
-                            <td>
-                                <strong>@req.FirstName @req.LastName</strong>
-                                @if (!string.IsNullOrEmpty(req.PhoneNumber))
-                                {
-                                    <br /><small>📞 @req.PhoneNumber</small>
-                                }
-                            </td>
-                            <td>
-                                <a href="https://www.google.com/maps/search/@Uri.EscapeDataString($"{req.Street}, {req.PostalCode} {req.City}")"
-                                   target="_blank" rel="noopener noreferrer"
-                                   class="av-addr-link">
-                                    @req.Street<br />
-                                    <strong>@req.PostalCode @req.City</strong>
-                                </a>
-                            </td>
-                            <td><small>@req.Description</small></td>
-                            <td>
-                                @if (req.Status == PickupRequestStatus.Pending)
-                                {
-                                    <span class="av-badge av-badge--pending">⏳ Ausstehend</span>
-                                }
-                                else if (req.Status == PickupRequestStatus.Accepted)
-                                {
-                                    <span class="av-badge av-badge--accepted">✅ Akzeptiert</span>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(req.AdminNote))
-                                {
-                                    <small class="av-admin-note">@req.AdminNote</small>
-                                }
-                                else
-                                {
-                                    <span class="av-badge av-badge--none">–</span>
-                                }
-                            </td>
-                        </tr>
+                        <div style="padding:.75rem 1.25rem;color:var(--color-text-light);font-size:.88rem;font-style:italic">
+                            Noch keine Abholungen zugewiesen
+                        </div>
                     }
-                </tbody>
-            </table>
+                    else
+                    {
+                        @RouteTable(vPickups, showVehicleColumn: true)
+                    }
+                </div>
+            }
+
+            @if (unassigned.Any())
+            {
+                <div class="av-vehicle-group av-vehicle-group--unassigned">
+                    <div class="av-vehicle-group__header">
+                        <div class="av-vehicle-group__info">
+                            <span>❓</span>
+                            <strong>Nicht zugeteilt</strong>
+                            <span class="av-badge av-badge--pending">@unassigned.Count Aufträge</span>
+                        </div>
+                    </div>
+                    @RouteTable(unassigned, showVehicleColumn: true)
+                </div>
+            }
         }
     }
 
@@ -970,8 +1003,11 @@
     private List<FurniturePickupRequest>? pickupRequests  = null;
 
     // ── Route Planning ────────────────────────────────────────────────────────
-    private int       routeEventId = 0;
-    private DateTime? routeDate    = null;
+    private int                       routeEventId      = 0;
+    private DateTime?                 routeDate         = null;
+    private string                    routeStartAddress = "";
+    private FurniturePickupSettings?  routeSettings     = null;
+    private bool                      isAutoDistributing = false;
 
     private IEnumerable<FurniturePickupRequest> RoutePickups =>
         (pickupRequests ?? new())
@@ -990,19 +1026,162 @@
         .OrderBy(d => d)
         .ToList();
 
+    private List<Vehicle> VehiclesOnRouteDay =>
+        routeDate == null ? new() :
+        (assignments ?? new())
+        .Where(a => (routeEventId == 0 || a.EventId == routeEventId)
+                 && a.AssignedDates.Any(d => d.Date.Date == routeDate.Value.Date))
+        .GroupBy(a => a.VehicleId)
+        .Select(g => g.First().Vehicle)
+        .Where(v => v != null)
+        .ToList()!;
+
     private string BuildMapsUrl()
     {
-        var parts = RoutePickups
-            .Select(r => Uri.EscapeDataString($"{r.Street}, {r.PostalCode} {r.City}"));
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(routeStartAddress))
+            parts.Add(Uri.EscapeDataString(routeStartAddress.Trim()));
+        parts.AddRange(RoutePickups.Select(r => Uri.EscapeDataString($"{r.Street}, {r.PostalCode} {r.City}")));
         return "https://www.google.com/maps/dir/" + string.Join("/", parts);
     }
 
-    private void OnRouteEventChanged(ChangeEventArgs e)
+    private string BuildVehicleMapsUrl(int vehicleId)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(routeStartAddress))
+            parts.Add(Uri.EscapeDataString(routeStartAddress.Trim()));
+        parts.AddRange(RoutePickups
+            .Where(r => r.AssignedVehicleId == vehicleId)
+            .OrderBy(r => r.PostalCode)
+            .Select(r => Uri.EscapeDataString($"{r.Street}, {r.PostalCode} {r.City}")));
+        return "https://www.google.com/maps/dir/" + string.Join("/", parts);
+    }
+
+    private async Task OnRouteEventChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var id))
             routeEventId = id;
         routeDate = null;
+        await LoadRouteSettingsAsync();
     }
+
+    private async Task LoadRouteSettingsAsync()
+    {
+        if (routeEventId > 0)
+        {
+            routeSettings     = await FurniturePickupService.GetSettingsByEventIdAsync(routeEventId);
+            routeStartAddress = routeSettings?.DepartureAddress ?? "";
+        }
+        else
+        {
+            routeSettings     = null;
+            routeStartAddress = "";
+        }
+    }
+
+    private async Task AutoDistribute()
+    {
+        if (!routeDate.HasValue) return;
+        var vehicleList = VehiclesOnRouteDay;
+        if (!vehicleList.Any()) return;
+
+        isAutoDistributing = true;
+        try
+        {
+            var sorted = RoutePickups.ToList();
+            int n         = vehicleList.Count;
+            int blockSize = (int)Math.Ceiling(sorted.Count / (double)n);
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                int vehicleIndex = Math.Min(i / blockSize, n - 1);
+                await FurniturePickupService.AssignVehicleAsync(sorted[i].Id, vehicleList[vehicleIndex].Id);
+            }
+
+            pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
+        }
+        finally
+        {
+            isAutoDistributing = false;
+        }
+    }
+
+    private async Task ReassignPickup(int requestId, string? vehicleIdStr)
+    {
+        int? vehicleId = int.TryParse(vehicleIdStr, out var v) && v > 0 ? v : (int?)null;
+        await FurniturePickupService.AssignVehicleAsync(requestId, vehicleId);
+        pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
+    }
+
+    private RenderFragment RouteTable(List<FurniturePickupRequest> rows, bool showVehicleColumn) => __builder =>
+    {
+        var dayVehicles = VehiclesOnRouteDay;
+        <table class="av-table">
+            <thead>
+                <tr>
+                    <th style="width:2.5rem">#</th>
+                    <th>Auftrag</th>
+                    <th>Name / Kontakt</th>
+                    <th>Adresse</th>
+                    <th>Möbel</th>
+                    <th>Status</th>
+                    @if (showVehicleColumn) { <th>Fahrzeug</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < rows.Count; i++)
+                {
+                    var req = rows[i];
+                    var idx = i + 1;
+                    <tr>
+                        <td><span class="av-route-index">@idx</span></td>
+                        <td><strong>#@req.OrderNumber</strong></td>
+                        <td>
+                            <strong>@req.FirstName @req.LastName</strong>
+                            @if (!string.IsNullOrEmpty(req.PhoneNumber))
+                            {
+                                <br /><small>📞 @req.PhoneNumber</small>
+                            }
+                        </td>
+                        <td>
+                            <a href="https://www.google.com/maps/search/@Uri.EscapeDataString($"{req.Street}, {req.PostalCode} {req.City}")"
+                               target="_blank" rel="noopener noreferrer" class="av-addr-link">
+                                @req.Street<br />
+                                <strong>@req.PostalCode @req.City</strong>
+                            </a>
+                        </td>
+                        <td><small>@req.Description</small></td>
+                        <td>
+                            @if (req.Status == PickupRequestStatus.Pending)
+                            {
+                                <span class="av-badge av-badge--pending">⏳ Ausstehend</span>
+                            }
+                            else if (req.Status == PickupRequestStatus.Accepted)
+                            {
+                                <span class="av-badge av-badge--accepted">✅ Akzeptiert</span>
+                            }
+                        </td>
+                        @if (showVehicleColumn)
+                        {
+                            var currentReq = req;
+                            <td>
+                                <select class="av-input av-input--sm"
+                                        value="@(currentReq.AssignedVehicleId?.ToString() ?? "")"
+                                        @onchange="e => ReassignPickup(currentReq.Id, e.Value?.ToString())">
+                                    <option value="">– Nicht zugeteilt –</option>
+                                    @foreach (var dv in dayVehicles)
+                                    {
+                                        <option value="@dv.Id">@dv.OwnerName</option>
+                                    }
+                                </select>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    };
+
 
     // ── Filter ────────────────────────────────────────────────────────────────
     private int            selectedEventId    = 0;

@@ -409,6 +409,105 @@
     display: inline-block;
 }
 
+/* ── Route Controls Bar ──────────────────────────────────────────────────── */
+.av-route-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: .85rem 1.1rem;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-soft);
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-card);
+}
+
+.av-auto-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.4rem;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: .92rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(124,58,237,.3);
+    transition: filter .2s, transform .15s;
+    align-self: flex-end;
+}
+
+.av-auto-btn:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+.av-auto-btn:disabled { opacity: .65; cursor: not-allowed; }
+
+/* ── Vehicle Groups ───────────────────────────────────────────────────────── */
+.av-vehicle-group {
+    border: 1.5px solid var(--color-border-soft);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+    background: var(--color-surface-card);
+    box-shadow: var(--shadow-card);
+}
+
+.av-vehicle-group--unassigned {
+    border-color: var(--color-warning-border);
+    background: var(--color-warning-bg);
+}
+
+.av-vehicle-group__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .8rem 1.25rem;
+    background: linear-gradient(135deg, var(--color-primary-deeper), var(--color-primary));
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.av-vehicle-group--unassigned .av-vehicle-group__header {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+}
+
+.av-vehicle-group__info {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    color: #ffffff;
+    flex-wrap: wrap;
+    font-size: .92rem;
+}
+
+.av-vehicle-group__info strong { color: #ffffff; font-size: 1rem; }
+.av-vehicle-group__info small  { color: rgba(255,255,255,.8); }
+.av-vehicle-group__info span[class*="av-badge"] {
+    background: rgba(255,255,255,.2);
+    color: #ffffff;
+    border-color: rgba(255,255,255,.3);
+}
+
+.av-maps-btn--sm {
+    padding: .45rem 1rem;
+    font-size: .82rem;
+    box-shadow: none;
+}
+
+/* ── Small Input ──────────────────────────────────────────────────────────── */
+.av-input--sm {
+    height: 2.1rem;
+    font-size: .82rem;
+    padding: 0 .6rem;
+    min-width: 130px;
+}
+
 .av-badge--accepted {
     background: var(--color-success-bg);
     color: var(--color-success-text);

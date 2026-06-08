@@ -312,6 +312,26 @@
                                 }
                             }
 
+                            <!-- Startadresse Routenplanung -->
+                            <div class="afp-field" style="margin-top:1.25rem">
+                                <label>
+                                    Startadresse Routenplanung
+                                    <span style="font-size:.8rem;font-weight:400;color:var(--color-text-placeholder)">
+                                        (z.B. Pfadiheim, Sammelplatz)
+                                    </span>
+                                </label>
+                                <input type="text"
+                                       class="afp-input"
+                                       placeholder="z.B. Pfadistrasse 1, 6300 Zug"
+                                       @bind="s.DepartureAddress" />
+                                @if (!string.IsNullOrEmpty(s.DepartureAddress))
+                                {
+                                    <small style="color:var(--color-text-light)">
+                                        🗺️ Wird als Startpunkt in der Fahrzeug-Routenplanung verwendet
+                                    </small>
+                                }
+                            </div>
+
                             <!-- Max. Abholungen pro Tag -->
                             <div class="afp-field" style="margin-top:1.25rem;max-width:320px">
                                 <label>

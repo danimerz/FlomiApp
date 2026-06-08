@@ -58,6 +58,11 @@ public class FurniturePickupRequest
     public int? EventId { get; set; }
 
     public Event? Event { get; set; }
+
+    // Fahrzeugzuweisung für Routenplanung
+    public int? AssignedVehicleId { get; set; }
+    public Vehicle? AssignedVehicle { get; set; }
+
     // Einverständnis Entsorgungsgebühren
     public bool AcceptsDisposalFee { get; set; } = false;
 

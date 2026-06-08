@@ -24,5 +24,8 @@ namespace FlomiApp.Data.Models
 
         [ForeignKey(nameof(EventId))]
         public Event? Event { get; set; }
+
+        /// <summary>Startadresse für Fahrzeug-Routenplanung (z.B. Pfadiheim / Sammelplatz)</summary>
+        public string? DepartureAddress { get; set; }
     }
 }
