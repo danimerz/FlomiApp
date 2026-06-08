@@ -3,8 +3,9 @@
 @using FlomiApp.Helpers
 @using Microsoft.AspNetCore.Authorization
 @using System.Globalization
-@inject IAreaService    AreaService
-@inject IVehicleService VehicleService
+@inject IAreaService            AreaService
+@inject IVehicleService         VehicleService
+@inject IFurniturePickupService FurniturePickupService
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrFahrzeug)]
 
@@ -44,6 +45,17 @@
         <button class="av-tab @(activeTab == Tab.AddAssignment ? "av-tab--active" : "")"
                 @onclick="() => SetTab(Tab.AddAssignment)">
             📌 Zuweisung erfassen
+        </button>
+        <button class="av-tab @(activeTab == Tab.Route ? "av-tab--active" : "")"
+                @onclick="() => SetTab(Tab.Route)">
+            🗺️ Routenplanung
+            @if (pickupRequests != null)
+            {
+                var cnt = pickupRequests.Count(r =>
+                    r.Status == PickupRequestStatus.Pending ||
+                    r.Status == PickupRequestStatus.Accepted);
+                if (cnt > 0) { <span class="av-tab__badge">@cnt</span> }
+            }
         </button>
     </div>
 
@@ -595,6 +607,147 @@
         }
     }
 
+
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TAB: ROUTENPLANUNG
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (activeTab == Tab.Route)
+    {
+        <div class="av-toolbar">
+            <div class="av-field" style="min-width:280px">
+                <label>Event auswählen</label>
+                <select class="av-input"
+                        value="@routeEventId"
+                        @onchange="OnRouteEventChanged">
+                    <option value="0">– Alle Events –</option>
+                    @foreach (var ev in events ?? new())
+                    {
+                        <option value="@ev.Id">
+                            @ev.Name (@ev.Date.ToShortDateString())
+                        </option>
+                    }
+                </select>
+            </div>
+
+            @if (RouteAvailableDates.Any())
+            {
+                <div class="av-field">
+                    <label>Abholdatum</label>
+                    <div class="av-day-filter">
+                        <button class="av-day-filter-btn @(routeDate == null ? "av-day-filter-btn--active" : "")"
+                                @onclick="() => routeDate = null">
+                            Alle
+                        </button>
+                        @foreach (var d in RouteAvailableDates)
+                        {
+                            var date = d;
+                            <button class="av-day-filter-btn @(routeDate == date ? "av-day-filter-btn--active" : "")"
+                                    @onclick="() => routeDate = date">
+                                @date.ToString("ddd dd.MM", new CultureInfo("de-CH"))
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (RoutePickups.Any())
+            {
+                <a href="@BuildMapsUrl()" target="_blank" rel="noopener noreferrer"
+                   class="av-maps-btn">
+                    🗺️ In Google Maps öffnen
+                </a>
+            }
+        </div>
+
+        @if (pickupRequests == null)
+        {
+            <div class="av-state-card av-state-card--info">
+                <div class="av-state-card__icon">⏳</div>
+                <div class="av-state-card__content"><h3>Wird geladen...</h3></div>
+            </div>
+        }
+        else if (!RoutePickups.Any())
+        {
+            <div class="av-state-card av-state-card--empty">
+                <div class="av-state-card__icon">🗺️</div>
+                <div class="av-state-card__content">
+                    <h3>Keine Abholaufträge vorhanden</h3>
+                    <p>Für den gewählten Filter gibt es keine offenen oder akzeptierten Möbelabholungen.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            var routeList = RoutePickups.ToList();
+            <div class="av-route-summary">
+                <span>📦 <strong>@routeList.Count</strong> Abholungen</span>
+                <span class="av-route-summary__hint">Sortiert nach Postleitzahl – optimale Reihenfolge für die Fahrt</span>
+            </div>
+
+            <table class="av-table">
+                <thead>
+                    <tr>
+                        <th style="width:2.5rem">#</th>
+                        <th>Auftrag</th>
+                        <th>Name / Kontakt</th>
+                        <th>Adresse</th>
+                        <th>Möbel</th>
+                        <th>Status</th>
+                        <th>Notiz</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < routeList.Count; i++)
+                    {
+                        var req = routeList[i];
+                        var idx = i + 1;
+                        <tr>
+                            <td><span class="av-route-index">@idx</span></td>
+                            <td><strong>#@req.OrderNumber</strong></td>
+                            <td>
+                                <strong>@req.FirstName @req.LastName</strong>
+                                @if (!string.IsNullOrEmpty(req.PhoneNumber))
+                                {
+                                    <br /><small>📞 @req.PhoneNumber</small>
+                                }
+                            </td>
+                            <td>
+                                <a href="https://www.google.com/maps/search/@Uri.EscapeDataString($"{req.Street}, {req.PostalCode} {req.City}")"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="av-addr-link">
+                                    @req.Street<br />
+                                    <strong>@req.PostalCode @req.City</strong>
+                                </a>
+                            </td>
+                            <td><small>@req.Description</small></td>
+                            <td>
+                                @if (req.Status == PickupRequestStatus.Pending)
+                                {
+                                    <span class="av-badge av-badge--pending">⏳ Ausstehend</span>
+                                }
+                                else if (req.Status == PickupRequestStatus.Accepted)
+                                {
+                                    <span class="av-badge av-badge--accepted">✅ Akzeptiert</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(req.AdminNote))
+                                {
+                                    <small class="av-admin-note">@req.AdminNote</small>
+                                }
+                                else
+                                {
+                                    <span class="av-badge av-badge--none">–</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════
@@ -806,14 +959,50 @@
 
 @code {
     // ── Enums ─────────────────────────────────────────────────────────────────
-    private enum Tab { Vehicles, Assignments, AddAssignment }
+    private enum Tab { Vehicles, Assignments, AddAssignment, Route }
     private Tab activeTab = Tab.Vehicles;
 
     // ── Data ──────────────────────────────────────────────────────────────────
-    private List<Vehicle>?           vehicles    = null;
-    private List<VehicleAssignment>? assignments = null;
-    private List<Event>?             events      = null;
-    private List<ApplicationUser>?   users       = null;
+    private List<Vehicle>?                vehicles        = null;
+    private List<VehicleAssignment>?      assignments     = null;
+    private List<Event>?                  events          = null;
+    private List<ApplicationUser>?        users           = null;
+    private List<FurniturePickupRequest>? pickupRequests  = null;
+
+    // ── Route Planning ────────────────────────────────────────────────────────
+    private int       routeEventId = 0;
+    private DateTime? routeDate    = null;
+
+    private IEnumerable<FurniturePickupRequest> RoutePickups =>
+        (pickupRequests ?? new())
+        .Where(r => r.Status == PickupRequestStatus.Pending || r.Status == PickupRequestStatus.Accepted)
+        .Where(r => routeEventId == 0 || r.EventId == routeEventId)
+        .Where(r => routeDate == null || r.PickupDate.Date == routeDate.Value.Date)
+        .OrderBy(r => r.PostalCode)
+        .ThenBy(r => r.Street);
+
+    private List<DateTime> RouteAvailableDates =>
+        (pickupRequests ?? new())
+        .Where(r => r.Status == PickupRequestStatus.Pending || r.Status == PickupRequestStatus.Accepted)
+        .Where(r => routeEventId == 0 || r.EventId == routeEventId)
+        .Select(r => r.PickupDate.Date)
+        .Distinct()
+        .OrderBy(d => d)
+        .ToList();
+
+    private string BuildMapsUrl()
+    {
+        var parts = RoutePickups
+            .Select(r => Uri.EscapeDataString($"{r.Street}, {r.PostalCode} {r.City}"));
+        return "https://www.google.com/maps/dir/" + string.Join("/", parts);
+    }
+
+    private void OnRouteEventChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+            routeEventId = id;
+        routeDate = null;
+    }
 
     // ── Filter ────────────────────────────────────────────────────────────────
     private int            selectedEventId    = 0;
@@ -866,10 +1055,11 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        events      = await AreaService.GetAllEventsAsync();
-        users       = await VehicleService.GetAllUsersAsync();
-        vehicles    = await VehicleService.GetAllVehiclesAsync();
-        assignments = await VehicleService.GetAssignmentsByEventAsync(0);
+        events         = await AreaService.GetAllEventsAsync();
+        users          = await VehicleService.GetAllUsersAsync();
+        vehicles       = await VehicleService.GetAllVehiclesAsync();
+        assignments    = await VehicleService.GetAssignmentsByEventAsync(0);
+        pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
     }
 
     // ── Sort: Fahrzeuge ───────────────────────────────────────────────────────
