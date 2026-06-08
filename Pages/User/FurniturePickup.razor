@@ -187,6 +187,7 @@
                             </label>
                             <div class="addr-wrap">
                                 <input type="text"
+                                       @key="@($"addr-street-{_addrKey}")"
                                        class="form-control-modern"
                                        placeholder="z.B. Musterstrasse 12"
                                        @bind-value="model.Street"
@@ -200,14 +201,12 @@
                                 }
                                 @if (showAddrSuggestions && addrSuggestions.Count > 0)
                                 {
-                                    <ul class="addr-suggestions"
-                                        @onmouseenter="() => isHoveringSuggestions = true"
-                                        @onmouseleave="() => isHoveringSuggestions = false">
+                                    <ul class="addr-suggestions">
                                         @foreach (var s in addrSuggestions)
                                         {
                                             var suggestion = s;
                                             <li class="addr-suggestion"
-                                                @onclick="() => SelectAddress(suggestion)">
+                                                @onmousedown="() => SelectAddress(suggestion)">
                                                 📍 @suggestion.Label
                                             </li>
                                         }
@@ -219,6 +218,7 @@
                         <div class="pickup-field">
                             <label>PLZ</label>
                             <input type="text"
+                                   @key="@($"addr-plz-{_addrKey}")"
                                    class="form-control-modern"
                                    placeholder="z.B. 8000"
                                    @bind-value="model.PostalCode"
@@ -228,6 +228,7 @@
                         <div class="pickup-field">
                             <label>Ort</label>
                             <input type="text"
+                                   @key="@($"addr-city-{_addrKey}")"
                                    class="form-control-modern"
                                    placeholder="z.B. Zürich"
                                    @bind-value="model.City"
@@ -413,7 +414,7 @@
     private List<AddressSuggestion>  addrSuggestions     = new();
     private bool                     showAddrSuggestions = false;
     private bool                     isAddrSearching     = false;
-    private bool                     isHoveringSuggestions = false;
+    private int                      _addrKey            = 0;
     private CancellationTokenSource? _addrSearchCts;
 
     private async Task OnStreetChanged()
@@ -458,22 +459,17 @@
 
     private void SelectAddress(AddressSuggestion s)
     {
-        model.Street          = s.Street;
-        model.PostalCode      = s.PostalCode;
-        model.City            = s.City;
-        addrSuggestions       = new();
-        showAddrSuggestions   = false;
-        isHoveringSuggestions = false;
+        model.Street        = s.Street;
+        model.PostalCode    = s.PostalCode;
+        model.City          = s.City;
+        addrSuggestions     = new();
+        showAddrSuggestions = false;
+        _addrKey++;
     }
 
-    private async Task OnStreetBlur()
+    private void OnStreetBlur()
     {
-        await Task.Delay(200);
-        if (!isHoveringSuggestions)
-        {
-            showAddrSuggestions = false;
-            StateHasChanged();
-        }
+        showAddrSuggestions = false;
     }
 
     // ── Bild-Vorschau ─────────────────────────────────────────────────────────
