@@ -187,24 +187,26 @@
                             </label>
                             <div class="addr-wrap">
                                 <input type="text"
-                                       class="form-control-modern"
+                                       class="form-control-modern addr-street-field"
                                        placeholder="z.B. Musterstrasse 12"
                                        value="@model.Street"
                                        autocomplete="off"
                                        @oninput="OnStreetInput"
-                                       @onblur="HideSuggestionsDelayed" />
+                                       @onblur="OnStreetBlur" />
                                 @if (isAddrSearching)
                                 {
                                     <div class="addr-spinner">🔍</div>
                                 }
                                 @if (showAddrSuggestions && addrSuggestions.Count > 0)
                                 {
-                                    <ul class="addr-suggestions">
+                                    <ul class="addr-suggestions"
+                                        @onmouseenter="() => isHoveringSuggestions = true"
+                                        @onmouseleave="() => isHoveringSuggestions = false">
                                         @foreach (var s in addrSuggestions)
                                         {
                                             var suggestion = s;
                                             <li class="addr-suggestion"
-                                                @onmousedown="() => SelectAddress(suggestion)">
+                                                @onclick="async () => await SelectAddress(suggestion)">
                                                 📍 @suggestion.Label
                                             </li>
                                         }
@@ -216,7 +218,7 @@
                         <div class="pickup-field">
                             <label>PLZ</label>
                             <input type="text"
-                                   class="form-control-modern"
+                                   class="form-control-modern addr-plz-field"
                                    placeholder="z.B. 8000"
                                    value="@model.PostalCode"
                                    @onchange="e => model.PostalCode = e.Value?.ToString() ?? string.Empty" />
@@ -225,7 +227,7 @@
                         <div class="pickup-field">
                             <label>Ort</label>
                             <input type="text"
-                                   class="form-control-modern"
+                                   class="form-control-modern addr-city-field"
                                    placeholder="z.B. Zürich"
                                    value="@model.City"
                                    @onchange="e => model.City = e.Value?.ToString() ?? string.Empty" />
@@ -415,9 +417,10 @@
         public string City       { get; set; } = "";
     }
 
-    private List<AddressSuggestion>  addrSuggestions    = new();
+    private List<AddressSuggestion>  addrSuggestions     = new();
     private bool                     showAddrSuggestions = false;
     private bool                     isAddrSearching     = false;
+    private bool                     isHoveringSuggestions = false;
     private CancellationTokenSource? _addrSearchCts;
 
     private async Task OnStreetInput(ChangeEventArgs e)
@@ -461,21 +464,26 @@
         }
     }
 
-    private void SelectAddress(AddressSuggestion s)
+    private async Task SelectAddress(AddressSuggestion s)
     {
-        model.Street        = s.Street;
-        model.PostalCode    = s.PostalCode;
-        model.City          = s.City;
-        addrSuggestions     = new();
-        showAddrSuggestions = false;
-        StateHasChanged();
+        model.Street          = s.Street;
+        model.PostalCode      = s.PostalCode;
+        model.City            = s.City;
+        addrSuggestions       = new();
+        showAddrSuggestions   = false;
+        isHoveringSuggestions = false;
+        // Direkt im DOM setzen – umgeht Blazor-Rendering für benutzerbearbeitete Inputs
+        await JS.InvokeVoidAsync("fillAddressFields", s.Street, s.PostalCode, s.City);
     }
 
-    private async Task HideSuggestionsDelayed()
+    private async Task OnStreetBlur()
     {
-        await Task.Delay(150);
-        showAddrSuggestions = false;
-        StateHasChanged();
+        await Task.Delay(200);
+        if (!isHoveringSuggestions)
+        {
+            showAddrSuggestions = false;
+            StateHasChanged();
+        }
     }
 
     // ── Bild-Vorschau ─────────────────────────────────────────────────────────

@@ -1,3 +1,13 @@
+window.fillAddressFields = (street, plz, city) => {
+    const set = (sel, val) => {
+        const el = document.querySelector(sel);
+        if (el) el.value = val;
+    };
+    set('.addr-street-field', street);
+    set('.addr-plz-field',    plz);
+    set('.addr-city-field',   city);
+};
+
 window.swisstopoSearch = async (query) => {
     if (!query || query.length < 3) return [];
     const url = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
