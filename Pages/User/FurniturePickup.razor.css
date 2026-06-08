@@ -1,3 +1,57 @@
+/* ── Address Autocomplete ────────────────────────────────────────────────── */
+.addr-wrap {
+    position: relative;
+}
+
+.addr-spinner {
+    position: absolute;
+    right: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: .9rem;
+    pointer-events: none;
+    animation: addr-spin 1s linear infinite;
+}
+
+@keyframes addr-spin {
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.addr-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 999;
+    margin: 0;
+    padding: .3rem 0;
+    list-style: none;
+    background: var(--color-surface-card, #fff);
+    border: 1.5px solid var(--color-border-soft, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.12);
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.addr-suggestion {
+    padding: .6rem 1rem;
+    font-size: .9rem;
+    color: var(--color-text, #1e293b);
+    cursor: pointer;
+    transition: background .12s;
+    border-bottom: 1px solid var(--color-border-light, #f1f5f9);
+}
+
+.addr-suggestion:last-child {
+    border-bottom: none;
+}
+
+.addr-suggestion:hover {
+    background: var(--color-info-bg, #eff6ff);
+    color: var(--color-primary, #2563eb);
+}
+
 /* ── Page ─────────────────────────────────────────────────────────────────── */
 .pickup-page {
     max-width: 1240px;

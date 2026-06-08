@@ -5,6 +5,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IFurniturePickupService FurniturePickupService
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+@inject IJSRuntime JS
 
 <PageTitle>Möbel Abholservice</PageTitle>
 
@@ -180,10 +181,36 @@
                     <div class="pickup-grid pickup-grid--2">
 
                         <div class="pickup-field pickup-field--full">
-                            <label>Strasse & Hausnummer</label>
-                            <InputText @bind-Value="model.Street"
+                            <label>
+                                Strasse & Hausnummer
+                                <span class="pickup-label-hint">(Adresse eingeben für Vorschläge)</span>
+                            </label>
+                            <div class="addr-wrap">
+                                <input type="text"
                                        class="form-control-modern"
-                                       placeholder="z.B. Musterstrasse 12" />
+                                       placeholder="z.B. Musterstrasse 12"
+                                       value="@model.Street"
+                                       autocomplete="off"
+                                       @oninput="OnStreetInput"
+                                       @onblur="HideSuggestionsDelayed" />
+                                @if (isAddrSearching)
+                                {
+                                    <div class="addr-spinner">🔍</div>
+                                }
+                                @if (showAddrSuggestions && addrSuggestions.Count > 0)
+                                {
+                                    <ul class="addr-suggestions">
+                                        @foreach (var s in addrSuggestions)
+                                        {
+                                            var suggestion = s;
+                                            <li class="addr-suggestion"
+                                                @onmousedown="() => SelectAddress(suggestion)">
+                                                📍 @suggestion.Label
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
                         </div>
 
                         <div class="pickup-field">
@@ -375,6 +402,77 @@
     private string? dateCapacityMessage  = null;
     private bool    dateIsFull           = false;
 
+    // ── Adresse Autocomplete ──────────────────────────────────────────────────
+    private class AddressSuggestion
+    {
+        public string Label      { get; set; } = "";
+        public string Street     { get; set; } = "";
+        public string PostalCode { get; set; } = "";
+        public string City       { get; set; } = "";
+    }
+
+    private List<AddressSuggestion>  addrSuggestions    = new();
+    private bool                     showAddrSuggestions = false;
+    private bool                     isAddrSearching     = false;
+    private CancellationTokenSource? _addrSearchCts;
+
+    private async Task OnStreetInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? "";
+        model.Street = text;
+
+        _addrSearchCts?.Cancel();
+        _addrSearchCts = new CancellationTokenSource();
+        var token = _addrSearchCts.Token;
+
+        if (text.Length < 3)
+        {
+            addrSuggestions    = new();
+            showAddrSuggestions = false;
+            return;
+        }
+
+        try
+        {
+            await Task.Delay(350, token);
+            if (token.IsCancellationRequested) return;
+
+            isAddrSearching = true;
+            StateHasChanged();
+
+            var results = await JS.InvokeAsync<List<AddressSuggestion>>("swisstopoSearch", token, text);
+            addrSuggestions    = results ?? new();
+            showAddrSuggestions = addrSuggestions.Count > 0;
+        }
+        catch (OperationCanceledException) { }
+        catch
+        {
+            addrSuggestions    = new();
+            showAddrSuggestions = false;
+        }
+        finally
+        {
+            isAddrSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectAddress(AddressSuggestion s)
+    {
+        model.Street     = s.Street;
+        model.PostalCode = s.PostalCode;
+        model.City       = s.City;
+        addrSuggestions    = new();
+        showAddrSuggestions = false;
+    }
+
+    private async Task HideSuggestionsDelayed()
+    {
+        await Task.Delay(150);
+        showAddrSuggestions = false;
+        StateHasChanged();
+    }
+
     // ── Bild-Vorschau ─────────────────────────────────────────────────────────
     private class ImagePreview
     {
@@ -556,11 +654,13 @@
     // ── Reset ─────────────────────────────────────────────────────────────────
     private void ResetForm()
     {
-        submitted        = false;
-        uploadedImages   = new();
-        imageError       = null;
-        showConsentError = false;
-        model            = CreateFreshModel(); // frisches Objekt, Id=0, kein EF-Tracking-Konflikt
+        submitted           = false;
+        uploadedImages      = new();
+        imageError          = null;
+        showConsentError    = false;
+        addrSuggestions     = new();
+        showAddrSuggestions = false;
+        model               = CreateFreshModel(); // frisches Objekt, Id=0, kein EF-Tracking-Konflikt
 
         ResetEventSelection();
     }
