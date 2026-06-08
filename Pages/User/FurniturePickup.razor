@@ -205,7 +205,8 @@
                                         {
                                             var suggestion = s;
                                             <li class="addr-suggestion"
-                                                @onmousedown="() => SelectAddress(suggestion)">
+                                                @onmousedown:preventDefault
+                                                @onclick="() => SelectAddress(suggestion)">
                                                 📍 @suggestion.Label
                                             </li>
                                         }
