@@ -12,8 +12,15 @@ window.swisstopoSearch = async (query) => {
             const cleanLabel = (a.label || '').replace(/<[^>]+>/g, '');
             const postalCode = String(a.postalcode || '');
             const city = a.city || '';
-            const idx = cleanLabel.indexOf(' ' + postalCode + ' ');
-            const street = idx > 0 ? cleanLabel.substring(0, idx).trim() : cleanLabel;
+
+            // Extract street: remove " PLZ City" suffix from the clean label
+            let street = cleanLabel;
+            const suffix = postalCode + ' ' + city;
+            if (postalCode && city && cleanLabel.includes(suffix)) {
+                const suffixIdx = cleanLabel.lastIndexOf(suffix);
+                street = cleanLabel.substring(0, suffixIdx).trim();
+            }
+
             return { label: cleanLabel, street, postalCode, city };
         });
     } catch {

@@ -215,16 +215,20 @@
 
                         <div class="pickup-field">
                             <label>PLZ</label>
-                            <InputText @bind-Value="model.PostalCode"
-                                       class="form-control-modern"
-                                       placeholder="z.B. 8000" />
+                            <input type="text"
+                                   class="form-control-modern"
+                                   placeholder="z.B. 8000"
+                                   value="@model.PostalCode"
+                                   @onchange="e => model.PostalCode = e.Value?.ToString() ?? string.Empty" />
                         </div>
 
                         <div class="pickup-field">
                             <label>Ort</label>
-                            <InputText @bind-Value="model.City"
-                                       class="form-control-modern"
-                                       placeholder="z.B. Zürich" />
+                            <input type="text"
+                                   class="form-control-modern"
+                                   placeholder="z.B. Zürich"
+                                   value="@model.City"
+                                   @onchange="e => model.City = e.Value?.ToString() ?? string.Empty" />
                         </div>
 
                     </div>
@@ -459,11 +463,12 @@
 
     private void SelectAddress(AddressSuggestion s)
     {
-        model.Street     = s.Street;
-        model.PostalCode = s.PostalCode;
-        model.City       = s.City;
-        addrSuggestions    = new();
+        model.Street        = s.Street;
+        model.PostalCode    = s.PostalCode;
+        model.City          = s.City;
+        addrSuggestions     = new();
         showAddrSuggestions = false;
+        StateHasChanged();
     }
 
     private async Task HideSuggestionsDelayed()
