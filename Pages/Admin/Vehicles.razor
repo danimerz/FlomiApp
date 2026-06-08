@@ -6,6 +6,8 @@
 @inject IAreaService            AreaService
 @inject IVehicleService         VehicleService
 @inject IFurniturePickupService FurniturePickupService
+@inject IExportService          ExportService
+@inject IJSRuntime              JS
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrFahrzeug)]
 
@@ -670,6 +672,11 @@
                         else { <span>⚡ Auto-verteilen</span> }
                     </button>
                 }
+                <button class="av-auto-btn" style="background:linear-gradient(135deg,#15803d,#22c55e);box-shadow:0 4px 12px rgba(21,128,61,.3)"
+                        @onclick="ExportRoute" disabled="@isExportingRoute">
+                    @if (isExportingRoute) { <span>⏳ Exportiere...</span> }
+                    else { <span>📥 Excel exportieren</span> }
+                </button>
             </div>
         }
 
@@ -1008,6 +1015,7 @@
     private string                    routeStartAddress = "";
     private FurniturePickupSettings?  routeSettings     = null;
     private bool                      isAutoDistributing = false;
+    private bool                      isExportingRoute   = false;
 
     private IEnumerable<FurniturePickupRequest> RoutePickups =>
         (pickupRequests ?? new())
@@ -1103,6 +1111,28 @@
         finally
         {
             isAutoDistributing = false;
+        }
+    }
+
+    private async Task ExportRoute()
+    {
+        if (!routeDate.HasValue) return;
+        isExportingRoute = true;
+        try
+        {
+            var bytes    = await ExportService.ExportRouteAsync(
+                               routeEventId > 0 ? routeEventId : null,
+                               routeDate.Value);
+            var dateStr  = routeDate.Value.ToString("yyyyMMdd");
+            var fileName = $"Route_{dateStr}.xlsx";
+            var base64   = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("downloadFile", fileName,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                base64);
+        }
+        finally
+        {
+            isExportingRoute = false;
         }
     }
 

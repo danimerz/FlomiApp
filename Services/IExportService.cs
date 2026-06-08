@@ -9,5 +9,6 @@ namespace FlomiApp.Services
         Task<byte[]> ExportGastroAppointmentsAsync(int? eventId = null);
         Task<byte[]> ExportPickupRequestsAsync(int? eventId = null);
         Task<byte[]> ExportVehicleAssignmentsAsync(int? eventId = null);
+        Task<byte[]> ExportRouteAsync(int? eventId, DateTime date);
     }
 }

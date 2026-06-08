@@ -276,6 +276,121 @@ namespace FlomiApp.Services
             return WorkbookToBytes(wb);
         }
 
+        // ── Route Export (pro Fahrzeug, pro Tag) ─────────────────────────────
+        public async Task<byte[]> ExportRouteAsync(int? eventId, DateTime date)
+        {
+            var query = _db.FurniturePickupRequests
+                .Include(r => r.AssignedVehicle)
+                .Where(r => r.PickupDate.Date == date.Date
+                         && (r.Status == PickupRequestStatus.Pending
+                          || r.Status == PickupRequestStatus.Accepted))
+                .AsQueryable();
+
+            if (eventId.HasValue)
+                query = query.Where(r => r.EventId == eventId.Value);
+
+            var data = await query
+                .OrderBy(r => r.AssignedVehicle != null ? r.AssignedVehicle.OwnerName : "zzz")
+                .ThenBy(r => r.PostalCode)
+                .ThenBy(r => r.Street)
+                .AsNoTracking()
+                .ToListAsync();
+
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Route");
+
+            var culture  = new System.Globalization.CultureInfo("de-CH");
+            var dateLabel = date.ToString("dddd, dd.MM.yyyy", culture);
+
+            // Title row
+            ws.Cell(1, 1).Value = $"Routenplan – {dateLabel}";
+            var titleRange = ws.Range(1, 1, 1, 10);
+            titleRange.Merge();
+            titleRange.Style.Font.Bold      = true;
+            titleRange.Style.Font.FontSize  = 14;
+            titleRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1D4ED8");
+            titleRange.Style.Font.FontColor = XLColor.White;
+            titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            var headers = new[] { "#", "Auftragsnr.", "Name", "Telefon", "Strasse", "PLZ", "Ort", "Möbelbeschreibung", "Status", "Admin-Notiz" };
+
+            int row = 2;
+
+            void WriteVehicleSection(string vehicleName, string? vehiclePhone, List<FurniturePickupRequest> pickups)
+            {
+                // Vehicle header
+                ws.Cell(row, 1).Value = $"🚗  {vehicleName}" + (string.IsNullOrEmpty(vehiclePhone) ? "" : $"   📞 {vehiclePhone}");
+                var vRange = ws.Range(row, 1, row, headers.Length);
+                vRange.Merge();
+                vRange.Style.Font.Bold      = true;
+                vRange.Style.Font.FontSize  = 11;
+                vRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E40AF");
+                vRange.Style.Font.FontColor = XLColor.White;
+                row++;
+
+                // Column headers
+                for (int i = 0; i < headers.Length; i++)
+                    ws.Cell(row, i + 1).Value = headers[i];
+                var hRange = ws.Range(row, 1, row, headers.Length);
+                hRange.Style.Font.Bold = true;
+                hRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#DBEAFE");
+                hRange.Style.Border.BottomBorder  = XLBorderStyleValues.Thin;
+                row++;
+
+                // Data rows
+                int stopNr = 1;
+                foreach (var r in pickups)
+                {
+                    ws.Cell(row, 1).Value  = stopNr++;
+                    ws.Cell(row, 2).Value  = r.OrderNumber;
+                    ws.Cell(row, 3).Value  = $"{r.FirstName} {r.LastName}".Trim();
+                    ws.Cell(row, 4).Value  = r.PhoneNumber ?? "";
+                    ws.Cell(row, 5).Value  = r.Street;
+                    ws.Cell(row, 6).Value  = r.PostalCode;
+                    ws.Cell(row, 7).Value  = r.City;
+                    ws.Cell(row, 8).Value  = r.Description ?? "";
+                    ws.Cell(row, 9).Value  = r.Status == PickupRequestStatus.Accepted ? "Akzeptiert" : "Ausstehend";
+                    ws.Cell(row, 10).Value = r.AdminNote ?? "";
+
+                    if (stopNr % 2 == 0)
+                        ws.Range(row, 1, row, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+                    ws.Range(row, 1, row, headers.Length).Style.Border.BottomBorder = XLBorderStyleValues.Hair;
+                    row++;
+                }
+
+                row++; // blank row between vehicles
+            }
+
+            // Assigned pickups grouped by vehicle
+            var assigned = data.Where(r => r.AssignedVehicle != null)
+                               .GroupBy(r => r.AssignedVehicle!.Id);
+            foreach (var group in assigned)
+            {
+                var v = group.First().AssignedVehicle!;
+                WriteVehicleSection(v.OwnerName, v.OwnerPhone, group.ToList());
+            }
+
+            // Unassigned
+            var unassigned = data.Where(r => r.AssignedVehicle == null).ToList();
+            if (unassigned.Any())
+                WriteVehicleSection("Nicht zugeteilt", null, unassigned);
+
+            // Column widths
+            ws.Column(1).Width  = 5;
+            ws.Column(2).Width  = 12;
+            ws.Column(3).Width  = 24;
+            ws.Column(4).Width  = 18;
+            ws.Column(5).Width  = 28;
+            ws.Column(6).Width  = 7;
+            ws.Column(7).Width  = 18;
+            ws.Column(8).Width  = 32;
+            ws.Column(9).Width  = 14;
+            ws.Column(10).Width = 28;
+            ws.SheetView.FreezeRows(1);
+
+            return WorkbookToBytes(wb);
+        }
+
         // ── Styling Helpers ───────────────────────────────────────────────────
         private static void StyleHeader(IXLWorksheet ws, int colCount)
         {
