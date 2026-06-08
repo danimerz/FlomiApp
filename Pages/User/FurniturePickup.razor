@@ -5,7 +5,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IFurniturePickupService FurniturePickupService
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
-@inject IJSRuntime JS
+@inject IAddressSearchService AddressSearch
 
 <PageTitle>Möbel Abholservice</PageTitle>
 
@@ -187,12 +187,13 @@
                             </label>
                             <div class="addr-wrap">
                                 <input type="text"
-                                       class="form-control-modern addr-street-field"
+                                       class="form-control-modern"
                                        placeholder="z.B. Musterstrasse 12"
-                                       value="@model.Street"
-                                       autocomplete="off"
-                                       @oninput="OnStreetInput"
-                                       @onblur="OnStreetBlur" />
+                                       @bind-value="model.Street"
+                                       @bind-value:event="oninput"
+                                       @bind-value:after="OnStreetChanged"
+                                       @onblur="OnStreetBlur"
+                                       autocomplete="off" />
                                 @if (isAddrSearching)
                                 {
                                     <div class="addr-spinner">🔍</div>
@@ -206,7 +207,7 @@
                                         {
                                             var suggestion = s;
                                             <li class="addr-suggestion"
-                                                @onclick="async () => await SelectAddress(suggestion)">
+                                                @onclick="() => SelectAddress(suggestion)">
                                                 📍 @suggestion.Label
                                             </li>
                                         }
@@ -218,19 +219,19 @@
                         <div class="pickup-field">
                             <label>PLZ</label>
                             <input type="text"
-                                   class="form-control-modern addr-plz-field"
+                                   class="form-control-modern"
                                    placeholder="z.B. 8000"
-                                   value="@model.PostalCode"
-                                   @onchange="e => model.PostalCode = e.Value?.ToString() ?? string.Empty" />
+                                   @bind-value="model.PostalCode"
+                                   @bind-value:event="onchange" />
                         </div>
 
                         <div class="pickup-field">
                             <label>Ort</label>
                             <input type="text"
-                                   class="form-control-modern addr-city-field"
+                                   class="form-control-modern"
                                    placeholder="z.B. Zürich"
-                                   value="@model.City"
-                                   @onchange="e => model.City = e.Value?.ToString() ?? string.Empty" />
+                                   @bind-value="model.City"
+                                   @bind-value:event="onchange" />
                         </div>
 
                     </div>
@@ -409,24 +410,15 @@
     private bool    dateIsFull           = false;
 
     // ── Adresse Autocomplete ──────────────────────────────────────────────────
-    private class AddressSuggestion
-    {
-        public string Label      { get; set; } = "";
-        public string Street     { get; set; } = "";
-        public string PostalCode { get; set; } = "";
-        public string City       { get; set; } = "";
-    }
-
     private List<AddressSuggestion>  addrSuggestions     = new();
     private bool                     showAddrSuggestions = false;
     private bool                     isAddrSearching     = false;
     private bool                     isHoveringSuggestions = false;
     private CancellationTokenSource? _addrSearchCts;
 
-    private async Task OnStreetInput(ChangeEventArgs e)
+    private async Task OnStreetChanged()
     {
-        var text = e.Value?.ToString() ?? "";
-        model.Street = text;
+        var text = model.Street;
 
         _addrSearchCts?.Cancel();
         _addrSearchCts = new CancellationTokenSource();
@@ -434,7 +426,7 @@
 
         if (text.Length < 3)
         {
-            addrSuggestions    = new();
+            addrSuggestions     = new();
             showAddrSuggestions = false;
             return;
         }
@@ -447,14 +439,14 @@
             isAddrSearching = true;
             StateHasChanged();
 
-            var results = await JS.InvokeAsync<List<AddressSuggestion>>("swisstopoSearch", token, text);
-            addrSuggestions    = results ?? new();
+            var results = await AddressSearch.SearchAsync(text);
+            addrSuggestions     = results;
             showAddrSuggestions = addrSuggestions.Count > 0;
         }
         catch (OperationCanceledException) { }
         catch
         {
-            addrSuggestions    = new();
+            addrSuggestions     = new();
             showAddrSuggestions = false;
         }
         finally
@@ -464,7 +456,7 @@
         }
     }
 
-    private async Task SelectAddress(AddressSuggestion s)
+    private void SelectAddress(AddressSuggestion s)
     {
         model.Street          = s.Street;
         model.PostalCode      = s.PostalCode;
@@ -472,8 +464,6 @@
         addrSuggestions       = new();
         showAddrSuggestions   = false;
         isHoveringSuggestions = false;
-        // Direkt im DOM setzen – umgeht Blazor-Rendering für benutzerbearbeitete Inputs
-        await JS.InvokeVoidAsync("fillAddressFields", s.Street, s.PostalCode, s.City);
     }
 
     private async Task OnStreetBlur()
