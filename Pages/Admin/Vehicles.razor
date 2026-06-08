@@ -1150,12 +1150,10 @@
             <thead>
                 <tr>
                     <th style="width:2.5rem">#</th>
-                    <th>Auftrag</th>
-                    <th>Name / Kontakt</th>
-                    <th>Adresse</th>
+                    <th>Auftrag / Person / Adresse</th>
                     <th>Möbel</th>
                     <th>Status</th>
-                    @if (showVehicleColumn) { <th>Fahrzeug</th> }
+                    @if (showVehicleColumn) { <th style="width:160px">Fahrzeug</th> }
                 </tr>
             </thead>
             <tbody>
@@ -1165,19 +1163,17 @@
                     var idx = i + 1;
                     <tr>
                         <td><span class="av-route-index">@idx</span></td>
-                        <td><strong>#@req.OrderNumber</strong></td>
                         <td>
-                            <strong>@req.FirstName @req.LastName</strong>
+                            <strong>#@req.OrderNumber</strong><br />
+                            @req.FirstName @req.LastName
                             @if (!string.IsNullOrEmpty(req.PhoneNumber))
                             {
-                                <br /><small>📞 @req.PhoneNumber</small>
+                                <span> · 📞 @req.PhoneNumber</span>
                             }
-                        </td>
-                        <td>
+                            <br />
                             <a href="https://www.google.com/maps/search/@Uri.EscapeDataString($"{req.Street}, {req.PostalCode} {req.City}")"
                                target="_blank" rel="noopener noreferrer" class="av-addr-link">
-                                @req.Street<br />
-                                <strong>@req.PostalCode @req.City</strong>
+                                @req.Street, @req.PostalCode @req.City
                             </a>
                         </td>
                         <td><small>@req.Description</small></td>
