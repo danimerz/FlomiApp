@@ -71,10 +71,13 @@
                             <span>📧</span>
                         }
                     </button>
-                    <label class="toggle-switch" title="Abgesagte anzeigen">
-                        <input type="checkbox" @bind="showCancelledAppointments" />
-                        <span class="slider round"></span>
-                    </label>
+                    <span class="cal-view-toggle" title="Abgesagte anzeigen">
+                        <span class="cal-view-toggle__icon">🚫</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="showCancelledAppointments" />
+                            <span class="slider round"></span>
+                        </label>
+                    </span>
                     <span class="cal-view-toggle" title="Kalenderansicht">
                         <span class="cal-view-toggle__icon">📅</span>
                         <label class="toggle-switch">

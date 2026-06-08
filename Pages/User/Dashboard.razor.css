@@ -480,6 +480,11 @@
     transform: none;
 }
 
+.dash-mail-btn {
+    border: none;
+    background: transparent;
+}
+
 /* ── Toggle Switch ────────────────────────────────────────────────────────── */
 .toggle-switch {
     position: relative;
