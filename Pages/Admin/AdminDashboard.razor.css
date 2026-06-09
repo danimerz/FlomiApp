@@ -285,3 +285,61 @@
 .adm-link  { display: inline-block; margin-top: .75rem; font-size: .82rem; font-weight: 700; color: var(--color-primary); text-decoration: none; }
 .adm-link:hover { text-decoration: underline; }
 .adm-empty { font-size: .88rem; color: var(--color-text-placeholder); font-style: italic; }
+
+/* ── Pickup Calendar Strip ──────────────────────────────────────────────── */
+.adm-section--full {
+    grid-column: 1 / -1;
+    max-height: none;
+    overflow: visible;
+}
+
+.adm-pickup-strip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+.adm-pickup-strip:last-child { border-bottom: none; }
+
+.adm-pickup-strip__event {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    min-width: 120px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.adm-pickup-strip__cells {
+    display: flex;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+
+.adm-day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    padding: .3rem .25rem;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: transform .12s, box-shadow .12s;
+    border: 1.5px solid transparent;
+}
+.adm-day-cell:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,.15); }
+
+.adm-day-cell__date  { font-size: .65rem; font-weight: 700; opacity: .8; }
+.adm-day-cell__count { font-size: .8rem;  font-weight: 900; }
+
+.adm-day-cell--empty     { background: var(--color-border-soft); color: var(--color-text-placeholder); border-color: var(--color-border-soft); }
+.adm-day-cell--free      { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.adm-day-cell--ok        { background: #dcfce7; color: #166534; border-color: #86efac; }
+.adm-day-cell--warn      { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+.adm-day-cell--warn-high { background: #ffedd5; color: #9a3412; border-color: #fdba74; }
+.adm-day-cell--full      { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }

@@ -80,6 +80,44 @@
         <!-- ── Sections ── -->
         <div class="adm-sections">
 
+            <!-- Möbel-Kapazitätskalender -->
+            @if (pickupCalendar.Any())
+            {
+                <div class="adm-section adm-section--full">
+                    <h2 class="adm-section__title">
+                        🚐 Möbel-Abholungen pro Tag
+                        <a href="/admin/furniture-pickup" class="adm-section__link">Details →</a>
+                    </h2>
+                    @foreach (var ev in pickupCalendar)
+                    {
+                        <div class="adm-pickup-strip">
+                            <span class="adm-pickup-strip__event">@ev.EventName</span>
+                            <div class="adm-pickup-strip__cells">
+                                @foreach (var day in ev.Days)
+                                {
+                                    var pct = day.Max.HasValue && day.Max > 0
+                                        ? (double)day.Count / day.Max.Value * 100 : -1;
+                                    var color = day.Count == 0 ? "empty"
+                                        : !day.Max.HasValue ? "free"
+                                        : pct >= 100 ? "full"
+                                        : pct >= 80  ? "warn-high"
+                                        : pct >= 50  ? "warn"
+                                        : "ok";
+                                    var label = day.Max.HasValue ? $"{day.Count}/{day.Max}" : $"{day.Count}";
+                                    var tip = $"{day.Date.ToString("ddd dd.MM", new CultureInfo("de-CH"))}: {label} Abholungen";
+                                    <a href="/admin/vehicles"
+                                       class="adm-day-cell adm-day-cell--@color"
+                                       title="@tip">
+                                        <span class="adm-day-cell__date">@day.Date.ToString("dd.MM")</span>
+                                        <span class="adm-day-cell__count">@label</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
             <!-- Bereiche nach Auslastung -->
             <div class="adm-section">
                 <h2 class="adm-section__title">📋 Bereiche nach Auslastung</h2>
@@ -294,10 +332,12 @@
 
     private record AreaStat(string Name, string EventName, DateTime Date, int Reg, int Cap);
     private record ActivityItem(DateTime Timestamp, string Type, string PersonName, string Detail, string? SubDetail = null);
+    private record PickupDayStat(DateTime Date, int Count, int? Max);
 
-    private List<AreaStat>               areaStats     = new();
-    private List<FurniturePickupRequest> recentPickups = new();
-    private List<ActivityItem>           activityFeed  = new();
+    private List<AreaStat>               areaStats      = new();
+    private List<FurniturePickupRequest> recentPickups  = new();
+    private List<ActivityItem>           activityFeed   = new();
+    private List<(string EventName, int EventId, List<PickupDayStat> Days)> pickupCalendar = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -429,6 +469,33 @@
         }
 
         activityFeed = feed.OrderByDescending(a => a.Timestamp).Take(40).ToList();
+
+        // Möbel-Kapazitätskalender
+        var pickupSettings = await Db.FurniturePickupSettings
+            .Include(s => s.Event)
+            .Where(s => s.IsEnabled && s.PickupDateFrom.HasValue && s.PickupDateTo.HasValue && s.EventId.HasValue)
+            .ToListAsync();
+
+        if (pickupSettings.Any())
+        {
+            var activeRequests = await Db.FurniturePickupRequests
+                .Where(r => r.Status == PickupRequestStatus.Pending || r.Status == PickupRequestStatus.Accepted)
+                .Select(r => new { r.EventId, r.PickupDate })
+                .ToListAsync();
+
+            pickupCalendar = pickupSettings
+                .Select(s =>
+                {
+                    var days = new List<PickupDayStat>();
+                    for (var d = s.PickupDateFrom!.Value.Date; d <= s.PickupDateTo!.Value.Date; d = d.AddDays(1))
+                    {
+                        var cnt = activeRequests.Count(r => r.EventId == s.EventId && r.PickupDate.Date == d);
+                        days.Add(new PickupDayStat(d, cnt, s.MaxPickupsPerDay));
+                    }
+                    return (EventName: s.Event?.Name ?? $"Event #{s.EventId}", EventId: s.EventId!.Value, Days: days);
+                })
+                .ToList();
+        }
 
         isLoading = false;
     }
