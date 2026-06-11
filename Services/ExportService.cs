@@ -1,5 +1,6 @@
 // Services/ExportService.cs
 using ClosedXML.Excel;
+using ClosedXML.Excel.Drawings;
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -388,6 +389,151 @@ namespace FlomiApp.Services
             ws.Column(10).Width = 28;
             ws.SheetView.FreezeRows(1);
 
+            return WorkbookToBytes(wb);
+        }
+
+        // ── Aufräum-Liste (Fotos + Auftragsnummer) ────────────────────────────
+        public async Task<byte[]> ExportPickupCleanupAsync(int? eventId = null)
+        {
+            var query = _db.FurniturePickupRequests
+                .Include(r => r.Images)
+                .Include(r => r.Event)
+                .Where(r => r.Status != PickupRequestStatus.Deleted)
+                .AsQueryable();
+
+            if (eventId.HasValue)
+                query = query.Where(r => r.EventId == eventId.Value);
+
+            var data = await query
+                .OrderBy(r => r.OrderNumber)
+                .AsNoTracking()
+                .ToListAsync();
+
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Aufräumliste");
+
+            // Druckeinstellungen A4
+            ws.PageSetup.PaperSize        = XLPaperSize.A4Paper;
+            ws.PageSetup.PageOrientation  = XLPageOrientation.Portrait;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.Margins.Left     = 0.5;
+            ws.PageSetup.Margins.Right    = 0.5;
+            ws.PageSetup.Margins.Top      = 0.6;
+            ws.PageSetup.Margins.Bottom   = 0.6;
+
+            // Spalten: 4 Foto-Spalten (je ~120px ≈ 17 units) + 1 Notizen-Spalte
+            const int    photoCols   = 4;
+            const double photoColW   = 17.0;
+            const int    photoWidthPx  = 115;
+            const int    photoHeightPx = 85;
+            const double photoRowPt    = 66.0; // ≈ 88px
+            const int    totalCols   = photoCols + 1;
+
+            for (int c = 1; c <= photoCols; c++)
+                ws.Column(c).Width = photoColW;
+            ws.Column(totalCols).Width = 22;
+
+            // Titelzeile
+            var eventName = eventId.HasValue
+                ? (await _db.Events.FindAsync(eventId.Value))?.Name ?? "Alle Events"
+                : "Alle Events";
+
+            ws.Cell(1, 1).Value = $"Aufräumliste – {eventName}";
+            var titleRange = ws.Range(1, 1, 1, totalCols);
+            titleRange.Merge();
+            titleRange.Style.Font.Bold            = true;
+            titleRange.Style.Font.FontSize        = 13;
+            titleRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1D4ED8");
+            titleRange.Style.Font.FontColor       = XLColor.White;
+            titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            titleRange.Style.Alignment.Vertical   = XLAlignmentVerticalValues.Center;
+            ws.Row(1).Height = 20;
+
+            int row = 2;
+
+            foreach (var req in data)
+            {
+                // ── Kopfzeile: Auftragsnummer + Person + Datum + Adresse ──
+                ws.Cell(row, 1).Value =
+                    $"#{req.OrderNumber}   ·   {req.FirstName} {req.LastName}   ·   {req.PickupDate:dd.MM.yyyy}   ·   {req.Street}, {req.PostalCode} {req.City}";
+                var headerRange = ws.Range(row, 1, row, totalCols);
+                headerRange.Merge();
+                headerRange.Style.Font.Bold            = true;
+                headerRange.Style.Font.FontSize        = 11;
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                headerRange.Style.Font.FontColor       = XLColor.White;
+                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                headerRange.Style.Alignment.Vertical   = XLAlignmentVerticalValues.Center;
+                ws.Row(row).Height = 20;
+                row++;
+
+                // ── Beschreibungs-Zeile ──
+                ws.Cell(row, 1).Value = req.Description ?? "–";
+                var descRange = ws.Range(row, 1, row, photoCols);
+                descRange.Merge();
+                descRange.Style.Fill.BackgroundColor  = XLColor.FromHtml("#EFF6FF");
+                descRange.Style.Font.FontSize         = 10;
+                descRange.Style.Alignment.Vertical    = XLAlignmentVerticalValues.Center;
+                descRange.Style.Alignment.WrapText    = true;
+
+                ws.Cell(row, totalCols).Value = "Notizen:";
+                ws.Cell(row, totalCols).Style.Font.Bold           = true;
+                ws.Cell(row, totalCols).Style.Font.FontSize       = 9;
+                ws.Cell(row, totalCols).Style.Fill.BackgroundColor = XLColor.FromHtml("#EFF6FF");
+                ws.Row(row).Height = 18;
+                row++;
+
+                // ── Foto-Zeile ──
+                int photoRow = row;
+                ws.Row(photoRow).Height = photoRowPt;
+
+                if (req.Images.Any())
+                {
+                    int photoCol = 1;
+                    foreach (var img in req.Images.Take(photoCols))
+                    {
+                        try
+                        {
+                            using var imgStream = new MemoryStream(img.ImageData);
+                            var format = img.ContentType.ToLower() switch
+                            {
+                                "image/png" => XLPictureFormat.Png,
+                                "image/gif" => XLPictureFormat.Gif,
+                                _           => XLPictureFormat.Jpeg
+                            };
+                            var pic = ws.AddPicture(imgStream, format);
+                            pic.MoveTo(ws.Cell(photoRow, photoCol));
+                            pic.Width  = photoWidthPx;
+                            pic.Height = photoHeightPx;
+
+                            if (!string.IsNullOrEmpty(img.Caption))
+                            {
+                                ws.Cell(photoRow, photoCol).Value = img.Caption;
+                                ws.Cell(photoRow, photoCol).Style.Font.FontSize = 7;
+                                ws.Cell(photoRow, photoCol).Style.Font.Italic   = true;
+                                ws.Cell(photoRow, photoCol).Style.Alignment.Vertical = XLAlignmentVerticalValues.Bottom;
+                            }
+                        }
+                        catch { /* Beschädigte Bilder überspringen */ }
+                        photoCol++;
+                    }
+                }
+                else
+                {
+                    ws.Cell(photoRow, 1).Value = "Keine Fotos vorhanden";
+                    ws.Cell(photoRow, 1).Style.Font.Italic    = true;
+                    ws.Cell(photoRow, 1).Style.Font.FontColor = XLColor.FromHtml("#94A3B8");
+                    ws.Cell(photoRow, 1).Style.Font.FontSize  = 9;
+                }
+
+                row++;
+
+                // ── Trennzeile ──
+                ws.Row(row).Height = 5;
+                row++;
+            }
+
+            ws.SheetView.FreezeRows(1);
             return WorkbookToBytes(wb);
         }
 

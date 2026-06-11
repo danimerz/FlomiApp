@@ -328,4 +328,17 @@ public class FurniturePickupService : IFurniturePickupService
         request.AssignedVehicleId = vehicleId;
         await _context.SaveChangesAsync();
     }
+
+    public async Task AddImageAsync(int requestId, byte[] imageData, string contentType, string fileName, string? caption)
+    {
+        _context.FurniturePickupImages.Add(new FurniturePickupImage
+        {
+            FurniturePickupRequestId = requestId,
+            ImageData   = imageData,
+            ContentType = contentType,
+            FileName    = fileName,
+            Caption     = caption
+        });
+        await _context.SaveChangesAsync();
+    }
 }

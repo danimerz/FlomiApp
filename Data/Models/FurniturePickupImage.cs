@@ -11,4 +11,5 @@ public class FurniturePickupImage
     public byte[] ImageData { get; set; } = Array.Empty<byte>();
     public string ContentType { get; set; } = "image/jpeg";
     public string FileName { get; set; } = string.Empty;
+    public string? Caption { get; set; }
 }

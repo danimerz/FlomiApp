@@ -163,6 +163,38 @@
             </div>
         </div>
 
+        @* ── Aufräum-Liste ── *@
+        <div class="export-card">
+            <div class="export-card__icon">🧹</div>
+            <div class="export-card__content">
+                <h3>Aufräum-Liste</h3>
+                <p>Pro Auftrag: Nummer, Name, Fotos und Beschreibung — zum Ausdrucken und Markieren beim Aufräumen.</p>
+                <div class="export-card__meta">
+                    <span class="export-tag">Auftragsnr.</span>
+                    <span class="export-tag">Fotos</span>
+                    <span class="export-tag">Beschreibung</span>
+                    <span class="export-tag">Notizfeld</span>
+                </div>
+            </div>
+            <div class="export-card__action">
+                @if (isExporting == "cleanup")
+                {
+                    <div class="btn-loading btn-loading--primary">
+                        <span class="btn-spinner btn-spinner--blue"></span>
+                        <span>Wird exportiert...</span>
+                    </div>
+                }
+                else
+                {
+                    <button class="export-btn"
+                            disabled="@(isExporting != null)"
+                            @onclick='() => RunExport("cleanup")'>
+                        ⬇️ Excel exportieren
+                    </button>
+                }
+            </div>
+        </div>
+
 
     </div>
 
@@ -239,6 +271,12 @@
                     bytes    = await ExportService.ExportPickupRequestsAsync(
                                    selectedEventId > 0 ? selectedEventId : null);
                     fileName = $"Abholungen{eventSuffix}_{dateSuffix}.xlsx";
+                    break;
+
+                case "cleanup":
+                    bytes    = await ExportService.ExportPickupCleanupAsync(
+                                   selectedEventId > 0 ? selectedEventId : null);
+                    fileName = $"Aufraeumlist{eventSuffix}_{dateSuffix}.xlsx";
                     break;
 
                 default:

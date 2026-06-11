@@ -43,4 +43,7 @@ public interface IFurniturePickupService
 
     /// <summary>Weist einer Abholung ein Fahrzeug zu (null = Zuweisung aufheben)</summary>
     Task AssignVehicleAsync(int requestId, int? vehicleId);
+
+    /// <summary>Fügt einem bestehenden Auftrag ein weiteres Foto hinzu (Nacherfassung durch Admin)</summary>
+    Task AddImageAsync(int requestId, byte[] imageData, string contentType, string fileName, string? caption);
 }

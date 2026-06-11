@@ -445,18 +445,52 @@
                 </div>
 
                 <!-- Bilder -->
+                <h4 style="margin-top:1.25rem; margin-bottom:.75rem">📷 Fotos (@selectedRequest.Images.Count)</h4>
                 @if (selectedRequest.Images.Any())
                 {
-                    <h4 style="margin-top:1.25rem; margin-bottom:.75rem">📷 Fotos</h4>
                     <div class="afp-modal__images">
                         @foreach (var img in selectedRequest.Images)
                         {
                             var src = $"data:{img.ContentType};base64,{Convert.ToBase64String(img.ImageData)}";
-                            <img src="@src" alt="@img.FileName"
-                                 @onclick="() => OpenImageModal(src)" />
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
+                                <img src="@src" alt="@img.FileName"
+                                     @onclick="() => OpenImageModal(src)" />
+                                @if (!string.IsNullOrEmpty(img.Caption))
+                                {
+                                    <span style="font-size:.72rem;color:var(--color-text-light);font-style:italic">@img.Caption</span>
+                                }
+                            </div>
                         }
                     </div>
                 }
+
+                <!-- Foto nachträglich hinzufügen -->
+                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--color-border-soft)">
+                    <p style="font-size:.8rem;font-weight:700;margin:0 0 .6rem;color:var(--color-text-medium)">📎 Weiteres Foto hinzufügen</p>
+                    <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
+                        <div style="flex:1;min-width:160px">
+                            <label style="font-size:.75rem;color:var(--color-text-light);display:block;margin-bottom:.25rem">Beschriftung (optional)</label>
+                            <input type="text" class="form-control" placeholder="z.B. Tisch (nachträglich)"
+                                   @bind="uploadCaption" style="font-size:.88rem" />
+                        </div>
+                        <label class="btn btn-secondary"
+                               style="cursor:pointer;white-space:nowrap;margin:0;@(isUploadingImage ? "opacity:.6;pointer-events:none" : "")">
+                            @if (isUploadingImage)
+                            {
+                                <span>⏳ Wird hochgeladen...</span>
+                            }
+                            else
+                            {
+                                <span>📷 Bild auswählen</span>
+                                <InputFile OnChange="HandleImageUpload" accept="image/*" style="display:none" />
+                            }
+                        </label>
+                    </div>
+                    @if (!string.IsNullOrEmpty(uploadError))
+                    {
+                        <p style="color:var(--color-error-text);font-size:.8rem;margin:.4rem 0 0">⚠️ @uploadError</p>
+                    }
+                </div>
 
                 <!-- Admin-Notiz -->
                 <div class="form-group" style="margin-top:1.25rem">
@@ -511,6 +545,9 @@
     private PickupRequestStatus?          filterStatus = null;
     private string?                       adminNote;
     private string?                       fullImageSrc;
+    private bool                          isUploadingImage = false;
+    private string                        uploadCaption    = string.Empty;
+    private string?                       uploadError;
 
     private List<FurniturePickupRequest> FilteredRequests =>
         filterStatus == null
@@ -595,6 +632,43 @@
     // ── Bild Modal ───────────────────────────────────────────────────────────
     private void OpenImageModal(string src) => fullImageSrc = src;
     private void CloseImageModal()          => fullImageSrc = null;
+
+    // ── Foto-Upload (Admin-Nacherfassung) ────────────────────────────────────
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        if (selectedRequest == null) return;
+        isUploadingImage = true;
+        uploadError      = null;
+
+        try
+        {
+            const long maxSize = 5 * 1024 * 1024; // 5 MB
+            var file = e.File;
+            if (file.Size > maxSize) { uploadError = "Bild zu gross (max. 5 MB)."; return; }
+
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxSize).CopyToAsync(ms);
+
+            await FurniturePickupService.AddImageAsync(
+                selectedRequest.Id,
+                ms.ToArray(),
+                file.ContentType,
+                file.Name,
+                string.IsNullOrWhiteSpace(uploadCaption) ? null : uploadCaption.Trim());
+
+            requests        = await FurniturePickupService.GetAllRequestsAsync();
+            selectedRequest = requests?.FirstOrDefault(r => r.Id == selectedRequest.Id);
+            uploadCaption   = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            uploadError = ex.Message;
+        }
+        finally
+        {
+            isUploadingImage = false;
+        }
+    }
 
     // ── Settings – Event Dropdown ─────────────────────────────────────────────
     private void OnEventChanged(FurniturePickupSettings s, ChangeEventArgs e)
