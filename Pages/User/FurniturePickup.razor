@@ -482,9 +482,6 @@
     }
 
     // ── Bild Upload ───────────────────────────────────────────────────────────
-    private static readonly HashSet<string> AllowedImageMimes =
-        new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/webp", "image/gif" };
-
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         imageError = null;
@@ -507,23 +504,26 @@
                 continue;
             }
 
-            if (!AllowedImageMimes.Contains(file.ContentType))
-            {
-                imageError = $"'{file.Name}' ist kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
-                continue;
-            }
-
             using var stream = file.OpenReadStream(maxSizeBytes);
             using var ms     = new MemoryStream();
             await stream.CopyToAsync(ms);
             var bytes = ms.ToArray();
 
+            // Nicht dem vom Browser gemeldeten Content-Type vertrauen —
+            // tatsächliches Format anhand der Datei-Signatur bestimmen.
+            var detectedType = FlomiApp.Helpers.ImageSignatureHelper.DetectContentType(bytes);
+            if (detectedType == null)
+            {
+                imageError = $"'{file.Name}' ist kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
+                continue;
+            }
+
             uploadedImages.Add(new ImagePreview
             {
                 FileName    = file.Name,
-                ContentType = file.ContentType,
+                ContentType = detectedType,
                 Data        = bytes,
-                PreviewUrl  = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}"
+                PreviewUrl  = $"data:{detectedType};base64,{Convert.ToBase64String(bytes)}"
             });
         }
     }

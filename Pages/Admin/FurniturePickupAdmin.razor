@@ -649,11 +649,21 @@
 
             using var ms = new MemoryStream();
             await file.OpenReadStream(maxSize).CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            // Nicht dem vom Browser gemeldeten Content-Type vertrauen —
+            // tatsächliches Format anhand der Datei-Signatur bestimmen.
+            var detectedType = FlomiApp.Helpers.ImageSignatureHelper.DetectContentType(bytes);
+            if (detectedType == null)
+            {
+                uploadError = "Kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
+                return;
+            }
 
             await FurniturePickupService.AddImageAsync(
                 selectedRequest.Id,
-                ms.ToArray(),
-                file.ContentType,
+                bytes,
+                detectedType,
                 file.Name,
                 string.IsNullOrWhiteSpace(uploadCaption) ? null : uploadCaption.Trim());
 
