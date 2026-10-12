@@ -1,0 +1,31 @@
+# Build-Ausgaben
+bin/
+obj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# VS Code (lokale Workspace-Einstellungen, nicht die geteilten)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Lokale Datenbank-Reste (App läuft über MySQL, keine SQLite-Datei versionieren)
+app.db
+*.db
+
+# Secrets / lokale Overrides
+appsettings.*.local.json
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
