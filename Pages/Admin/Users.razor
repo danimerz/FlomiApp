@@ -8,6 +8,7 @@
 @inject UserManager<ApplicationUser>  UserManager
 @inject RoleManager<IdentityRole>     RoleManager
 @inject IMailService                  MailService
+@inject IAuditLogService              AuditLogService
 @inject NavigationManager             Navigation
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
@@ -378,6 +379,15 @@
 }
 
 @code {
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+
+    private async Task<System.Security.Claims.ClaimsPrincipal> CurrentAdminAsync()
+    {
+        var state = AuthStateTask != null ? await AuthStateTask : null;
+        return state?.User ?? new System.Security.Claims.ClaimsPrincipal();
+    }
+
     private enum Tab { All, Admins, Locked }
     private Tab activeTab = Tab.All;
 
@@ -535,11 +545,12 @@
         errorMessage   = null;
     }
 
-    private async Task SyncRole(ApplicationUser u, string role, bool shouldHave)
+    private async Task<string?> SyncRole(ApplicationUser u, string role, bool shouldHave)
     {
         var has = await UserManager.IsInRoleAsync(u, role);
-        if (shouldHave && !has)  await UserManager.AddToRoleAsync(u, role);
-        if (!shouldHave && has)  await UserManager.RemoveFromRoleAsync(u, role);
+        if (shouldHave && !has) { await UserManager.AddToRoleAsync(u, role); return $"{role}: hinzugefügt"; }
+        if (!shouldHave && has) { await UserManager.RemoveFromRoleAsync(u, role); return $"{role}: entfernt"; }
+        return null;
     }
 
     private void CloseEdit() { editUser = null; }
@@ -576,10 +587,24 @@
             }
 
             // Rollen synchronisieren
-            await SyncRole(existing, "Admin",         editIsAdmin);
-            await SyncRole(existing, "FahrzeugAdmin", editIsFahrzeugAdmin);
-            await SyncRole(existing, "MoebelAdmin",   editIsMoebelAdmin);
-            await SyncRole(existing, "BereichsAdmin", editIsBereichsAdmin);
+            var roleChanges = new List<string>();
+            foreach (var change in new[]
+            {
+                await SyncRole(existing, "Admin",         editIsAdmin),
+                await SyncRole(existing, "FahrzeugAdmin", editIsFahrzeugAdmin),
+                await SyncRole(existing, "MoebelAdmin",   editIsMoebelAdmin),
+                await SyncRole(existing, "BereichsAdmin", editIsBereichsAdmin)
+            })
+            {
+                if (change != null) roleChanges.Add(change);
+            }
+
+            if (roleChanges.Any())
+            {
+                await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.RoleChanged,
+                    $"{existing.FirstName} {existing.LastName} ({existing.Email})",
+                    string.Join("; ", roleChanges));
+            }
 
             await LoadUsers();
             successMessage = $"Benutzer «{existing.FirstName} {existing.LastName}» wurde gespeichert.";
@@ -643,6 +668,8 @@
             }
 
             successMessage = $"Passwort für «{user.FirstName} {user.LastName}» wurde zurückgesetzt.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.PasswordReset,
+                $"{user.FirstName} {user.LastName} ({user.Email})");
             ClosePwReset();
         }
         catch (Exception ex)
@@ -672,6 +699,8 @@
                     return;
                 }
                 successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde gelöscht.";
+                await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.UserDeleted,
+                    $"{user.FirstName} {user.LastName} ({user.Email})");
             }
             confirmDeleteUser = null;
             await LoadUsers();
@@ -710,12 +739,16 @@
         {
             await UserManager.SetLockoutEndDateAsync(user, null);
             successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde entsperrt.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.UserUnlocked,
+                $"{user.FirstName} {user.LastName} ({user.Email})");
         }
         else
         {
             await UserManager.SetLockoutEnabledAsync(user, true);
             await UserManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
             successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde gesperrt.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.UserLocked,
+                $"{user.FirstName} {user.LastName} ({user.Email})");
         }
         await LoadUsers();
     }
@@ -735,6 +768,8 @@
 
             successMessage = $"2FA für «{user.FirstName} {user.LastName}» wurde zurückgesetzt. " +
                               "Die Person muss sich beim nächsten Login neu einrichten.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.TwoFactorReset,
+                $"{user.FirstName} {user.LastName} ({user.Email})");
             confirmResetTfa = null;
             await LoadUsers();
         }

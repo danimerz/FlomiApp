@@ -1,0 +1,116 @@
+@page "/admin/auditlog"
+@using FlomiApp.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using FlomiApp.Security
+@attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
+@inject IAuditLogService AuditLogService
+
+<PageTitle>Audit-Log – Admin</PageTitle>
+
+<div class="dashboard-page">
+
+    <section class="dashboard-hero">
+        <div class="dashboard-hero__content">
+            <span class="dashboard-hero__badge">Administration</span>
+            <h1>Audit-Log</h1>
+            <p>Wer hat was geändert: Benutzerlöschungen, Sperrungen, Rollenvergaben, Passwort- und 2FA-Resets, Admin-Stornierungen.</p>
+        </div>
+    </section>
+
+    <div class="aud-filter-bar">
+        <input type="text"
+               class="aud-search"
+               placeholder="🔍 Admin-Name suchen..."
+               @bind="adminFilter"
+               @bind:event="oninput" />
+        <select class="aud-filter-select" @bind="actionFilter">
+            <option value="">Alle Aktionen</option>
+            @foreach (var a in AllActions)
+            {
+                <option value="@a">@a</option>
+            }
+        </select>
+        <input type="date" class="aud-filter-select" @bind="fromDate" />
+        <input type="date" class="aud-filter-select" @bind="toDate" />
+        <button class="aud-reload-btn" @onclick="Reload">🔄 Aktualisieren</button>
+        <span class="aud-count">@entries.Count Einträge</span>
+    </div>
+
+    @if (isLoading)
+    {
+        <p style="color:var(--color-text-light)">Lade…</p>
+    }
+    else if (!entries.Any())
+    {
+        <div class="state-card state-card--info">
+            <div class="state-card__icon">📭</div>
+            <div class="state-card__content"><p>Keine Einträge für diese Filter.</p></div>
+        </div>
+    }
+    else
+    {
+        <div class="aud-table-wrap">
+            <table class="aud-table">
+                <thead>
+                    <tr>
+                        <th>Zeitpunkt</th>
+                        <th>Admin</th>
+                        <th>Aktion</th>
+                        <th>Ziel</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in entries)
+                    {
+                        <tr>
+                            <td class="aud-time">@e.Timestamp.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@e.AdminName</td>
+                            <td><span class="aud-badge">@e.Action</span></td>
+                            <td>@(e.TargetDescription ?? "–")</td>
+                            <td class="aud-details">@(e.Details ?? "–")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<AuditLogEntry> entries = new();
+    private bool isLoading = true;
+
+    private string adminFilter  = string.Empty;
+    private string actionFilter = string.Empty;
+    private DateTime? fromDate;
+    private DateTime? toDate;
+
+    private static readonly string[] AllActions =
+    {
+        AuditActions.UserDeleted,
+        AuditActions.UserLocked,
+        AuditActions.UserUnlocked,
+        AuditActions.RoleChanged,
+        AuditActions.PasswordReset,
+        AuditActions.TwoFactorReset,
+        AuditActions.AppointmentCancelled
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        isLoading = true;
+        entries = await AuditLogService.SearchAsync(
+            adminFilter:  string.IsNullOrWhiteSpace(adminFilter) ? null : adminFilter,
+            actionFilter: string.IsNullOrWhiteSpace(actionFilter) ? null : actionFilter,
+            from: fromDate,
+            to:   toDate?.AddDays(1).AddSeconds(-1));
+        isLoading = false;
+    }
+}

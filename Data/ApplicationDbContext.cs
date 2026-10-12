@@ -26,6 +26,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Vehicle>           Vehicles           { get; set; }
     public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
     public DbSet<AssignmentDate>    AssignmentDates    { get; set; }
+    public DbSet<AuditLogEntry>     AuditLogEntries    { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

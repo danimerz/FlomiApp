@@ -191,6 +191,14 @@
                                                 <span>Export</span>
                                             </NavLink>
                                         </div>
+                                        <AuthorizeView Roles="Admin" Context="d1">
+                                        <div class="navmenu-item">
+                                            <NavLink class="navmenu-link" href="admin/auditlog">
+                                                <span class="navmenu-icon">🕵️</span>
+                                                <span>Audit-Log</span>
+                                            </NavLink>
+                                        </div>
+                                        </AuthorizeView>
                                     </div>
                                 }
 

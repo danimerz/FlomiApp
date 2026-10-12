@@ -319,6 +319,40 @@ namespace FlomiApp.Migrations
                     b.ToTable("AssignmentDates");
                 });
 
+            modelBuilder.Entity("FlomiApp.Data.Models.AuditLogEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("AdminName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("AdminUserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TargetDescription")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditLogEntries");
+                });
+
             modelBuilder.Entity("FlomiApp.Data.Models.ChatMessage", b =>
                 {
                     b.Property<int>("Id")

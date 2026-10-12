@@ -1,10 +1,12 @@
 @page "/admin/appointments"
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
 @using System.Globalization
 @inject IAreaService                         AreaService
 @inject IAppointmentService                  AppointmentService
 @inject FlomiApp.Data.ApplicationDbContext   Db
+@inject IAuditLogService                     AuditLogService
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrBereichs)]
 @attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
@@ -325,12 +327,26 @@
         isLoading = false;
     }
 
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+
     private async Task AdminCancelAppointment(int appointmentId)
     {
-        var ap = await Db.Appointments.FindAsync(appointmentId);
+        var ap = await Db.Appointments
+            .Include(a => a.User)
+            .Include(a => a.Area).ThenInclude(a => a!.AreaTemplate)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId);
         if (ap == null) return;
         ap.Status = AppointmentStatus.Cancelled;
         await Db.SaveChangesAsync();
+
+        var adminState = AuthStateTask != null ? await AuthStateTask : null;
+        await AuditLogService.LogAsync(
+            adminState?.User ?? new System.Security.Claims.ClaimsPrincipal(),
+            AuditActions.AppointmentCancelled,
+            $"{ap.User.FirstName} {ap.User.LastName} ({ap.User.Email})",
+            $"{ap.Area?.AreaTemplate?.Name ?? "Bereich"} am {ap.Area?.Date:dd.MM.yyyy}");
+
         await LoadAreas();
     }
 
