@@ -101,6 +101,12 @@
 .register-checkbox input[type="checkbox"] {
     width: 18px;
     height: 18px;
+    /* .register-field input setzt appearance:none für alle Inputs (gedacht für
+       Text-/Select-Felder) — das greift per Nachbarschaft auch hier und macht
+       die Checkbox unsichtbar bei Klick/Haken, ohne das Klicken selbst zu verhindern. */
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
 }
 
 .register-links a {
@@ -272,6 +278,9 @@
     margin: 0;
     accent-color: #2563eb;
     box-shadow: none;
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
 }
 
 @media (max-width: 768px) {
