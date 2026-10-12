@@ -240,7 +240,10 @@ Excel-Export (.xlsx) unter `/admin/export`:
 | News verwalten | ❌ | ✅ |
 | Datenexport | ❌ | ✅ |
 
-Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.com` / `Admin123!`).
+Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.com`). Ist kein
+`AdminPassword` konfiguriert, generiert die App ein zufälliges, starkes Passwort und zeigt es
+**einmalig** als Warnung in den Server-Logs an; beim ersten Login muss es sofort geändert werden
+(siehe [Installation & Setup](#installation--setup)).
 
 ---
 
@@ -263,7 +266,7 @@ cd FlomiApp
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
   "Server=localhost;Port=3306;Database=FlomiApp;User Id=root;Password=secret;CharSet=utf8mb4;"
 
-# 3. Admin-Passwort setzen (optional, Standard: Admin123!)
+# 3. Admin-Passwort setzen (optional — ohne das wird eines generiert, siehe unten)
 dotnet user-secrets set "AdminPassword" "DeinSicheresPasswort!"
 
 # 4. Datenbank migrieren
@@ -276,9 +279,16 @@ dotnet run
 Die App startet standardmässig auf `https://localhost:5001`.
 
 Beim ersten Start werden automatisch angelegt:
-- Admin-Rolle und Admin-Benutzer (`admin@flomiapp.com` / konfiguriertes Passwort)
+- Admin-Rolle und Admin-Benutzer (`admin@flomiapp.com`)
 - Basis-Bereichskategorien (Sammeln, Sortieren, Verkauf, Sonstiges)
 - Standard-Möbelabholungs-Setting
+
+**Admin-Passwort beim ersten Start:**
+- Wurde `AdminPassword` gesetzt (Schritt 3), wird genau dieses Passwort verwendet.
+- Wurde nichts gesetzt, generiert die App ein zufälliges 16-stelliges Passwort und schreibt es
+  **einmalig** als Warnung in die Konsolen-Logs des ersten Starts (danach nirgends mehr abrufbar).
+  In beiden Fällen gilt: Ist das Passwort automatisch generiert worden, verlangt die App beim
+  ersten Login eine sofortige Änderung, bevor das Konto nutzbar ist.
 
 ---
 

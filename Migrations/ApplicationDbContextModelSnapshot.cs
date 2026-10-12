@@ -61,6 +61,9 @@ namespace FlomiApp.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");

@@ -124,12 +124,20 @@ namespace FlomiApp.Areas.Identity.Pages.Account
                     _logger.LogInformation("User logged in.");
 
                     var user = await _userManager.FindByEmailAsync(Input.Email);
-                    if (user != null && !user.TwoFactorEnabled)
+                    if (user != null)
                     {
-                        var roles = await _userManager.GetRolesAsync(user);
-                        if (roles.Any(Roles.AllAdminRoles.Contains))
+                        if (user.MustChangePassword)
                         {
-                            return RedirectToPage("./TwoFactorSetup", new { ReturnUrl = returnUrl });
+                            return RedirectToPage("./ChangePasswordRequired");
+                        }
+
+                        if (!user.TwoFactorEnabled)
+                        {
+                            var roles = await _userManager.GetRolesAsync(user);
+                            if (roles.Any(Roles.AllAdminRoles.Contains))
+                            {
+                                return RedirectToPage("./TwoFactorSetup", new { ReturnUrl = returnUrl });
+                            }
                         }
                     }
 

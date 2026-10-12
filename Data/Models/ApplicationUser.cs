@@ -22,4 +22,8 @@ public class ApplicationUser : IdentityUser
 
     public bool    EmailNotificationsEnabled { get; set; } = true;
     public string? PreferredTheme            { get; set; }
+
+    // Zwingt zur Passwortänderung beim nächsten Login (z.B. für den
+    // automatisch generierten Admin-Passwort bei der Erstinstallation).
+    public bool MustChangePassword { get; set; } = false;
 }
