@@ -21,6 +21,38 @@
         </div>
     </section>
 
+    @if (currentUser != null && !currentUser.HasSeenRegisterOnboarding)
+    {
+        <section class="onboarding-panel">
+            <button class="onboarding-panel__close" @onclick="DismissOnboarding" aria-label="Schliessen">✕</button>
+            <h2>👋 Kurz erklärt, bevor du startest</h2>
+            <div class="onboarding-panel__grid">
+                <div class="onboarding-panel__item">
+                    <span class="onboarding-panel__icon">🗂</span>
+                    <div>
+                        <strong>Kategorie</strong>
+                        <p>Die grobe Art des Einsatzes — z.B. Sammeln, Sortieren, Verkauf oder Fahrer. Jeder Bereich gehört zu genau einer Kategorie.</p>
+                    </div>
+                </div>
+                <div class="onboarding-panel__item">
+                    <span class="onboarding-panel__icon">📍</span>
+                    <div>
+                        <strong>Bereich</strong>
+                        <p>Der konkrete Einsatz innerhalb einer Kategorie — z.B. «Geschirr» oder «Spielzeug» —, für den du dich mit Datum und Zeit anmeldest.</p>
+                    </div>
+                </div>
+                <div class="onboarding-panel__item">
+                    <span class="onboarding-panel__icon">🕓</span>
+                    <div>
+                        <strong>Halbtagsschicht</strong>
+                        <p>Manche Bereiche lassen sich statt als ganzer Tag auch als halber Tag buchen — erkennbar am Umschalter bei der Anmeldung.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="onboarding-panel__dismiss" @onclick="DismissOnboarding">Verstanden, los geht's!</button>
+        </section>
+    }
+
     @if (events == null)
     {
         <div class="state-card state-card--info">
@@ -431,6 +463,14 @@
                 await LoadAreasForSelectedEvent();
             }
         }
+    }
+
+    // ── Onboarding ───────────────────────────────────────────────────────────
+    private async Task DismissOnboarding()
+    {
+        if (currentUser == null) return;
+        currentUser.HasSeenRegisterOnboarding = true;
+        await UserManager.UpdateAsync(currentUser);
     }
 
     // ── Event-Wechsel ─────────────────────────────────────────────────────────

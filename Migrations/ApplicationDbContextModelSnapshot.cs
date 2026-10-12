@@ -51,6 +51,9 @@ namespace FlomiApp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("HasSeenRegisterOnboarding")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("longtext");

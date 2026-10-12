@@ -26,4 +26,8 @@ public class ApplicationUser : IdentityUser
     // Zwingt zur Passwortänderung beim nächsten Login (z.B. für den
     // automatisch generierten Admin-Passwort bei der Erstinstallation).
     public bool MustChangePassword { get; set; } = false;
+
+    // Einmaliges Einführungs-Panel auf der Anmeldungsseite — true sobald
+    // die Person es einmal weggeklickt hat, dann nie wieder angezeigt.
+    public bool HasSeenRegisterOnboarding { get; set; } = false;
 }
