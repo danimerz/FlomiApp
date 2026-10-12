@@ -71,7 +71,68 @@
             <button class="ac-submit-btn" @onclick="ShowCreateEventForm">
                 ＋ Neues Event
             </button>
+            <button class="ac-submit-btn" style="background:var(--color-success-bg);color:var(--color-success-text);border:1px solid var(--color-success-border)"
+                    @onclick="ShowNewYearForm"
+                    disabled="@(events == null || !events.Any())">
+                🚀 Neues Jahr starten
+            </button>
+            @if (events != null && !events.Any())
+            {
+                <span class="ac-toolbar__hint">Steht erst zur Verfügung, sobald ein erstes Event existiert.</span>
+            }
         </div>
+
+        @if (showNewYearForm)
+        {
+            <div class="ac-form-card" style="border-left:4px solid var(--color-success-border)">
+                <div class="ac-form-card__header" style="background:linear-gradient(135deg,#166534,#15803d)">
+                    <h3>🚀 Neues Jahr starten</h3>
+                </div>
+                <div class="ac-form-card__body">
+                    <p style="margin:0 0 1rem;font-size:.9rem;color:var(--color-text-medium)">
+                        Erstellt ein neues Event und kopiert alle Bereich-Zuweisungen des gewählten
+                        Vorjahres-Events mit dem neuen Datum. Alles danach wie gewohnt im Events-
+                        bzw. Bereich-Zuweisungen-Tab anpassbar.
+                    </p>
+                    <div class="ac-form-grid">
+                        <div class="ac-field">
+                            <label>Vorlage-Event (von)</label>
+                            <select class="ac-input" @bind="newYearSourceEventId">
+                                <option value="0" disabled>– Bitte wählen –</option>
+                                @foreach (var evt in events!.OrderByDescending(e => e.Date))
+                                {
+                                    <option value="@evt.Id">@evt.Name (@evt.Date.ToShortDateString())</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="ac-field">
+                            <label>Name des neuen Events</label>
+                            <input class="ac-input" @bind="newYearName" />
+                        </div>
+                        <div class="ac-field">
+                            <label>Datum</label>
+                            <input type="date" class="ac-input" @bind="newYearDate" />
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(newYearMessage))
+                    {
+                        <div class="ac-state-card @(newYearSuccess ? "ac-state-card--success" : "ac-state-card--error")" style="margin-top:.75rem">
+                            <div class="ac-state-card__icon">@(newYearSuccess ? "✅" : "⚠️")</div>
+                            <div class="ac-state-card__content"><p>@newYearMessage</p></div>
+                        </div>
+                    }
+                    <div class="ac-form-actions" style="margin-top:1rem">
+                        <button class="ac-submit-btn" @onclick="StartNewYear"
+                                disabled="@(newYearSourceEventId == 0 || string.IsNullOrWhiteSpace(newYearName) || isCreatingNewYear)">
+                            @(isCreatingNewYear ? "⏳ Wird erstellt..." : "🚀 Jahr erstellen")
+                        </button>
+                        <button class="ac-cancel-btn" @onclick="() => { showNewYearForm = false; newYearMessage = null; }">
+                            Schliessen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
 
         @if (showEventForm)
         {
@@ -1035,6 +1096,15 @@
     private bool    copySuccess       = false;
     private bool    isCopying         = false;
 
+    // ── Neues Jahr starten (Event + Bereiche in einem Schritt) ──────────────────
+    private bool     showNewYearForm      = false;
+    private int      newYearSourceEventId = 0;
+    private string   newYearName          = string.Empty;
+    private DateTime newYearDate          = DateTime.Today;
+    private string?  newYearMessage       = null;
+    private bool     newYearSuccess       = false;
+    private bool     isCreatingNewYear    = false;
+
     // ── Categories ────────────────────────────────────────────────────────────
     private AreaCategory currentCategory   = new();
     private bool         showCategoryForm  = false;
@@ -1161,6 +1231,59 @@
         showCategoryForm = false;
         showCopyForm     = false;
         copyMessage      = null;
+        showNewYearForm  = false;
+        newYearMessage   = null;
+    }
+
+    // ── Neues Jahr starten ───────────────────────────────────────────────────
+    private void ShowNewYearForm()
+    {
+        if (events == null || !events.Any()) return;
+
+        showNewYearForm = true;
+        newYearMessage  = null;
+
+        var latest = events.OrderByDescending(e => e.Date).First();
+        newYearSourceEventId = latest.Id;
+        newYearName          = latest.Name;
+        newYearDate          = latest.Date.AddYears(1);
+    }
+
+    private async Task StartNewYear()
+    {
+        if (newYearSourceEventId == 0 || string.IsNullOrWhiteSpace(newYearName)) return;
+
+        isCreatingNewYear = true;
+        newYearMessage    = null;
+
+        try
+        {
+            var newEvent = new Event
+            {
+                Name     = newYearName.Trim(),
+                Date     = newYearDate,
+                IsActive = true
+            };
+            await AreaService.CreateEventAsync(newEvent);
+
+            var copiedCount = await AreaService.CopyAreasToEventAsync(newYearSourceEventId, newEvent.Id);
+
+            events     = await AreaService.GetAllEventsAsync();
+            areas      = await AreaService.GetAllAreasAsync();
+
+            newYearSuccess = true;
+            newYearMessage = $"Event «{newEvent.Name}» erstellt, {copiedCount} Bereich-Zuweisung(en) kopiert. " +
+                              "Im Tab «Bereich-Zuweisungen» kannst du die Details jetzt anpassen.";
+        }
+        catch (Exception ex)
+        {
+            newYearSuccess = false;
+            newYearMessage = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            isCreatingNewYear = false;
+        }
     }
 
     // ── Events CRUD ───────────────────────────────────────────────────────────
