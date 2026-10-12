@@ -1,0 +1,36 @@
+@page
+@model RegisterConfirmationModel
+
+@{
+    ViewData["Title"] = "Bitte E-Mail bestätigen";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Fast fertig</span>
+            <h1>Nur noch ein Klick</h1>
+            <p>Dein Konto wurde erstellt. Bevor du dich anmelden kannst, bestätige noch deine E-Mail-Adresse.</p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__body" style="text-align:center;padding:2rem">
+            <div style="font-size:3rem;margin-bottom:1rem">📧</div>
+            <h2 style="margin:0 0 .75rem">Bestätigungsmail gesendet</h2>
+            <p style="color:var(--color-text-medium);margin-bottom:1.5rem">
+                Wir haben dir eine E-Mail mit einem Bestätigungslink geschickt. Klicke darauf,
+                um dein Konto zu aktivieren – danach kannst du dich ganz normal anmelden.
+            </p>
+            <p style="color:var(--color-text-medium);font-size:.9rem;margin-bottom:1.5rem">
+                Nichts erhalten? Schau auch im Spam-Ordner nach, oder
+                <a href="/Identity/Account/ResendEmailConfirmation">fordere einen neuen Link an</a>.
+            </p>
+            <a href="/Identity/Account/Login" class="register-submit-btn" style="display:inline-block;text-decoration:none">
+                → Zum Login
+            </a>
+        </div>
+    </section>
+</div>

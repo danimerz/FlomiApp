@@ -1,0 +1,50 @@
+@page
+@model ConfirmEmailModel
+
+@{
+    ViewData["Title"] = "E-Mail bestätigen";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">@(Model.Success ? "Erledigt" : "Hinweis")</span>
+            <h1>@(Model.Success ? "E-Mail bestätigt" : "Link ungültig")</h1>
+            <p>
+                @(Model.Success
+                    ? "Dein Konto ist jetzt aktiv."
+                    : "Dieser Bestätigungslink ist ungültig oder wurde bereits verwendet.")
+            </p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__body" style="text-align:center;padding:2rem">
+            @if (Model.Success)
+            {
+                <div style="font-size:3rem;margin-bottom:1rem">✅</div>
+                <h2 style="margin:0 0 .75rem">Danke, das war's!</h2>
+                <p style="color:var(--color-text-medium);margin-bottom:1.5rem">
+                    Deine E-Mail-Adresse ist bestätigt. Du kannst dich jetzt anmelden.
+                </p>
+                <a href="/Identity/Account/Login" class="register-submit-btn" style="display:inline-block;text-decoration:none">
+                    → Zum Login
+                </a>
+            }
+            else
+            {
+                <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+                <h2 style="margin:0 0 .75rem">Das hat nicht geklappt</h2>
+                <p style="color:var(--color-text-medium);margin-bottom:1.5rem">
+                    Möglicherweise ist der Link abgelaufen oder wurde schon einmal benutzt.
+                    Du kannst einen neuen anfordern.
+                </p>
+                <a href="/Identity/Account/ResendEmailConfirmation" class="register-submit-btn" style="display:inline-block;text-decoration:none">
+                    → Neuen Link anfordern
+                </a>
+            }
+        </div>
+    </section>
+</div>

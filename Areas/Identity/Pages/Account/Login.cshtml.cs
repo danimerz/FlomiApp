@@ -127,6 +127,13 @@ namespace FlomiApp.Areas.Identity.Pages.Account
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
+                else if (result.IsNotAllowed)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Bitte bestätige zuerst deine E-Mail-Adresse (Link aus der Mail nach der Registrierung). " +
+                        "Nichts erhalten? Fordere unten einen neuen Link an.");
+                    return Page();
+                }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");

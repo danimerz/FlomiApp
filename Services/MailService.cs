@@ -283,6 +283,29 @@ public class MailService : IMailService
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    // ─── E-Mail-Bestätigung ───────────────────────────────────────────────────
+    public async Task SendEmailConfirmationAsync(
+        string toEmail, string toName, string confirmLink)
+    {
+        var subject = "Bitte bestätige deine E-Mail-Adresse";
+        var body = $"""
+            <h2>Hallo {toName}</h2>
+            <p>Danke für deine Registrierung bei der FlomiApp! Bitte bestätige deine E-Mail-Adresse, damit wir sicher sind, dass sie dir gehört.</p>
+            <p>
+                <a href="{confirmLink}"
+                   style="background:#007bff;color:white;padding:10px 20px;
+                          text-decoration:none;border-radius:5px;">
+                    E-Mail-Adresse bestätigen
+                </a>
+            </p>
+            <p style="color:gray;font-size:12px;">
+                Falls du dich nicht registriert hast, ignoriere diese Mail einfach.
+            </p>
+            """;
+
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
     // ─── Layout ───────────────────────────────────────────────────────────────
     private string WrapInLayout(string content) => $"""
         <!DOCTYPE html>

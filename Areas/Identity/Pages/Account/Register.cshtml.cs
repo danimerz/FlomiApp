@@ -2,11 +2,13 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading.Tasks;
 using FlomiApp.Data.Models;
+using FlomiApp.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 
 namespace FlomiApp.Areas.Identity.Pages.Account;
@@ -16,15 +18,18 @@ public class RegisterModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IMailQueue _mailQueue;
     private readonly ILogger<RegisterModel> _logger;
 
     public RegisterModel(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
+        IMailQueue mailQueue,
         ILogger<RegisterModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _mailQueue = mailQueue;
         _logger = logger;
     }
 
@@ -99,8 +104,15 @@ public class RegisterModel : PageModel
             {
                 _logger.LogInformation("User created a new account with password.");
 
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return LocalRedirect(returnUrl);
+                var token   = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                var confirmLink = $"{Request.Scheme}://{Request.Host}/Identity/Account/ConfirmEmail" +
+                                   $"?userId={user.Id}&code={encoded}";
+                var fullName = $"{user.FirstName} {user.LastName}";
+
+                _mailQueue.Enqueue(m => m.SendEmailConfirmationAsync(user.Email!, fullName, confirmLink));
+
+                return RedirectToPage("RegisterConfirmation");
             }
             foreach (var error in result.Errors)
             {

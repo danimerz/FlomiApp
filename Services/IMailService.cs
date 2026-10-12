@@ -30,6 +30,9 @@ public interface IMailService
     // Passwort-Reset (Identity)
     Task SendPasswordResetAsync(string toEmail, string toName, string resetLink);
 
+    // E-Mail-Bestätigung bei Registrierung (Identity)
+    Task SendEmailConfirmationAsync(string toEmail, string toName, string confirmLink);
+
     // Generisch
     Task SendAsync(string toEmail, string toName, string subject, string htmlBody);
 }
