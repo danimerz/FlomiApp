@@ -18,7 +18,10 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore FlomiApp.sln
+
+      - name: Tests
+        run: dotnet test FlomiApp.sln --no-restore --configuration Release
 
       - name: Publish
         run: |

@@ -11,6 +11,14 @@
     <None Update="app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 
+  <!-- Web-SDK globbt standardmässig rekursiv — Testprojekt-Unterordner ausschliessen -->
+  <ItemGroup>
+    <Compile Remove="FlomiApp.Tests/**" />
+    <Content Remove="FlomiApp.Tests/**" />
+    <EmbeddedResource Remove="FlomiApp.Tests/**" />
+    <None Remove="FlomiApp.Tests/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="QRCoder" Version="1.6.0" />

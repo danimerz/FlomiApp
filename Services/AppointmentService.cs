@@ -228,26 +228,6 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    public async Task<bool> CanRegisterAsync(string userId, int areaId)
-    {
-        var area = await _areaService.GetAreaByIdAsync(areaId);
-        if (area == null) return false;
-
-        var current = await _areaService.GetCurrentRegistrationsAsync(areaId, false);
-        if (current >= area.MaxCapacity) return false;
-
-        if (await UserHasConflictingRegistrationAsync(userId, area.Date, area.TimeSlot))
-            return false;
-
-        if (IsVerkauf(area))
-            return !await UserHasRegisteredSaleAreaAsync(userId, area.EventId);
-
-        if (IsKuchen(area))
-            return !await PersonHasRegisteredCategoryOnDateAsync(userId, null, "Kuchen", area.Date.Date);
-
-        return true;
-    }
-
     private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area,
         string? comment = null, int? appointmentId = null, bool useAlternativeSlot = false)
     {
@@ -404,25 +384,6 @@ public class AppointmentService : IAppointmentService
                         && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
     }
 
-    private async Task<bool> UserHasConflictingRegistrationAsync(
-        string userId, DateTime date, string timeSlot)
-    {
-        var existingAppointments = await _context.Appointments
-            .Include(a => a.Area)
-            .Where(a => a.UserId == userId
-                     && a.Status == AppointmentStatus.Registered
-                     && a.Area.Date.Date == date.Date)
-            .ToListAsync();
-
-        foreach (var existing in existingAppointments)
-        {
-            if (TimeSlotConflict(timeSlot, existing.Area.TimeSlot))
-                return true;
-        }
-
-        return false;
-    }
-
     private bool TimeSlotConflict(string slot1, string slot2)
     {
         var times1 = ExtractTimeRange(slot1);
@@ -451,20 +412,6 @@ public class AppointmentService : IAppointmentService
             return (start, end);
         }
         catch { return null; }
-    }
-
-    private async Task<bool> UserHasRegisteredSaleAreaAsync(string userId, int eventId)
-    {
-        return await _context.Appointments
-            .Include(a => a.Area)
-                .ThenInclude(area => area.AreaTemplate)
-                    .ThenInclude(t => t!.AreaCategory)
-            .Where(a => a.UserId == userId
-                     && a.Status == AppointmentStatus.Registered
-                     && a.Area.EventId == eventId)
-            .AnyAsync(a => a.Area.AreaTemplate != null
-                        && a.Area.AreaTemplate.AreaCategory != null
-                        && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
     }
 
     public async Task<Appointment?> GetByIdForCheckInAsync(int appointmentId)

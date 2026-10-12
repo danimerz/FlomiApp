@@ -292,6 +292,22 @@ Beim ersten Start werden automatisch angelegt:
 
 ---
 
+## Tests
+
+Automatisierte Tests (xUnit) decken die zentrale Buchungslogik ab — Kapazitäts-, Alters- und
+Zeitkonflikt-Prüfung, Verkauf-/Kuchen-Sonderregeln, Stornierung inkl. Fahrzeugzuweisung, sowie die
+reinen Helper (Telefonnummer-/Zeit-Formatierung, Bild-Signatur-Erkennung). Sie laufen gegen eine
+SQLite-In-Memory-Datenbank, keine echte MySQL-Instanz nötig:
+
+```bash
+dotnet test FlomiApp.sln
+```
+
+Das Deploy-Workflow (`.github/workflows/deploy.yaml`) führt `dotnet test` vor dem Publish aus —
+ein fehlschlagender Test stoppt den Deploy.
+
+---
+
 ## Konfiguration
 
 ### `appsettings.json`
