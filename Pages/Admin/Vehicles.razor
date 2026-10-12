@@ -10,6 +10,7 @@
 @inject IJSRuntime              JS
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrFahrzeug)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Fahrzeuge – Admin</PageTitle>
 

@@ -4,6 +4,7 @@
 @inject IFurniturePickupService FurniturePickupService
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrMoebel)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Möbel Abholungen – Admin</PageTitle>
 

@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 @inject IExportService ExportService
 @inject IAreaService AreaService
 @inject IJSRuntime JS

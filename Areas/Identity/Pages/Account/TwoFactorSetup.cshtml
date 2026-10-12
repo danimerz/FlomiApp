@@ -1,0 +1,144 @@
+@page
+@model TwoFactorSetupModel
+
+@{
+    ViewData["Title"] = "Zwei-Faktor-Authentisierung";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+<style>
+    .tfa-qr { display: flex; justify-content: center; margin: 1rem 0; }
+    .tfa-qr img { width: 200px; height: 200px; border-radius: 12px; border: 1px solid var(--color-border-soft); background: #fff; padding: .5rem; }
+    .tfa-key {
+        font-family: "Courier New", monospace; font-size: 1rem; font-weight: 700;
+        letter-spacing: .05em; text-align: center; padding: .75rem 1rem;
+        background: var(--color-surface-card-soft); border: 1px solid var(--color-border-soft);
+        border-radius: 10px; margin: .75rem 0; word-break: break-all;
+    }
+    .tfa-steps { font-size: .9rem; color: var(--color-text-medium); padding-left: 1.2rem; line-height: 1.8; }
+    .register-form { display: flex; flex-direction: column; gap: 1.25rem; }
+    .form-group { display: flex; flex-direction: column; gap: .45rem; }
+    .form-group label { font-size: .92rem; font-weight: 700; color: #374151; }
+    .register-field-error { color: #dc2626; font-size: .82rem; margin-top: .2rem; }
+    .form-control-modern {
+        display: block; width: 100%; height: 3.35rem; padding: 0 1rem;
+        border: 1px solid #d1d5db; border-radius: 14px; background: #f9fafb;
+        color: #111827; font-size: 1.3rem; letter-spacing: .15em; text-align: center;
+        box-sizing: border-box; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control-modern:focus {
+        outline: none; border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37,99,235,.12); background: #fff;
+    }
+    .register-submit-btn {
+        display: flex; align-items: center; justify-content: center; gap: .5rem;
+        width: 100%; padding: 1rem 1.5rem; border: none; border-radius: 16px;
+        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+        color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer;
+        box-shadow: 0 4px 18px rgba(37,99,235,.28);
+        transition: filter .18s, transform .18s; margin-top: .5rem;
+        text-decoration: none;
+    }
+    .register-submit-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .register-validation { color: #dc2626; font-size: .88rem; margin-bottom: .5rem; }
+    .recovery-codes {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem;
+        font-family: "Courier New", monospace; font-weight: 700; font-size: .95rem;
+        background: var(--color-surface-card-soft); border: 1px solid var(--color-border-soft);
+        border-radius: 12px; padding: 1rem; margin: 1rem 0;
+    }
+    .tfa-warning {
+        background: #fef9c3; border: 1px solid #fde68a; color: #854d0e;
+        border-radius: 10px; padding: .75rem 1rem; font-size: .88rem; font-weight: 600;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Sicherheit</span>
+            <h1>Zwei-Faktor-Authentisierung</h1>
+            <p>Admin-Konten brauchen eine Authenticator-App zusätzlich zum Passwort.</p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        @if (Model.JustEnabled)
+        {
+            <div class="register-card__header">
+                <div class="register-card__topline">Erledigt</div>
+                <h2>2FA ist jetzt aktiv ✅</h2>
+                <p>Speichere diese Recovery-Codes — sie werden nur dieses eine Mal angezeigt.</p>
+            </div>
+            <div class="register-card__body">
+                <div class="tfa-warning">
+                    ⚠️ Jeder Code funktioniert nur einmal. Bewahre sie an einem sicheren Ort auf (z.B. Passwort-Manager) —
+                    ohne Handy und ohne diese Codes kommst du nicht mehr ins Admin-Konto.
+                </div>
+                <div class="recovery-codes">
+                    @foreach (var code in Model.RecoveryCodes ?? Array.Empty<string>())
+                    {
+                        <span>@code</span>
+                    }
+                </div>
+                <a href="@(string.IsNullOrEmpty(Model.ReturnUrl) ? "/" : Model.ReturnUrl)" class="register-submit-btn">
+                    → Weiter
+                </a>
+            </div>
+        }
+        else if (Model.AlreadyEnabled)
+        {
+            <div class="register-card__header">
+                <div class="register-card__topline">Status</div>
+                <h2>2FA ist bereits aktiv</h2>
+                <p>Dein Konto ist mit einer Authenticator-App abgesichert.</p>
+            </div>
+            <div class="register-card__body" style="text-align:center;padding:1.5rem 0">
+                <div style="font-size:3rem;margin-bottom:1rem">🔐</div>
+                <a href="@(string.IsNullOrEmpty(Model.ReturnUrl) ? "/" : Model.ReturnUrl)" class="register-submit-btn" style="max-width:260px;margin:0 auto">
+                    → Weiter
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="register-card__header">
+                <div class="register-card__topline">Einrichtung</div>
+                <h2>Authenticator-App verbinden</h2>
+                <ol class="tfa-steps">
+                    <li>Installiere eine Authenticator-App (z.B. Google Authenticator, Microsoft Authenticator).</li>
+                    <li>Scanne den QR-Code oder gib den Schlüssel manuell ein.</li>
+                    <li>Gib den 6-stelligen Code aus der App unten ein, um zu bestätigen.</li>
+                </ol>
+            </div>
+            <div class="register-card__body">
+                <div class="tfa-qr">
+                    <img src="@Model.QrCodeDataUri" alt="QR-Code für Authenticator-App" />
+                </div>
+                <div class="tfa-key">@Model.SharedKey</div>
+
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl" class="register-form">
+                    <div asp-validation-summary="ModelOnly" class="register-validation"></div>
+                    <div class="form-group">
+                        <label asp-for="Input.Code">Code aus der App</label>
+                        <input asp-for="Input.Code"
+                               class="form-control-modern"
+                               inputmode="numeric"
+                               autocomplete="one-time-code"
+                               maxlength="7"
+                               placeholder="000000" />
+                        <span asp-validation-for="Input.Code" class="register-field-error"></span>
+                    </div>
+                    <button type="submit" class="register-submit-btn">
+                        ✅ Bestätigen &amp; aktivieren
+                    </button>
+                </form>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

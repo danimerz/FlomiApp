@@ -9,6 +9,7 @@
 @inject IJSRuntime JS
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AnyAdmin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Admin Dashboard</PageTitle>
 

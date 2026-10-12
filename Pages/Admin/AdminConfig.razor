@@ -7,6 +7,7 @@
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Konfiguration – Admin</PageTitle>
 

@@ -50,6 +50,19 @@ builder.Services.Configure<SmtpSettings>(
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
+builder.Services.AddAuthorization(options =>
+{
+    // Zusätzlich zur Rollen-Prüfung: Admin-Rollen müssen 2FA aktiviert haben.
+    // Wer keine Admin-Rolle hat, erfüllt diese Policy trivial (betrifft nur
+    // Seiten, die zusätzlich auch [Authorize(Roles = ...)] verlangen).
+    options.AddPolicy(Roles.RequireTwoFactorForAdmins, policy =>
+        policy.RequireAssertion(ctx =>
+        {
+            var isAdmin = Roles.AllAdminRoles.Any(ctx.User.IsInRole);
+            return !isAdmin || ctx.User.HasClaim("tfa_enrolled", "true");
+        }));
+});
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();

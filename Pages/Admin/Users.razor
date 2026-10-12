@@ -12,6 +12,7 @@
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Benutzerverwaltung – Admin</PageTitle>
 
@@ -180,6 +181,13 @@
                                     🚫 Sperren
                                 </button>
                             }
+                            @if (u.TwoFactorEnabled)
+                            {
+                                <button class="usr-btn usr-btn--unlock" @onclick="() => confirmResetTfa = u"
+                                        title="2FA zurücksetzen (z.B. bei verlorenem Handy)">
+                                    🔐 2FA reset
+                                </button>
+                            }
                             <button class="usr-btn usr-btn--delete"
                                     @onclick="() => confirmDeleteUser = u"
                                     title="Benutzer löschen">
@@ -341,6 +349,34 @@
     </div>
 }
 
+<!-- ════════════════════════════════════════════════════
+     2FA-RESET CONFIRM MODAL
+════════════════════════════════════════════════════ -->
+@if (confirmResetTfa != null)
+{
+    <div class="usr-modal-backdrop" @onclick="() => confirmResetTfa = null">
+        <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
+            <div class="usr-modal__header">
+                <h3>🔐 2FA zurücksetzen</h3>
+                <button class="usr-modal__close" @onclick="() => confirmResetTfa = null">✕</button>
+            </div>
+            <div class="usr-modal__body">
+                <p style="margin:0;font-size:.95rem">
+                    2FA für <strong>@confirmResetTfa.FirstName @confirmResetTfa.LastName</strong>
+                    (@confirmResetTfa.Email) deaktivieren? Die Person muss sich beim nächsten Login neu einrichten
+                    (z.B. nach verlorenem Handy oder verlorenen Recovery-Codes).
+                </p>
+            </div>
+            <div class="usr-modal__footer">
+                <button class="usr-submit-btn" @onclick="ResetTwoFactor" disabled="@isSaving">
+                    @(isSaving ? "⏳ Wird zurückgesetzt..." : "🔐 Ja, zurücksetzen")
+                </button>
+                <button class="usr-cancel-btn" @onclick="() => confirmResetTfa = null">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private enum Tab { All, Admins, Locked }
     private Tab activeTab = Tab.All;
@@ -369,6 +405,9 @@
 
     // ── Delete ────────────────────────────────────────────────────────────────
     private ApplicationUser? confirmDeleteUser = null;
+
+    // ── 2FA-Reset ─────────────────────────────────────────────────────────────
+    private ApplicationUser? confirmResetTfa = null;
 
     // ── PW-Reset ──────────────────────────────────────────────────────────────
     private ApplicationUser? pwUser      = null;
@@ -679,5 +718,29 @@
             successMessage = $"Benutzer «{user.FirstName} {user.LastName}» wurde gesperrt.";
         }
         await LoadUsers();
+    }
+
+    private async Task ResetTwoFactor()
+    {
+        if (confirmResetTfa == null) return;
+        isSaving = true;
+
+        try
+        {
+            var user = await UserManager.FindByIdAsync(confirmResetTfa.Id);
+            if (user == null) return;
+
+            await UserManager.SetTwoFactorEnabledAsync(user, false);
+            await UserManager.ResetAuthenticatorKeyAsync(user);
+
+            successMessage = $"2FA für «{user.FirstName} {user.LastName}» wurde zurückgesetzt. " +
+                              "Die Person muss sich beim nächsten Login neu einrichten.";
+            confirmResetTfa = null;
+            await LoadUsers();
+        }
+        finally
+        {
+            isSaving = false;
+        }
     }
 }

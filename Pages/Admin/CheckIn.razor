@@ -2,12 +2,14 @@
 @using FlomiApp.Data.Models
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using FlomiApp.Security
 @implements IAsyncDisposable
 @inject IAppointmentService AppointmentService
 @inject IAreaService AreaService
 @inject FlomiApp.Data.ApplicationDbContext Db
 @inject IJSRuntime JS
 @attribute [Authorize(Roles = "Admin,FahrzeugAdmin,MoebelAdmin,BereichsAdmin")]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>Check-in – Admin</PageTitle>
 

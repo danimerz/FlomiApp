@@ -4,6 +4,7 @@
 @inject INewsService NewsService
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Policy = Roles.RequireTwoFactorForAdmins)]
 
 <PageTitle>News – Admin</PageTitle>
 

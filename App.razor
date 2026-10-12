@@ -1,21 +1,61 @@
+@using FlomiApp.Security
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    <div class="auth-error-page">
-                        <div class="auth-error-card">
-                            <div class="auth-error-icon">🔒</div>
-                            <h1 class="auth-error-title">Kein Zugriff</h1>
-                            <p class="auth-error-text">
-                                Du hast keine Berechtigung, diese Seite aufzurufen.
-                            </p>
-                            <div class="auth-error-actions">
-                                <a href="/" class="auth-error-btn auth-error-btn--primary">← Zur Startseite</a>
-                                <a href="/Identity/Account/Login" class="auth-error-btn auth-error-btn--secondary">Anmelden</a>
+                    <AuthorizeView Context="authCtx">
+                        <Authorized>
+                            @if (Roles.AllAdminRoles.Any(authCtx.User.IsInRole) && !authCtx.User.HasClaim("tfa_enrolled", "true"))
+                            {
+                                <div class="auth-error-page">
+                                    <div class="auth-error-card">
+                                        <div class="auth-error-icon">🔐</div>
+                                        <h1 class="auth-error-title">Zwei-Faktor-Authentisierung nötig</h1>
+                                        <p class="auth-error-text">
+                                            Admin-Konten müssen zuerst 2FA einrichten, bevor sie auf diesen Bereich zugreifen können.
+                                        </p>
+                                        <div class="auth-error-actions">
+                                            <a href="/Identity/Account/TwoFactorSetup" class="auth-error-btn auth-error-btn--primary">→ Jetzt einrichten</a>
+                                            <a href="/" class="auth-error-btn auth-error-btn--secondary">← Zur Startseite</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="auth-error-page">
+                                    <div class="auth-error-card">
+                                        <div class="auth-error-icon">🔒</div>
+                                        <h1 class="auth-error-title">Kein Zugriff</h1>
+                                        <p class="auth-error-text">
+                                            Du hast keine Berechtigung, diese Seite aufzurufen.
+                                        </p>
+                                        <div class="auth-error-actions">
+                                            <a href="/" class="auth-error-btn auth-error-btn--primary">← Zur Startseite</a>
+                                            <a href="/Identity/Account/Login" class="auth-error-btn auth-error-btn--secondary">Anmelden</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="auth-error-page">
+                                <div class="auth-error-card">
+                                    <div class="auth-error-icon">🔒</div>
+                                    <h1 class="auth-error-title">Kein Zugriff</h1>
+                                    <p class="auth-error-text">
+                                        Du hast keine Berechtigung, diese Seite aufzurufen.
+                                    </p>
+                                    <div class="auth-error-actions">
+                                        <a href="/" class="auth-error-btn auth-error-btn--primary">← Zur Startseite</a>
+                                        <a href="/Identity/Account/Login" class="auth-error-btn auth-error-btn--secondary">Anmelden</a>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />

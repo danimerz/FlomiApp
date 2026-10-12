@@ -37,6 +37,12 @@ public class ApplicationUserClaimsPrincipalFactory
             identity.AddClaim(new Claim("Pfadiname", user.Pfadiname));
         }
 
+        // Für die 2FA-Pflicht der Admin-Rollen (RequireTwoFactorForAdmins-Policy):
+        // wird in den Cookie gebacken, damit die Policy ohne DB-Zugriff pro Request prüfen kann.
+        // Nach Ein-/Ausschalten von 2FA muss SignInManager.RefreshSignInAsync aufgerufen werden,
+        // damit der Claim im aktuellen Cookie aktualisiert wird.
+        identity.AddClaim(new Claim("tfa_enrolled", user.TwoFactorEnabled ? "true" : "false"));
+
         return identity;
     }
 }
