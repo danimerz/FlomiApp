@@ -1,4 +1,4 @@
-name: Build & Deploy Blazor Server App (via Jump Host)
+name: Build & Deploy Blazor Server App
 
 on:
   workflow_dispatch:
@@ -44,7 +44,7 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY" > $HOME/.ssh/id_ed25519
           chmod 600 $HOME/.ssh/id_ed25519
 
-          ssh-keyscan -p "$JUMP_PORT_1" "$JUMP_HOST_1" >> $HOME/.ssh/known_hosts
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> $HOME/.ssh/known_hosts
 
           CONFIG="          
           Host target
