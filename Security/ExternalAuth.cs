@@ -69,6 +69,7 @@ public static class ExternalAuthSetup
                 o.ClientId     = google.ClientId!;
                 o.ClientSecret = google.ClientSecret!;
                 o.ClaimActions.MapJsonKey(ExternalLoginProfile.EmailVerifiedClaim, "email_verified");
+                o.Events.OnRemoteFailure = HandleRemoteFailure;
             });
             settings.Add(GoogleScheme, google.TrustEmail, "https://accounts.google.com");
         }
@@ -80,6 +81,7 @@ public static class ExternalAuthSetup
             {
                 o.ClientId     = microsoft.ClientId!;
                 o.ClientSecret = microsoft.ClientSecret!;
+                o.Events.OnRemoteFailure = HandleRemoteFailure;
             });
             // Private Microsoft-Konten werden über login.live.com weitergeleitet
             settings.Add(MicrosoftScheme, microsoft.TrustEmail,
@@ -113,11 +115,38 @@ public static class ExternalAuthSetup
                 o.ClaimActions.MapUniqueJsonKey("last_name",  "last_name");
                 o.ClaimActions.MapUniqueJsonKey("nickname",   "nickname");
                 o.ClaimActions.MapUniqueJsonKey("birthday",   "birthday");
+                o.Events.OnRemoteFailure = HandleRemoteFailure;
             });
             settings.Add(MiDataScheme, midata.TrustEmail, midata.Authority.TrimEnd('/'));
         }
 
         services.AddSingleton(settings);
         return settings;
+    }
+
+    // Fehler beim Anbieter oder beim Einlösen des Codes (z.B. falsches Client-Secret):
+    // statt der rohen Fehlerseite zurück zum Login mit verständlicher Meldung,
+    // der genaue Grund landet im Log.
+    private static Task HandleRemoteFailure(RemoteFailureContext context)
+    {
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("FlomiApp.ExternalAuth");
+        logger.LogError(context.Failure, "Externer Login über {Scheme} fehlgeschlagen", context.Scheme.Name);
+
+        // access_denied = Person hat beim Anbieter selbst abgebrochen
+        var reason = context.Failure?.Message.Contains("access_denied", StringComparison.OrdinalIgnoreCase) == true
+            ? "cancelled"
+            : "failed";
+
+        // RedirectUri ist unser Callback inkl. returnUrl – nur lokale Pfade zulassen
+        var target = context.Properties?.RedirectUri;
+        if (string.IsNullOrEmpty(target) || !target.StartsWith('/') || target.StartsWith("//"))
+            target = "/Identity/Account/ExternalLogin?handler=Callback";
+
+        var separator = target.Contains('?') ? '&' : '?';
+        context.Response.Redirect($"{target}{separator}remoteError={reason}");
+        context.HandleResponse();
+        return Task.CompletedTask;
     }
 }

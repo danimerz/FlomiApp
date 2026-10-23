@@ -96,8 +96,11 @@ public class ExternalLoginModel : PageModel
 
         if (remoteError != null)
         {
-            _logger.LogWarning("Externer Login abgebrochen: {Error}", remoteError);
-            return LoginError("Die Anmeldung beim externen Dienst wurde abgebrochen.", returnUrl);
+            // Details stehen bereits im Log (ExternalAuthSetup.HandleRemoteFailure)
+            return LoginError(remoteError == "cancelled"
+                ? "Die Anmeldung beim externen Dienst wurde abgebrochen."
+                : "Die Anmeldung beim externen Dienst hat nicht geklappt. Bitte versuche es erneut " +
+                  "oder melde dich mit E-Mail und Passwort an.", returnUrl);
         }
 
         var info = await _signInManager.GetExternalLoginInfoAsync();
