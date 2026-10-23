@@ -89,7 +89,7 @@ public static class ExternalAuthSetup
         var midata = configuration.GetSection("ExternalAuth:MiData").Get<MiDataOptions>();
         if (midata?.IsConfigured == true)
         {
-            auth.AddOpenIdConnect(MiDataScheme, "MiData (Pfadi)", o =>
+            auth.AddOpenIdConnect(MiDataScheme, "MiData", o =>
             {
                 o.Authority    = midata.Authority;
                 o.ClientId     = midata.ClientId;

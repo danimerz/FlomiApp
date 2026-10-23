@@ -26,23 +26,10 @@
         </div>
 
         <div class="register-card__body">
-            @if (Model.ExternalLogins.Count > 0)
-            {
-                <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post"
-                      class="register-form" style="margin-bottom:1.5rem">
-                    <p style="margin:0 0 .75rem;color:#475569">Schneller geht's mit einem bestehenden Konto:</p>
-                    <div class="register-actions">
-                        @foreach (var provider in Model.ExternalLogins)
-                        {
-                            <button type="submit" class="register-button" name="provider" value="@provider.Name"
-                                    title="Mit deinem @provider.DisplayName-Konto registrieren">
-                                Mit @provider.DisplayName registrieren
-                            </button>
-                        }
-                    </div>
-                    <p style="margin:.75rem 0 0;color:#475569">Oder mit E-Mail und Passwort:</p>
-                </form>
-            }
+            <partial name="_ExternalLoginButtons"
+                     model='new ExternalLoginButtonsModel(Model.ExternalLogins, Model.ReturnUrl,
+                         "oder mit E-Mail registrieren",
+                         "Schneller: Name und E-Mail werden übernommen, du ergänzt nur Stufe, Geburtstag und Telefon.")' />
 
             <form method="post" class="register-form">
 

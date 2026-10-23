@@ -22,10 +22,17 @@
         <div class="register-card__header">
             <div class="register-card__topline">Benutzerzugang</div>
             <h2>Kontoanmeldung</h2>
-            <p>Gib deine E-Mail-Adresse und dein Passwort ein, um dich anzumelden.</p>
+            <p>@(Model.ExternalLogins?.Count > 0
+                ? "Melde dich mit einem bestehenden Konto oder mit E-Mail und Passwort an."
+                : "Gib deine E-Mail-Adresse und dein Passwort ein, um dich anzumelden.")</p>
         </div>
 
         <div class="register-card__body">
+            <partial name="_ExternalLoginButtons"
+                     model='new ExternalLoginButtonsModel(Model.ExternalLogins ?? new List<Microsoft.AspNetCore.Authentication.AuthenticationScheme>(), Model.ReturnUrl,
+                         "oder mit E-Mail",
+                         "Admin-Konten melden sich mit E-Mail, Passwort und 2FA an.")' />
+
             <form id="account" method="post" class="register-form">
                 <div asp-validation-summary="ModelOnly" class="register-validation"></div>
 
@@ -82,36 +89,6 @@
                 </div>
             </form>
 
-            @if ((Model.ExternalLogins?.Count ?? 0) > 0)
-            {
-                <div style="margin-top: 2rem;">
-                    <div class="register-card__topline">Externe Anmeldung</div>
-                    <h2 style="margin-top: 0;">Oder anmelden mit</h2>
-                    <p style="margin-bottom: 1rem; color: #475569;">
-                        Beim ersten Mal ergänzt du noch Stufe, Geburtstag und Telefonnummer.
-                        Admin-Konten melden sich mit E-Mail, Passwort und 2FA an.
-                    </p>
-
-                    <form id="external-account"
-                          asp-page="./ExternalLogin"
-                          asp-route-returnUrl="@Model.ReturnUrl"
-                          method="post"
-                          class="register-form">
-                        <div class="register-actions">
-                            @foreach (var provider in Model.ExternalLogins!)
-                            {
-                                <button type="submit"
-                                        class="register-button"
-                                        name="provider"
-                                        value="@provider.Name"
-                                        title="Mit deinem @provider.DisplayName-Konto anmelden">
-                                    Mit @provider.DisplayName anmelden
-                                </button>
-                            }
-                        </div>
-                    </form>
-                </div>
-            }
         </div>
     </section>
 </div>
