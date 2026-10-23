@@ -637,7 +637,7 @@
 .area-list__head,
 .area-row {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.8fr) 96px minmax(0, 1fr) minmax(0, 1.3fr) 150px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2.1fr) 136px 108px minmax(0, 1.1fr) 140px;
     gap: 1rem;
     align-items: center;
 }
@@ -655,7 +655,6 @@
 .area-row {
     padding: 0.7rem 0.75rem;
     border-bottom: 1px dashed var(--color-border-light);
-    border-radius: 12px;
     transition: background 0.15s ease;
 }
 
@@ -700,6 +699,7 @@
 
 .area-row__cell .capacity-chip {
     min-width: 0;
+    white-space: nowrap;
 }
 
 .area-row__action .register-btn {
