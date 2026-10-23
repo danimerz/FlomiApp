@@ -5,7 +5,7 @@
     ViewData["Title"] = "Anmelden";
 }
 
-<link rel="stylesheet" href="/css/register.css" />
+<link rel="stylesheet" href="~/css/register.css" asp-append-version="true" />
 
 <div class="register-page">
     <section class="register-hero">
@@ -63,7 +63,6 @@
 
                 <div class="register-grid register-grid--full">
                     <div class="register-field">
-                        <label asp-for="Input.RememberMe" class="register-label"></label>
                         <div class="register-checkbox">
                             <input asp-for="Input.RememberMe" />
                             <span>Angemeldet bleiben</span>

@@ -73,6 +73,7 @@ namespace FlomiApp.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [EmailAddress]
+            [Display(Name = "E-Mail")]
             public string Email { get; set; }
 
             /// <summary>
@@ -81,13 +82,14 @@ namespace FlomiApp.Areas.Identity.Pages.Account
             /// </summary>
             [Required]
             [DataType(DataType.Password)]
+            [Display(Name = "Passwort")]
             public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Angemeldet bleiben")]
             public bool RememberMe { get; set; }
         }
 
