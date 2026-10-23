@@ -165,12 +165,33 @@
             {
                 var categoryKey = group.Key;
                 var isCollapsed = collapsedCategories.Contains(categoryKey);
+                var isList      = listCategories.Contains(categoryKey);
 
                 <section class="category-block @(isCollapsed ? "is-collapsed" : "")">
                     <div class="category-block__header"
                          @onclick="() => ToggleCategory(categoryKey)">
                         <h3>🎪 @group.Key</h3>
                         <div class="category-block__header-right">
+                            @* Ansicht umschalten – Klick soll die Kategorie nicht auf-/zuklappen *@
+                            <div class="view-switch" role="group" aria-label="Ansicht für @group.Key"
+                                 @onclick:stopPropagation="true">
+                                <button type="button"
+                                        class="view-switch__btn @(isList ? "" : "is-active")"
+                                        aria-pressed="@(isList ? "false" : "true")"
+                                        title="Als Kacheln anzeigen"
+                                        @onclick="() => SetViewMode(categoryKey, false)">
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.2"/></svg>
+                                    <span class="view-switch__text">Kacheln</span>
+                                </button>
+                                <button type="button"
+                                        class="view-switch__btn @(isList ? "is-active" : "")"
+                                        aria-pressed="@(isList ? "true" : "false")"
+                                        title="Als Liste anzeigen"
+                                        @onclick="() => SetViewMode(categoryKey, true)">
+                                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="2.2" rx="1.1"/><rect x="1.5" y="6.9" width="13" height="2.2" rx="1.1"/><rect x="1.5" y="11.3" width="13" height="2.2" rx="1.1"/></svg>
+                                    <span class="view-switch__text">Liste</span>
+                                </button>
+                            </div>
                             <span class="category-block__count">@group.Count() Bereiche</span>
                             <span class="category-block__toggle-icon">▾</span>
                         </div>
@@ -183,106 +204,111 @@
                         {
                             <div class="date-subgroup">
                                 <h4>📅 @GetGermanDayName(dateGroup.Key), @dateGroup.Key</h4>
-                                <div class="area-grid">
-                                    @foreach (var area in dateGroup)
-                                    {
-                                        <article class="area-card">
-                                            <div class="area-card__body">
-                                                <div class="area-card__header">
-                                                    <h4>@area.AreaTemplate?.Name</h4>
-                                                    <span class="area-category">
-                                                        @(area.AreaTemplate?.AreaCategory?.Name ?? "–")
-                                                    </span>
-                                                </div>
 
-                                                @{
-                                                    var hasAlt   = !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
-                                                    var altOk    = hasAlt && IsAlternativeAllowed(area);
-                                                    var isAlt    = altOk && useAltSlot.GetValueOrDefault(area.Id, false);
-                                                    var dispTime = isAlt ? area.AlternativeTimeSlot : area.TimeSlot;
-                                                    var dispReg  = isAlt ? altRegistrations.GetValueOrDefault(area.Id, 0) : currentRegistrations.GetValueOrDefault(area.Id, 0);
-                                                    var dispCap  = isAlt ? area.AlternativeMaxCapacity!.Value : area.MaxCapacity;
-                                                }
-                                                @if (altOk)
-                                                {
-                                                    <div class="area-slot-toggle">
-                                                        <span class="area-slot-toggle__label">
-                                                            @(isAlt ? "⏰ Halber Tag" : "⏰ Ganzer Tag")
-                                                        </span>
-                                                        <label class="toggle-switch" title="Zeitslot wechseln">
-                                                            <input type="checkbox"
-                                                                   checked="@isAlt"
-                                                                   @onchange="() => ToggleAltSlot(area.Id)" />
-                                                            <span class="slider round"></span>
-                                                        </label>
-                                                    </div>
-                                                }
-
-                                                <div class="area-info-list">
-                                                    <div class="area-info-item">
-                                                        <span class="label">Datum</span>
-                                                        <span class="value">@area.Date.ToShortDateString()</span>
-                                                    </div>
-                                                    <div class="area-info-item">
-                                                        <span class="label">Zeit</span>
-                                                        <span class="value">@dispTime</span>
-                                                    </div>
-                                                    <div class="area-info-item">
-                                                        <span class="label">Belegt</span>
-                                                        <span class="value">
-                                                            @if (dispCap >= 999)
-                                                            {
-                                                                <span class="capacity-chip capacity-chip--unlimited">∞ Unbegrenzt</span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="capacity-chip">@dispReg / @dispCap</span>
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                    @if ((area.AreaTemplate?.MinAge ?? 0) > 0)
+                                @if (isList)
+                                {
+                                    <div class="area-list">
+                                        <div class="area-list__head" aria-hidden="true">
+                                            <span>Bereich</span>
+                                            <span>Zeit</span>
+                                            <span>Belegt</span>
+                                            <span>Mindestalter</span>
+                                            <span>Standort</span>
+                                            <span></span>
+                                        </div>
+                                        @foreach (var area in dateGroup)
+                                        {
+                                            var slot = GetSlot(area);
+                                            var note = GetRegistrationNote(area);
+                                            <div class="area-row">
+                                                <div class="area-row__name">
+                                                    <span class="area-row__title">@area.AreaTemplate?.Name</span>
+                                                    @if (!string.IsNullOrEmpty(note))
                                                     {
-                                                        <div class="area-info-item">
-                                                            <span class="label">Mindestalter</span>
-                                                            <span class="value">@area.AreaTemplate!.MinAge Jahre</span>
-                                                        </div>
-                                                    }
-                                                    @if (!string.IsNullOrEmpty(area.AreaTemplate?.Location))
-                                                    {
-                                                        <div class="area-info-item">
-                                                            <span class="label">Standort</span>
-                                                            <span class="value">@area.AreaTemplate!.Location</span>
-                                                        </div>
+                                                        <span class="area-row__note">@note</span>
                                                     }
                                                 </div>
-
-                                                @* ── Register Button mit Loading ── *@
-                                                @if (registeringAreaId == area.Id)
-                                                {
-                                                    <div class="btn-loading btn-loading--register">
-                                                        <span class="btn-spinner btn-spinner--white"></span>
-                                                        <span>Wird registriert...</span>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <button class="register-btn"
-                                                            @onclick="() => OpenConfirmModal(area)"
-                                                            disabled="@(registeringAreaId.HasValue || (isAlt ? !canRegisterAlt.GetValueOrDefault(area.Id, false) : !canRegister[area.Id]))">
-                                                        Jetzt registrieren
-                                                    </button>
-                                                }
-
-                                                @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
-                                                {
-                                                    <p class="registration-note">
-                                                        @GetRegistrationNote(area)
-                                                    </p>
-                                                }
+                                                <div class="area-row__cell" data-label="Zeit">
+                                                    <span>@slot.Time</span>
+                                                    @if (slot.AltOk)
+                                                    {
+                                                        @SlotToggle(area, slot, compact: true)
+                                                    }
+                                                </div>
+                                                <div class="area-row__cell" data-label="Belegt">@CapacityChip(slot)</div>
+                                                <div class="area-row__cell" data-label="Mindestalter">
+                                                    @((area.AreaTemplate?.MinAge ?? 0) > 0 ? $"{area.AreaTemplate!.MinAge} Jahre" : "–")
+                                                </div>
+                                                <div class="area-row__cell" data-label="Standort">
+                                                    @(string.IsNullOrEmpty(area.AreaTemplate?.Location) ? "–" : area.AreaTemplate!.Location)
+                                                </div>
+                                                <div class="area-row__action">@RegisterAction(area, slot, "Registrieren")</div>
                                             </div>
-                                        </article>
-                                    }
-                                </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="area-grid">
+                                        @foreach (var area in dateGroup)
+                                        {
+                                            var slot = GetSlot(area);
+                                            <article class="area-card">
+                                                <div class="area-card__body">
+                                                    <div class="area-card__header">
+                                                        <h4>@area.AreaTemplate?.Name</h4>
+                                                        <span class="area-category">
+                                                            @(area.AreaTemplate?.AreaCategory?.Name ?? "–")
+                                                        </span>
+                                                    </div>
+
+                                                    @if (slot.AltOk)
+                                                    {
+                                                        @SlotToggle(area, slot, compact: false)
+                                                    }
+
+                                                    <div class="area-info-list">
+                                                        <div class="area-info-item">
+                                                            <span class="label">Datum</span>
+                                                            <span class="value">@area.Date.ToShortDateString()</span>
+                                                        </div>
+                                                        <div class="area-info-item">
+                                                            <span class="label">Zeit</span>
+                                                            <span class="value">@slot.Time</span>
+                                                        </div>
+                                                        <div class="area-info-item">
+                                                            <span class="label">Belegt</span>
+                                                            <span class="value">@CapacityChip(slot)</span>
+                                                        </div>
+                                                        @if ((area.AreaTemplate?.MinAge ?? 0) > 0)
+                                                        {
+                                                            <div class="area-info-item">
+                                                                <span class="label">Mindestalter</span>
+                                                                <span class="value">@area.AreaTemplate!.MinAge Jahre</span>
+                                                            </div>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(area.AreaTemplate?.Location))
+                                                        {
+                                                            <div class="area-info-item">
+                                                                <span class="label">Standort</span>
+                                                                <span class="value">@area.AreaTemplate!.Location</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+
+                                                    @RegisterAction(area, slot, "Jetzt registrieren")
+
+                                                    @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                                                    {
+                                                        <p class="registration-note">
+                                                            @GetRegistrationNote(area)
+                                                        </p>
+                                                    }
+                                                </div>
+                                            </article>
+                                        }
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -383,6 +409,10 @@
     private string               successMessage       = string.Empty;
     private CancellationTokenSource? successMessageCts;
     private HashSet<string>      collapsedCategories  = new();
+
+    // Kategorien, die als Liste statt als Kacheln angezeigt werden (pro Browser gemerkt)
+    private HashSet<string>      listCategories       = new();
+    private const string         ListViewStorageKey   = "flomi.register.listCategories";
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? registeringAreaId = null;
@@ -597,6 +627,107 @@
         else
             collapsedCategories.Add(categoryKey);
     }
+
+    // ── Ansicht Kacheln/Liste ─────────────────────────────────────────────────
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", ListViewStorageKey);
+            if (!string.IsNullOrEmpty(stored))
+            {
+                listCategories = stored.Split('|', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // Kein localStorage (z.B. privater Modus) – dann bleibt es bei Kacheln
+        }
+    }
+
+    private async Task SetViewMode(string categoryKey, bool asList)
+    {
+        if (asList) listCategories.Add(categoryKey);
+        else        listCategories.Remove(categoryKey);
+
+        // Wer die Ansicht wählt, will die Bereiche auch sehen
+        collapsedCategories.Remove(categoryKey);
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", ListViewStorageKey, string.Join('|', listCategories));
+        }
+        catch
+        {
+            // Merken ist nur Komfort
+        }
+    }
+
+    // ── Anzeige-Werte pro Bereich (ganzer oder halber Tag) ───────────────────
+    private sealed record SlotInfo(bool AltOk, bool IsAlt, string? Time, int Registered, int Capacity, bool CanRegister);
+
+    private SlotInfo GetSlot(Area area)
+    {
+        var hasAlt = !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
+        var altOk  = hasAlt && IsAlternativeAllowed(area);
+        var isAlt  = altOk && useAltSlot.GetValueOrDefault(area.Id, false);
+
+        return isAlt
+            ? new SlotInfo(altOk, true, area.AlternativeTimeSlot,
+                           altRegistrations.GetValueOrDefault(area.Id, 0), area.AlternativeMaxCapacity!.Value,
+                           canRegisterAlt.GetValueOrDefault(area.Id, false))
+            : new SlotInfo(altOk, false, area.TimeSlot,
+                           currentRegistrations.GetValueOrDefault(area.Id, 0), area.MaxCapacity,
+                           canRegister.GetValueOrDefault(area.Id, false));
+    }
+
+    // ── Bausteine für Kachel- und Listenansicht ──────────────────────────────
+    private RenderFragment CapacityChip(SlotInfo slot) =>
+        @<text>
+            @if (slot.Capacity >= 999)
+            {
+                <span class="capacity-chip capacity-chip--unlimited">∞ Unbegrenzt</span>
+            }
+            else
+            {
+                <span class="capacity-chip">@slot.Registered / @slot.Capacity</span>
+            }
+        </text>;
+
+    private RenderFragment SlotToggle(Area area, SlotInfo slot, bool compact) =>
+        @<div class="area-slot-toggle @(compact ? "area-slot-toggle--compact" : "")">
+            <span class="area-slot-toggle__label">
+                @(slot.IsAlt ? "⏰ Halber Tag" : "⏰ Ganzer Tag")
+            </span>
+            <label class="toggle-switch" title="Zeitslot wechseln">
+                <input type="checkbox"
+                       checked="@slot.IsAlt"
+                       aria-label="Halber Tag"
+                       @onchange="() => ToggleAltSlot(area.Id)" />
+                <span class="slider round"></span>
+            </label>
+        </div>;
+
+    private RenderFragment RegisterAction(Area area, SlotInfo slot, string label) =>
+        @<text>
+            @if (registeringAreaId == area.Id)
+            {
+                <div class="btn-loading btn-loading--register">
+                    <span class="btn-spinner btn-spinner--white"></span>
+                    <span>Wird registriert...</span>
+                </div>
+            }
+            else
+            {
+                <button class="register-btn"
+                        @onclick="() => OpenConfirmModal(area)"
+                        disabled="@(registeringAreaId.HasValue || !slot.CanRegister)">
+                    @label
+                </button>
+            }
+        </text>;
 
     // ── Hinweis-Text pro Area-Karte ───────────────────────────────────────────
     private string GetRegistrationNote(Area area)
