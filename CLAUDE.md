@@ -23,6 +23,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - `Security/ExternalAuth.cs` – Google/Microsoft/MiData-Login, nur aktiv wenn unter `ExternalAuth` konfiguriert; Ablauf in `Areas/Identity/Pages/Account/ExternalLogin` und `LinkLogin`. Admin-Rollen sind von externen Logins ausgeschlossen.
 - `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur, Foto-Aufbereitung mit SkiaSharp)
 - `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`)
+- Routenplanung: `Helpers/RouteOptimizer.cs` (reine Tourenoptimierung, getestet), `Services/RoutePlanningService.cs` (Adresssuche `GeocodingService` via geo.admin.ch, Fahrzeiten `TravelTimeService` via OpenRouteService oder Luftlinie). Beispieldaten: `SampleDataService` (`Event.IsSample`/`Vehicle.IsSample`)
 - `FlomiApp.Tests/` – Testprojekt; wird in `FlomiApp.csproj` explizit vom Glob ausgeschlossen
 
 ## Konventionen

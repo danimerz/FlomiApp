@@ -97,6 +97,17 @@ builder.Services.AddSingleton<IChatService, ChatService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHostedService<PickupImageMaintenanceService>();
 
+// Routenplanung: Adresssuche (geo.admin.ch) und Fahrzeiten (OpenRouteService, optional)
+builder.Services.Configure<RoutingOptions>(builder.Configuration.GetSection("Routing"));
+builder.Services.AddHttpClient<IGeocodingService, GeoAdminGeocodingService>(c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(10);
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("FlomiApp/1.0 (+https://flomiapp.familie-merz.ch)");
+});
+builder.Services.AddHttpClient<ITravelTimeService, TravelTimeService>(c => c.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddScoped<IRoutePlanningService, RoutePlanningService>();
+builder.Services.AddScoped<ISampleDataService, SampleDataService>();
+
 var app = builder.Build();
 
 app.UseForwardedHeaders();

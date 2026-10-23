@@ -135,6 +135,15 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 - Einsatztage: 8 Tage vor dem Event bis zum Eventtag
 - Benutzer sehen ihre Fahrzeugzuweisung direkt auf der Anmeldungskarte im Dashboard
 
+**Routenplanung (Tab «Routenplanung»):**
+- Pro Abholtag werden die akzeptierten Möbelabholungen auf die an diesem Tag zugewiesenen Fahrzeuge verteilt
+- **🧭 Optimal verteilen**: Adressen werden über geo.admin.ch (Bund, gratis) in Koordinaten umgewandelt, die Fahrzeiten berechnet und die Stopps so verteilt und sortiert, dass Gesamtfahrzeit und längste Tour möglichst kurz sind (Startadresse → Stopps → zurück, 10 Min. Ladezeit pro Stopp). Fahrzeug und Stopp-Reihenfolge werden gespeichert
+- **↕️ Nur Reihenfolge**: behält eine von Hand angepasste Zuteilung und optimiert nur die Reihenfolge pro Fahrzeug
+- Fahrzeiten aus dem Strassennetz über OpenRouteService, falls `Routing__OpenRouteServiceApiKey` gesetzt ist (Gratiskonto auf openrouteservice.org); sonst Schätzung aus der Luftlinie
+- Nicht gefundene Adressen werden gemeldet, markiert und nicht eingeplant
+- «Route öffnen» (Google Maps) und Excel-Export folgen der geplanten Reihenfolge
+- **🧪 Beispieldaten**: legt einen für Freiwillige unsichtbaren Beispiel-Event mit 3 Fahrzeugen und 19 Abholungen im Kanton Zug an (eine Adresse absichtlich falsch) und entfernt ihn auf Knopfdruck wieder. Beispiel-Mailadressen enden auf `.invalid`, dorthin werden keine Mails verschickt
+
 ---
 
 ### Admin-Konfiguration

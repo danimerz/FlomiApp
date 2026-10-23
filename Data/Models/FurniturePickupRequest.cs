@@ -63,6 +63,17 @@ public class FurniturePickupRequest
     public int? AssignedVehicleId { get; set; }
     public Vehicle? AssignedVehicle { get; set; }
 
+    /// <summary>Position in der Tour des zugewiesenen Fahrzeugs (1 = erster Stopp); null = noch nicht geplant.</summary>
+    public int? RouteStopOrder { get; set; }
+
+    // Koordinaten der Abholadresse (WGS84), von der Routenplanung ermittelt.
+    // GeocodedAddress hält fest, für welche Adresse sie gelten – ändert sich die
+    // Adresse, wird neu gesucht. Koordinaten null + GeocodedAddress gesetzt = nicht gefunden.
+    public double? Latitude  { get; set; }
+    public double? Longitude { get; set; }
+    [MaxLength(300)]
+    public string? GeocodedAddress { get; set; }
+
     // Einverständnis Entsorgungsgebühren
     public bool AcceptsDisposalFee { get; set; } = false;
 

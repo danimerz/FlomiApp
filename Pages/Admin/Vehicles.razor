@@ -7,6 +7,8 @@
 @inject IVehicleService         VehicleService
 @inject IFurniturePickupService FurniturePickupService
 @inject IExportService          ExportService
+@inject IRoutePlanningService   RoutePlanningService
+@inject ISampleDataService      SampleDataService
 @inject IJSRuntime              JS
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AdminOrFahrzeug)]
@@ -647,9 +649,23 @@
                     </div>
                 </div>
             }
+
+            <!-- Beispieldaten zum Ausprobieren der Routenplanung -->
+            <div class="av-sample-actions">
+                @if (hasSampleData)
+                {
+                    <button class="av-sample-btn av-sample-btn--remove" @onclick="RemoveSampleData" disabled="@isSampleBusy">
+                        @(isSampleBusy ? "⏳ Entferne..." : "🗑️ Beispieldaten entfernen")
+                    </button>
+                }
+                <button class="av-sample-btn" @onclick="CreateSampleData" disabled="@isSampleBusy"
+                        title="Legt einen versteckten Beispiel-Event mit 3 Fahrzeugen und 19 Abholungen an">
+                    @(isSampleBusy ? "⏳ Lade..." : hasSampleData ? "🧪 Beispieldaten neu laden" : "🧪 Beispieldaten laden")
+                </button>
+            </div>
         </div>
 
-        <!-- Startadresse + Auto-verteilen (nur wenn Datum gewählt) -->
+        <!-- Startadresse + Planung (nur wenn Datum gewählt) -->
         @if (routeDate.HasValue && RoutePickups.Any())
         {
             <div class="av-route-controls">
@@ -667,10 +683,18 @@
                 </div>
                 @if (VehiclesOnRouteDay.Any())
                 {
-                    <button class="av-auto-btn" @onclick="AutoDistribute" disabled="@isAutoDistributing">
-                        @if (isAutoDistributing) { <span>⏳ Verteile...</span> }
-                        else { <span>⚡ Auto-verteilen</span> }
+                    <button class="av-auto-btn" @onclick="() => PlanRoutes(RoutePlanMode.Distribute)" disabled="@isPlanning"
+                            title="Verteilt alle Abholungen neu auf die Fahrzeuge und legt die Reihenfolge fest">
+                        @if (isPlanning) { <span>⏳ Plane...</span> }
+                        else { <span>🧭 Optimal verteilen</span> }
                     </button>
+                    @if (RoutePickups.Any(r => r.AssignedVehicleId.HasValue))
+                    {
+                        <button class="av-auto-btn av-auto-btn--secondary" @onclick="() => PlanRoutes(RoutePlanMode.OrderOnly)" disabled="@isPlanning"
+                                title="Behält die Zuteilung bei und optimiert nur die Reihenfolge pro Fahrzeug">
+                            <span>↕️ Nur Reihenfolge</span>
+                        </button>
+                    }
                 }
                 <button class="av-auto-btn" style="background:linear-gradient(135deg,#15803d,#22c55e);box-shadow:0 4px 12px rgba(21,128,61,.3)"
                         @onclick="ExportRoute" disabled="@isExportingRoute">
@@ -678,6 +702,45 @@
                     else { <span>📥 Excel exportieren</span> }
                 </button>
             </div>
+
+            @if (CurrentPlan is { } plan)
+            {
+                <div class="av-plan-result @(plan.Success ? "" : "av-plan-result--error")">
+                    @if (!plan.Success)
+                    {
+                        <span>⚠️ @plan.Error</span>
+                    }
+                    else
+                    {
+                        <div>
+                            ✅ <strong>Plan gespeichert:</strong>
+                            @plan.Vehicles.Sum(v => v.Stops) Stopps auf @plan.Vehicles.Count(v => v.Stops > 0) Fahrzeuge,
+                            längste Tour ≈ @FormatDuration(plan.Vehicles.Max(v => v.Seconds)).
+                        </div>
+                        <small>
+                            @(plan.IsEstimate
+                                ? "Fahrzeiten nach Luftlinie geschätzt (kein OpenRouteService-Schlüssel hinterlegt)."
+                                : "Fahrzeiten aus dem Strassennetz (OpenRouteService).")
+                            Inkl. @((int)(RouteOptimizer.ServiceSecondsPerStop / 60)) Min. Ladezeit pro Stopp und Rückfahrt zur Startadresse.
+                        </small>
+                        @if (plan.UnlocatedOrderNumbers.Any())
+                        {
+                            <div class="av-plan-result__warn">
+                                📍 Adresse nicht gefunden, deshalb nicht eingeplant:
+                                @string.Join(", ", plan.UnlocatedOrderNumbers.Select(n => $"#{n}"))
+                                – bitte Adresse prüfen oder von Hand zuteilen.
+                            </div>
+                        }
+                        @if (plan.ApproximateOrderNumbers.Any())
+                        {
+                            <div class="av-plan-result__warn">
+                                ℹ️ Hausnummer nicht exakt gefunden, Position ungefähr:
+                                @string.Join(", ", plan.ApproximateOrderNumbers.Select(n => $"#{n}"))
+                            </div>
+                        }
+                    }
+                </div>
+            }
         }
 
         @if (pickupRequests == null)
@@ -734,7 +797,9 @@
             @foreach (var v in dayVehicles)
             {
                 var veh     = v;
-                var vPickups = allPickups.Where(r => r.AssignedVehicleId == veh.Id).OrderBy(r => r.PostalCode).ToList();
+                var vPickups = allPickups.Where(r => r.AssignedVehicleId == veh.Id)
+                    .OrderBy(r => r.RouteStopOrder ?? int.MaxValue).ThenBy(r => r.PostalCode).ToList();
+                var vSummary = CurrentPlan?.Vehicles.FirstOrDefault(s => s.VehicleId == veh.Id);
                 <div class="av-vehicle-group">
                     <div class="av-vehicle-group__header">
                         <div class="av-vehicle-group__info">
@@ -749,6 +814,12 @@
                                 <small style="color:var(--color-text-light)">@veh.OwnerContact</small>
                             }
                             <span class="av-badge av-badge--driver">@vPickups.Count Stopps</span>
+                            @if (vSummary is { Stops: > 0 })
+                            {
+                                <span class="av-route-stats" title="Fahrzeit inkl. Ladezeit und Rückfahrt">
+                                    ⏱️ ≈ @FormatDuration(vSummary.Seconds) · @((vSummary.Meters / 1000).ToString("0.0")) km
+                                </span>
+                            }
                         </div>
                         @if (vPickups.Any())
                         {
@@ -1014,8 +1085,11 @@
     private DateTime?                 routeDate         = null;
     private string                    routeStartAddress = "";
     private FurniturePickupSettings?  routeSettings     = null;
-    private bool                      isAutoDistributing = false;
+    private bool                      isPlanning         = false;
     private bool                      isExportingRoute   = false;
+    private RoutePlanningResult?      planResult         = null;
+    private bool                      hasSampleData      = false;
+    private bool                      isSampleBusy       = false;
 
     private IEnumerable<FurniturePickupRequest> RoutePickups =>
         (pickupRequests ?? new())
@@ -1060,8 +1134,12 @@
             parts.Add(Uri.EscapeDataString(routeStartAddress.Trim()));
         parts.AddRange(RoutePickups
             .Where(r => r.AssignedVehicleId == vehicleId)
-            .OrderBy(r => r.PostalCode)
+            .OrderBy(r => r.RouteStopOrder ?? int.MaxValue)
+            .ThenBy(r => r.PostalCode)
             .Select(r => Uri.EscapeDataString($"{r.Street}, {r.PostalCode} {r.City}")));
+        // Zurück zur Startadresse zum Abladen
+        if (!string.IsNullOrWhiteSpace(routeStartAddress))
+            parts.Add(Uri.EscapeDataString(routeStartAddress.Trim()));
         return "https://www.google.com/maps/dir/" + string.Join("/", parts);
     }
 
@@ -1077,7 +1155,9 @@
     {
         if (routeEventId > 0)
         {
-            routeSettings     = await FurniturePickupService.GetSettingsByEventIdAsync(routeEventId);
+            // Startadresse auch übernehmen, wenn der Abholservice (noch) nicht aktiv ist
+            routeSettings     = (await FurniturePickupService.GetAllSettingsAsync())
+                                .FirstOrDefault(s => s.EventId == routeEventId);
             routeStartAddress = routeSettings?.DepartureAddress ?? "";
         }
         else
@@ -1087,31 +1167,91 @@
         }
     }
 
-    private async Task AutoDistribute()
+    // Ergebnis gilt nur für den Tag/Event, für den geplant wurde
+    private (int EventId, DateTime? Date) planKey;
+    private RoutePlanningResult? CurrentPlan =>
+        planResult != null && planKey == (routeEventId, routeDate) ? planResult : null;
+
+    private async Task PlanRoutes(RoutePlanMode mode)
     {
         if (!routeDate.HasValue) return;
-        var vehicleList = VehiclesOnRouteDay;
-        if (!vehicleList.Any()) return;
+        if (string.IsNullOrWhiteSpace(routeStartAddress))
+        {
+            planResult = RoutePlanningResult.Failed("Bitte zuerst eine Startadresse eingeben (z.B. «Gewerbestrasse 1, 6314 Unterägeri»).");
+            planKey    = (routeEventId, routeDate);
+            return;
+        }
 
-        isAutoDistributing = true;
+        isPlanning = true;
         try
         {
-            var sorted = RoutePickups.ToList();
-            int n         = vehicleList.Count;
-            int blockSize = (int)Math.Ceiling(sorted.Count / (double)n);
-
-            for (int i = 0; i < sorted.Count; i++)
-            {
-                int vehicleIndex = Math.Min(i / blockSize, n - 1);
-                await FurniturePickupService.AssignVehicleAsync(sorted[i].Id, vehicleList[vehicleIndex].Id);
-            }
-
+            planResult = await RoutePlanningService.PlanAsync(
+                routeEventId > 0 ? routeEventId : null,
+                routeDate.Value,
+                routeStartAddress,
+                VehiclesOnRouteDay.Select(v => v.Id).ToList(),
+                mode);
+            planKey = (routeEventId, routeDate);
             pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
         }
         finally
         {
-            isAutoDistributing = false;
+            isPlanning = false;
         }
+    }
+
+    private static string FormatDuration(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(seconds);
+        return t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes:00} min" : $"{t.Minutes} min";
+    }
+
+    // ── Beispieldaten ────────────────────────────────────────────────────────
+    private async Task CreateSampleData()
+    {
+        isSampleBusy = true;
+        try
+        {
+            var (eventId, pickupDate) = await SampleDataService.CreateRouteSampleAsync();
+            await ReloadAfterSampleChangeAsync();
+
+            // Gleich den Beispiel-Tag anzeigen
+            routeEventId = eventId;
+            routeDate    = pickupDate;
+            planResult   = null;
+            await LoadRouteSettingsAsync();
+        }
+        finally
+        {
+            isSampleBusy = false;
+        }
+    }
+
+    private async Task RemoveSampleData()
+    {
+        isSampleBusy = true;
+        try
+        {
+            await SampleDataService.RemoveRouteSampleAsync();
+            routeEventId = 0;
+            routeDate    = null;
+            planResult   = null;
+            await LoadRouteSettingsAsync();
+            await ReloadAfterSampleChangeAsync();
+        }
+        finally
+        {
+            isSampleBusy = false;
+        }
+    }
+
+    private async Task ReloadAfterSampleChangeAsync()
+    {
+        events         = await AreaService.GetAllEventsAsync();
+        vehicles       = await VehicleService.GetAllVehiclesAsync();
+        assignments    = await VehicleService.GetAssignmentsByEventAsync(0);
+        pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
+        hasSampleData  = await SampleDataService.HasRouteSampleAsync();
     }
 
     private async Task ExportRoute()
@@ -1175,6 +1315,10 @@
                                target="_blank" rel="noopener noreferrer" class="av-addr-link">
                                 @req.Street, @req.PostalCode @req.City
                             </a>
+                            @if (req.GeocodedAddress != null && req.Latitude == null)
+                            {
+                                <br /><span class="av-badge av-badge--pending" title="Die Adresssuche hat nichts gefunden – nicht in der Optimierung">📍 Adresse nicht gefunden</span>
+                            }
                         </td>
                         <td><small>@req.Description</small></td>
                         <td>
@@ -1265,6 +1409,7 @@
         vehicles       = await VehicleService.GetAllVehiclesAsync();
         assignments    = await VehicleService.GetAssignmentsByEventAsync(0);
         pickupRequests = await FurniturePickupService.GetAllRequestsAsync();
+        hasSampleData  = await SampleDataService.HasRouteSampleAsync();
     }
 
     // ── Sort: Fahrzeuge ───────────────────────────────────────────────────────

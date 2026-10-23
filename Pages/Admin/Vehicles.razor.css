@@ -550,3 +550,80 @@
 
     .av-day-filter { gap: .3rem; }
 }
+
+/* ── Routenplanung: Optimierung & Beispieldaten ───────────────────────────── */
+.av-auto-btn--secondary {
+    background: var(--color-surface-card);
+    color: #7c3aed;
+    border: 2px solid #a855f7;
+    box-shadow: none;
+}
+
+.av-plan-result {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    padding: .8rem 1.1rem;
+    margin: -.5rem 0 1.25rem;
+    border: 1px solid var(--color-success-border, #86efac);
+    border-radius: 12px;
+    background: var(--color-success-bg, #f0fdf4);
+    color: var(--color-success-text, #166534);
+    font-size: .9rem;
+}
+
+.av-plan-result small {
+    color: var(--color-text-medium);
+    font-size: .8rem;
+}
+
+.av-plan-result--error {
+    border-color: var(--color-warning-border);
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+}
+
+.av-plan-result__warn {
+    color: var(--color-warning-text);
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.av-route-stats {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--color-text-medium);
+    white-space: nowrap;
+}
+
+.av-sample-actions {
+    display: flex;
+    gap: .5rem;
+    margin-left: auto;
+    align-self: flex-end;
+    flex-wrap: wrap;
+}
+
+.av-sample-btn {
+    padding: .5rem .9rem;
+    border: 1px dashed var(--color-border-soft);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text-medium);
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.av-sample-btn:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.av-sample-btn--remove:hover:not(:disabled) {
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+.av-sample-btn:disabled { opacity: .6; cursor: not-allowed; }

@@ -16,5 +16,8 @@ public class Event
     public bool IsActive        { get; set; } = true;
     public bool CheckInEnabled  { get; set; } = false;
 
+    /// <summary>Beispieldaten zum Testen der Routenplanung – lassen sich gesammelt wieder entfernen.</summary>
+    public bool IsSample        { get; set; } = false;
+
     public ICollection<Area> Areas { get; set; } = new List<Area>();
 }

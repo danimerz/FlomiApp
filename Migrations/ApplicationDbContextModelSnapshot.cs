@@ -424,6 +424,9 @@ namespace FlomiApp.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsSample")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -556,9 +559,19 @@ namespace FlomiApp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("GeocodedAddress")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double");
 
                     b.Property<int>("OrderNumber")
                         .HasColumnType("int");
@@ -575,6 +588,9 @@ namespace FlomiApp.Migrations
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("RouteStopOrder")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -674,6 +690,9 @@ namespace FlomiApp.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSample")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("OwnerContact")
                         .HasColumnType("longtext");

@@ -102,7 +102,9 @@ public class FurniturePickupService : IFurniturePickupService
 
     private void SendStatusMailAsync(FurniturePickupRequest request)
     {
-        if (string.IsNullOrEmpty(request.Email)) return;
+        // .invalid = reservierte Test-Domain (Beispieldaten) – dorthin keine Mails
+        if (string.IsNullOrEmpty(request.Email)
+            || request.Email.EndsWith(".invalid", StringComparison.OrdinalIgnoreCase)) return;
 
         var name        = $"{request.FirstName} {request.LastName}".Trim();
         var orderNum    = $"#{request.OrderNumber}";
@@ -322,6 +324,8 @@ public class FurniturePickupService : IFurniturePickupService
     {
         var request = await _context.FurniturePickupRequests.FindAsync(requestId);
         if (request == null) return;
+        if (request.AssignedVehicleId != vehicleId)
+            request.RouteStopOrder = null;   // von Hand umgeteilt → Reihenfolge neu planen
         request.AssignedVehicleId = vehicleId;
         await _context.SaveChangesAsync();
     }

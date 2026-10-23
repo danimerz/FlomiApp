@@ -293,6 +293,7 @@ namespace FlomiApp.Services
 
             var data = await query
                 .OrderBy(r => r.AssignedVehicle != null ? r.AssignedVehicle.OwnerName : "zzz")
+                .ThenBy(r => r.RouteStopOrder ?? int.MaxValue)
                 .ThenBy(r => r.PostalCode)
                 .ThenBy(r => r.Street)
                 .AsNoTracking()
