@@ -47,4 +47,17 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
+  <!-- SkiaSharp bringt native Bibliotheken für ~17 Plattformen mit (Windows inkl. 81-MB-PDBs) – das
+       Publish-ZIP wurde dadurch grösser als die 100 MB, die Cloudflare beim Deploy-Upload erlaubt.
+       Der Server läuft auf Linux: nur linux-x64 (und arm64 als Reserve) ins Publish übernehmen. -->
+  <Target Name="TrimSkiaSharpNativeAssets" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <_SkiaNativeToDrop Include="@(ResolvedFileToPublish)"
+                         Condition="$([System.String]::Copy('%(Filename)').StartsWith('libSkiaSharp'))
+                                    And !$([System.String]::Copy('%(RelativePath)').Replace('\','/').StartsWith('runtimes/linux-x64/'))
+                                    And !$([System.String]::Copy('%(RelativePath)').Replace('\','/').StartsWith('runtimes/linux-arm64/'))" />
+      <ResolvedFileToPublish Remove="@(_SkiaNativeToDrop)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
