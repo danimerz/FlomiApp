@@ -1,6 +1,6 @@
 # FlomiApp
 
-**FlomiApp** ist eine webbasierte Verwaltungsapplikation für den Flomi-Markt – einen Flohmarkt der Pfadfinderabteilung. Die App wurde mit **ASP.NET Core 9 Blazor Server** entwickelt und deckt die gesamte Organisation des Events ab: von der Benutzeranmeldung über die Bereichszuweisung bis hin zur Fahrzeugverwaltung, Möbelabholung und QR-Code Check-in.
+**FlomiApp** ist eine webbasierte Verwaltungsapplikation für den Flomi-Markt – einen Flohmarkt der Pfadfinderabteilung. Die App wurde mit **ASP.NET Core 10 Blazor Server** entwickelt und deckt die gesamte Organisation des Events ab: von der Benutzeranmeldung über die Bereichszuweisung bis hin zur Fahrzeugverwaltung, Möbelabholung und QR-Code Check-in.
 
 ---
 
@@ -33,9 +33,9 @@
 
 | Komponente | Technologie |
 |---|---|
-| Framework | ASP.NET Core 9 Blazor Server |
+| Framework | ASP.NET Core 10 Blazor Server (.NET 10) |
 | Datenbank | MySQL 8 (Pomelo.EntityFrameworkCore.MySql) |
-| ORM | Entity Framework Core 9 |
+| ORM | Entity Framework Core 9 (bleibt auf 9, bis Pomelo EF Core 10 unterstützt) |
 | Authentifizierung | ASP.NET Core Identity |
 | E-Mail | SMTP via MailKit; asynchrone Mail-Queue als `IHostedService` (`Channel<T>`) |
 | QR-Code | QRCoder (PNG-Generierung) + jsQR (Browser-Scan) |
@@ -300,7 +300,7 @@ Die Übersicht lässt sich nach Admin-Name, Aktion und Zeitraum filtern und zeig
 
 ### Voraussetzungen
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - MySQL 8.0+ Server (lokal oder gehostet)
 - SMTP-Server (optional, für E-Mail-Benachrichtigungen)
 

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-FlomiApp: Verwaltungs-App für den Flomi-Markt (Flohmarkt der Pfadi-Abteilung). ASP.NET Core 9 **Blazor Server**, EF Core 9 + **MySQL 8** (Pomelo), ASP.NET Identity. Funktionsübersicht: `README.md`.
+FlomiApp: Verwaltungs-App für den Flomi-Markt (Flohmarkt der Pfadi-Abteilung). .NET 10 / ASP.NET Core 10 **Blazor Server**, EF Core 9 + **MySQL 8** (Pomelo 9 – EF-Core-Pakete bewusst auf 9.0.x, bis Pomelo EF Core 10 unterstützt), ASP.NET Identity. Funktionsübersicht: `README.md`.
 
 ## Befehle
 
@@ -36,5 +36,5 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 ## Deploy
 
 GitHub Actions, nur manuell (`workflow_dispatch`):
+- `deploy_famMerz.yaml` – **wird aktuell verwendet.** Tests, framework-abhängiger Publish als ZIP an `apps.familie-merz.ch` (Server braucht die passende ASP.NET Core Runtime)
 - `deploy.yaml` – Tests, self-contained Publish, rsync per SSH, `systemctl restart flomi` (Environment «Brahmsnet»)
-- `deploy_famMerz.yaml` – Publish als ZIP an `apps.familie-merz.ch` (nutzt .NET 10 SDK und führt **keine Tests** aus)
