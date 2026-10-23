@@ -724,6 +724,8 @@
 
             await MailService.SendPasswordResetAsync(user.Email, $"{user.FirstName} {user.LastName}", resetLink);
             successMessage = $"PW-Reset-Mail wurde an {user.Email} gesendet.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.PasswordResetMailSent,
+                $"{user.FirstName} {user.LastName} ({user.Email})");
         }
         catch (Exception ex) { errorMessage = $"Mail konnte nicht gesendet werden: {ex.Message}"; }
     }

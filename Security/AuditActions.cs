@@ -7,6 +7,7 @@ public static class AuditActions
     public const string UserUnlocked       = "Benutzer entsperrt";
     public const string RoleChanged        = "Rolle geändert";
     public const string PasswordReset      = "Passwort gesetzt";
+    public const string PasswordResetMailSent = "PW-Reset-Mail gesendet";
     public const string TwoFactorReset     = "2FA zurückgesetzt";
     public const string AppointmentCancelled = "Anmeldung storniert (Admin)";
 }

@@ -182,7 +182,7 @@ Seite `/admin/users`:
 - Tabs: Alle / Admins / Gesperrt
 - **Anmeldungszähler**: Offene Anmeldungen pro Benutzer direkt in der Tabelle
 - Aktionen: Edit (Name/Mail/Stufe/Admin-Rollen), PW manuell setzen oder per 🔑 PW-Mail, 2FA zurücksetzen, Sperren/Entsperren, Löschen
-- Rollenänderungen, gesetzte Passwörter, 2FA-Resets, Sperrungen und Löschungen werden im [Audit-Log](#audit-log) protokolliert
+- Rollenänderungen, gesetzte Passwörter, versendete PW-Mails, 2FA-Resets, Sperrungen und Löschungen werden im [Audit-Log](#audit-log) protokolliert
 
 ---
 
@@ -288,7 +288,8 @@ Jeder Eintrag enthält Zeitpunkt, Admin, Aktion, betroffene Person und Details
 | Benutzer gelöscht | `/admin/users` |
 | Benutzer gesperrt / entsperrt | `/admin/users` |
 | Rolle geändert | `/admin/users` (pro hinzugefügter/entfernter Rolle) |
-| Passwort gesetzt | `/admin/users` (manuell gesetztes Passwort; der Versand einer PW-Mail wird nicht protokolliert) |
+| Passwort gesetzt | `/admin/users` (manuell gesetztes Passwort) |
+| PW-Reset-Mail gesendet | `/admin/users` (Reset-Link per Mail) |
 | 2FA zurückgesetzt | `/admin/users` |
 | Anmeldung storniert (Admin) | `/admin/appointments` |
 
