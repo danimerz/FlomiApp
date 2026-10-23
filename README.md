@@ -22,6 +22,8 @@
 - [Chat](#chat)
 - [Datenexport](#datenexport)
 - [Rollen & Berechtigungen](#rollen--berechtigungen)
+- [Zwei-Faktor-Authentifizierung (2FA)](#zwei-faktor-authentifizierung-2fa)
+- [Audit-Log](#audit-log)
 - [Installation & Setup](#installation--setup)
 - [Konfiguration](#konfiguration)
 
@@ -52,7 +54,8 @@
 - **Familienmitglieder** können pro Konto hinterlegt werden (eigene Anmeldungen für Kinder / Begleitpersonen)
 - **E-Mail-Benachrichtigungen** können pro Benutzer aktiviert/deaktiviert werden
 - **Passwort vergessen**: Reset-Link per E-Mail, gestylte Reset-Seite mit PW-Generator und Stärke-Indikator
-- **Admin-Rolle**: Erweiterte Verwaltungsrechte für ausgewählte Benutzer
+- **Admin-Rollen**: Vollzugriff (`Admin`) oder auf einen Bereich beschränkte Rollen (`BereichsAdmin`, `FahrzeugAdmin`, `MoebelAdmin`), siehe [Rollen & Berechtigungen](#rollen--berechtigungen)
+- **2FA-Pflicht** für alle Admin-Rollen (Authenticator-App), siehe [Zwei-Faktor-Authentifizierung](#zwei-faktor-authentifizierung-2fa)
 
 ---
 
@@ -177,7 +180,8 @@ Seite `/admin/users`:
 - Tabelle mit allen Benutzern, Suche, Filter nach Stufe, sortierbare Spalten
 - Tabs: Alle / Admins / Gesperrt
 - **Anmeldungszähler**: Offene Anmeldungen pro Benutzer direkt in der Tabelle
-- Aktionen: Edit (Name/Mail/Stufe/Admin-Rolle), PW manuell setzen oder per 🔑 PW-Mail, Sperren/Entsperren, Löschen
+- Aktionen: Edit (Name/Mail/Stufe/Admin-Rollen), PW manuell setzen oder per 🔑 PW-Mail, 2FA zurücksetzen, Sperren/Entsperren, Löschen
+- Rollenänderungen, gesetzte Passwörter, 2FA-Resets, Sperrungen und Löschungen werden im [Audit-Log](#audit-log) protokolliert
 
 ---
 
@@ -201,7 +205,7 @@ Admin-Seite `/admin/checkin` für die Einscheibung am Einsatztag (nur Kategorie 
 
 ### Chat
 
-Echtzeit-Chat unter `/admin/chat` (Admin) und `/user/dashboard` (User):
+Echtzeit-Chat unter `/admin/messages` (Admin-Rollen) und `/user/messages` (User):
 
 - Direkte Nachrichten zwischen Admins und einzelnen Benutzern
 - Echtzeit-Aktualisierung via Blazor-Events (kein Polling)
@@ -224,26 +228,71 @@ Excel-Export (.xlsx) unter `/admin/export`:
 
 ## Rollen & Berechtigungen
 
-| Bereich | Benutzer | Admin |
-|---|---|---|
-| Eigene Anmeldungen verwalten | ✅ | ✅ |
-| Möbelabholung anmelden | ✅ | ✅ |
-| Dashboard (Kalender, Fahrzeug) | ✅ | ✅ |
-| News lesen | ✅ | ✅ |
-| Admin-Dashboard & Statistiken | ❌ | ✅ |
-| Admin-Konfiguration | ❌ | ✅ |
-| Anmeldeübersicht + Stornierung | ❌ | ✅ |
-| Benutzerverwaltung | ❌ | ✅ |
-| Fahrzeugverwaltung | ❌ | ✅ |
-| Möbel-Admin | ❌ | ✅ |
-| Check-in / Walk-in verwalten | ❌ | ✅ |
-| News verwalten | ❌ | ✅ |
-| Datenexport | ❌ | ✅ |
+Neben normalen Benutzern gibt es vier Admin-Rollen. `Admin` hat Vollzugriff; die übrigen Rollen
+geben nur Zugriff auf ihren Bereich. Einem Benutzer können mehrere Rollen zugewiesen werden
+(unter `/admin/users` → Edit).
 
-Der erste Admin-Benutzer wird beim Start automatisch angelegt (`admin@flomiapp.com`). Ist kein
-`AdminPassword` konfiguriert, generiert die App ein zufälliges, starkes Passwort und zeigt es
-**einmalig** als Warnung in den Server-Logs an; beim ersten Login muss es sofort geändert werden
+| Bereich | Benutzer | Admin | BereichsAdmin | FahrzeugAdmin | MoebelAdmin |
+|---|---|---|---|---|---|
+| Eigene Anmeldungen, Möbelabholung, Dashboard, News lesen | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Admin-Dashboard & Statistiken (`/admin/dashboard`) | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Check-in / Walk-in (`/admin/checkin`) | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Chat mit Benutzern (`/admin/messages`) | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Anmeldeübersicht + Stornierung (`/admin/appointments`) | ❌ | ✅ | ✅ | ❌ | ❌ |
+| Fahrzeugverwaltung (`/admin/vehicles`) | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Möbel-Admin (`/admin/furniture-pickup`) | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Admin-Konfiguration (`/admin/config`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Benutzerverwaltung (`/admin/users`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| News verwalten (`/admin/news`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Datenexport (`/admin/export`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Audit-Log (`/admin/auditlog`) | ❌ | ✅ | ❌ | ❌ | ❌ |
+
+Alle Admin-Seiten verlangen zusätzlich zur Rolle eine aktivierte 2FA (siehe unten).
+
+Beim Start legt die App die vier Rollen an, falls sie fehlen, und erstellt den ersten
+Admin-Benutzer (`admin@flomiapp.com`) mit der Rolle `Admin`. Ist kein `AdminPassword` konfiguriert,
+generiert die App ein zufälliges, starkes Passwort und zeigt es **einmalig** als Warnung in den
+Server-Logs an; beim ersten Login muss es sofort geändert werden
 (siehe [Installation & Setup](#installation--setup)).
+
+---
+
+## Zwei-Faktor-Authentifizierung (2FA)
+
+Für alle Admin-Rollen ist 2FA mit einer Authenticator-App (z.B. Google Authenticator, Microsoft
+Authenticator, 1Password) **Pflicht**. Normale Benutzer brauchen keine 2FA.
+
+- **Einrichtung beim Login:** Meldet sich jemand mit Admin-Rolle ohne aktive 2FA an, leitet die App
+  direkt auf die Einrichtungsseite weiter. Dort erscheint ein QR-Code (alternativ der Schlüssel zum
+  Abtippen); nach Eingabe eines gültigen Codes ist 2FA aktiv.
+- **Wiederherstellungscodes:** Nach der Aktivierung werden einmalig 10 Recovery-Codes angezeigt.
+  Sie ersetzen beim Login den Authenticator-Code, falls das Gerät verloren geht – sicher aufbewahren.
+- **Durchsetzung:** Die Policy `RequireTwoFactorForAdmins` prüft auf jeder Admin-Seite, ob 2FA aktiv
+  ist. Ohne 2FA bleiben die Admin-Seiten gesperrt, auch wenn die Rolle vergeben ist.
+- **Zurücksetzen:** Ein `Admin` kann die 2FA eines Benutzers unter `/admin/users` zurücksetzen
+  (z.B. bei Gerätewechsel ohne Recovery-Codes). Die Person richtet 2FA beim nächsten Login neu ein.
+- **Reihenfolge beim ersten Login:** Ein automatisch generiertes Passwort muss zuerst geändert
+  werden, danach folgt die 2FA-Einrichtung.
+
+---
+
+## Audit-Log
+
+Unter `/admin/auditlog` (nur Rolle `Admin`) wird protokolliert, welcher Admin wann was geändert hat.
+Jeder Eintrag enthält Zeitpunkt, Admin, Aktion, betroffene Person und Details
+(z.B. «Rolle 'Admin' entfernt»).
+
+| Aktion | Auslöser |
+|---|---|
+| Benutzer gelöscht | `/admin/users` |
+| Benutzer gesperrt / entsperrt | `/admin/users` |
+| Rolle geändert | `/admin/users` (pro hinzugefügter/entfernter Rolle) |
+| Passwort gesetzt | `/admin/users` (manuell gesetztes Passwort; der Versand einer PW-Mail wird nicht protokolliert) |
+| 2FA zurückgesetzt | `/admin/users` |
+| Anmeldung storniert (Admin) | `/admin/appointments` |
+
+Die Übersicht lässt sich nach Admin-Name, Aktion und Zeitraum filtern und zeigt die neuesten
+300 Einträge.
 
 ---
 
