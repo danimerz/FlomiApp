@@ -65,6 +65,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(r => r.AssignedVehicleId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ── FurniturePickupImage: Bilddaten per Table Splitting abgetrennt ─────
+        modelBuilder.Entity<FurniturePickupImage>(b =>
+        {
+            b.ToTable("FurniturePickupImages");
+            b.HasOne(i => i.Data)
+                .WithOne()
+                .HasForeignKey<FurniturePickupImageData>(d => d.Id);
+            b.Navigation(i => i.Data).IsRequired();
+        });
+        modelBuilder.Entity<FurniturePickupImageData>().ToTable("FurniturePickupImages");
+
         // ── AreaTemplate → AreaCategory ───────────────────────────────────────
         modelBuilder.Entity<AreaTemplate>()
             .HasOne(t => t.AreaCategory)

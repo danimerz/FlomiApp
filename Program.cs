@@ -11,6 +11,7 @@ using FlomiApp.Data;
 using FlomiApp.Data.Models;
 using FlomiApp.Services;
 using FlomiApp.Security;
+using FlomiApp.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddSingleton<IChatService, ChatService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddHostedService<PickupImageMaintenanceService>();
 
 var app = builder.Build();
 
@@ -147,6 +149,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapPickupImages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

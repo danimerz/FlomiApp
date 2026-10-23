@@ -39,6 +39,10 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- SkiaSharp (MIT) verkleinert die Möbelfotos; NativeAssets.Linux liefert libSkiaSharp für den Linux-Server mit.
+         ImageSharp 4 bräuchte im Release-Build einen Lizenzschlüssel, 3.x hat offene Sicherheitslücken. -->
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     <!-- Transitiv über MailKit/MimeKit; 10.0.0 hat bekannte Sicherheitslücken (CVE-2026-84008, CVE-2026-70162) -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>

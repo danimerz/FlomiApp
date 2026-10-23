@@ -379,8 +379,7 @@
     private class ImagePreview
     {
         public string FileName    { get; set; } = string.Empty;
-        public string ContentType { get; set; } = string.Empty;
-        public byte[] Data        { get; set; } = Array.Empty<byte>();
+        public FlomiApp.Helpers.ProcessedImage Image { get; set; } = null!;
         public string PreviewUrl  { get; set; } = string.Empty;
     }
 
@@ -512,7 +511,12 @@
             // Nicht dem vom Browser gemeldeten Content-Type vertrauen —
             // tatsächliches Format anhand der Datei-Signatur bestimmen.
             var detectedType = FlomiApp.Helpers.ImageSignatureHelper.DetectContentType(bytes);
-            if (detectedType == null)
+            // Gleich hier verkleinern: spart Speicher bis zum Absenden und
+            // die Vorschau geht als kleines Bild statt als 5 MB durch die Verbindung.
+            var processed = detectedType == null
+                ? null
+                : await Task.Run(() => FlomiApp.Helpers.PickupImageProcessor.Process(bytes));
+            if (processed == null)
             {
                 imageError = $"'{file.Name}' ist kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
                 continue;
@@ -520,10 +524,9 @@
 
             uploadedImages.Add(new ImagePreview
             {
-                FileName    = file.Name,
-                ContentType = detectedType,
-                Data        = bytes,
-                PreviewUrl  = $"data:{detectedType};base64,{Convert.ToBase64String(bytes)}"
+                FileName   = file.Name,
+                Image      = processed,
+                PreviewUrl = $"data:{FlomiApp.Helpers.ProcessedImage.ContentType};base64,{Convert.ToBase64String(processed.Thumbnail)}"
             });
         }
     }
@@ -544,7 +547,7 @@
         isSubmitting     = true;
 
         var images = uploadedImages
-            .Select(i => (i.Data, i.ContentType, i.FileName))
+            .Select(i => (i.Image, i.FileName))
             .ToList();
 
         var created        = await FurniturePickupService.CreateRequestAsync(model, images);

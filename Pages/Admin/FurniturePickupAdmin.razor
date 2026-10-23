@@ -452,9 +452,9 @@
                     <div class="afp-modal__images">
                         @foreach (var img in selectedRequest.Images)
                         {
-                            var src = $"data:{img.ContentType};base64,{Convert.ToBase64String(img.ImageData)}";
+                            var src = $"/pickup-images/{img.Id}";
                             <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem">
-                                <img src="@src" alt="@img.FileName"
+                                <img src="@($"{src}?thumb=true")" alt="@img.FileName" loading="lazy"
                                      @onclick="() => OpenImageModal(src)" />
                                 @if (!string.IsNullOrEmpty(img.Caption))
                                 {
@@ -654,7 +654,10 @@
             // Nicht dem vom Browser gemeldeten Content-Type vertrauen —
             // tatsächliches Format anhand der Datei-Signatur bestimmen.
             var detectedType = FlomiApp.Helpers.ImageSignatureHelper.DetectContentType(bytes);
-            if (detectedType == null)
+            var processed    = detectedType == null
+                ? null
+                : await Task.Run(() => FlomiApp.Helpers.PickupImageProcessor.Process(bytes));
+            if (processed == null)
             {
                 uploadError = "Kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
                 return;
@@ -662,8 +665,7 @@
 
             await FurniturePickupService.AddImageAsync(
                 selectedRequest.Id,
-                bytes,
-                detectedType,
+                processed,
                 file.Name,
                 string.IsNullOrWhiteSpace(uploadCaption) ? null : uploadCaption.Trim());
 

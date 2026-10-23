@@ -17,7 +17,7 @@ namespace FlomiApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.21")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -493,15 +493,28 @@ namespace FlomiApp.Migrations
                     b.Property<int>("FurniturePickupRequestId")
                         .HasColumnType("int");
 
-                    b.Property<byte[]>("ImageData")
-                        .IsRequired()
-                        .HasColumnType("longblob");
-
                     b.HasKey("Id");
 
                     b.HasIndex("FurniturePickupRequestId");
 
-                    b.ToTable("FurniturePickupImages");
+                    b.ToTable("FurniturePickupImages", (string)null);
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupImageData", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<byte[]>("ThumbnailData")
+                        .HasColumnType("longblob");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FurniturePickupImages", (string)null);
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupRequest", b =>
@@ -974,6 +987,15 @@ namespace FlomiApp.Migrations
                     b.Navigation("FurniturePickupRequest");
                 });
 
+            modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupImageData", b =>
+                {
+                    b.HasOne("FlomiApp.Data.Models.FurniturePickupImage", null)
+                        .WithOne("Data")
+                        .HasForeignKey("FlomiApp.Data.Models.FurniturePickupImageData", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupRequest", b =>
                 {
                     b.HasOne("FlomiApp.Data.Models.Vehicle", "AssignedVehicle")
@@ -1110,6 +1132,12 @@ namespace FlomiApp.Migrations
             modelBuilder.Entity("FlomiApp.Data.Models.Event", b =>
                 {
                     b.Navigation("Areas");
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupImage", b =>
+                {
+                    b.Navigation("Data")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupRequest", b =>

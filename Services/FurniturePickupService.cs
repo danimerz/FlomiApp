@@ -1,12 +1,16 @@
 // Services/FurniturePickupService.cs
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlomiApp.Services;
 
 public class FurniturePickupService : IFurniturePickupService
 {
+    /// <summary>Fotos werden so viele Monate nach dem Event gelöscht (siehe Datenschutzerklärung).</summary>
+    public const int PhotoRetentionMonths = 3;
+
     private readonly ApplicationDbContext _context;
     private readonly IMailQueue           _mailQueue;
     private readonly ILogger<FurniturePickupService> _logger;
@@ -25,7 +29,7 @@ public class FurniturePickupService : IFurniturePickupService
 
     public async Task<FurniturePickupRequest> CreateRequestAsync(
         FurniturePickupRequest request,
-        List<(byte[] Data, string ContentType, string FileName)> images)
+        List<(ProcessedImage Image, string FileName)> images)
     {
         // Auftragsnummer berechnen: höchste bestehende + 1, mindestens 1000
         var maxOrder = await _context.FurniturePickupRequests
@@ -33,15 +37,8 @@ public class FurniturePickupService : IFurniturePickupService
         request.OrderNumber = Math.Max(maxOrder + 1, 1000);
 
         // Bilder anhängen
-        foreach (var (data, contentType, fileName) in images)
-        {
-            request.Images.Add(new FurniturePickupImage
-            {
-                ImageData   = data,
-                ContentType = contentType,
-                FileName    = fileName
-            });
-        }
+        foreach (var (image, fileName) in images)
+            request.Images.Add(NewImage(image, fileName, caption: null));
 
         _context.FurniturePickupRequests.Add(request);
         await _context.SaveChangesAsync();
@@ -329,16 +326,106 @@ public class FurniturePickupService : IFurniturePickupService
         await _context.SaveChangesAsync();
     }
 
-    public async Task AddImageAsync(int requestId, byte[] imageData, string contentType, string fileName, string? caption)
+    public async Task AddImageAsync(int requestId, ProcessedImage image, string fileName, string? caption)
     {
-        _context.FurniturePickupImages.Add(new FurniturePickupImage
-        {
-            FurniturePickupRequestId = requestId,
-            ImageData   = imageData,
-            ContentType = contentType,
-            FileName    = fileName,
-            Caption     = caption
-        });
+        var entity = NewImage(image, fileName, caption);
+        entity.FurniturePickupRequestId = requestId;
+        _context.FurniturePickupImages.Add(entity);
         await _context.SaveChangesAsync();
+    }
+
+    private static FurniturePickupImage NewImage(ProcessedImage image, string fileName, string? caption) => new()
+    {
+        ContentType = ProcessedImage.ContentType,
+        FileName    = Path.ChangeExtension(fileName, ".jpg"),
+        Caption     = caption,
+        Data        = new FurniturePickupImageData { ImageData = image.Data, ThumbnailData = image.Thumbnail }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // BILDER – Auslieferung, Löschfrist, Nachbearbeitung
+    // ════════════════════════════════════════════════════════════════════════
+
+    public async Task<(byte[] Data, string ContentType)?> GetImageContentAsync(int imageId, bool thumbnail)
+    {
+        var images = _context.FurniturePickupImages.AsNoTracking().Where(i => i.Id == imageId);
+
+        if (thumbnail)
+        {
+            var thumb = await images.Select(i => i.Data.ThumbnailData).FirstOrDefaultAsync();
+            if (thumb is { Length: > 0 }) return (thumb, ProcessedImage.ContentType);
+            // Altbild ohne Vorschau → volles Bild ausliefern
+        }
+
+        var full = await images.Select(i => new { i.Data.ImageData, i.ContentType }).FirstOrDefaultAsync();
+        return full == null ? null : (full.ImageData, full.ContentType);
+    }
+
+    public async Task<int> DeleteExpiredImagesAsync(DateTime now)
+    {
+        var cutoff = now.AddMonths(-PhotoRetentionMonths);
+        var deleted = 0;
+
+        while (true)
+        {
+            // Bilddaten mitladen: bei Table Splitting müssen beide Teile gelöscht werden
+            var batch = await _context.FurniturePickupImages
+                .Include(i => i.Data)
+                .Where(i => (i.FurniturePickupRequest.EventId != null
+                                ? i.FurniturePickupRequest.Event!.Date
+                                : i.FurniturePickupRequest.PickupDate) < cutoff)
+                .OrderBy(i => i.Id)
+                .Take(20)
+                .ToListAsync();
+
+            if (batch.Count == 0) break;
+
+            _context.FurniturePickupImages.RemoveRange(batch);
+            await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
+            deleted += batch.Count;
+        }
+
+        if (deleted > 0)
+            _logger.LogInformation("Löschfrist: {Count} Möbelfotos gelöscht (Event älter als {Months} Monate).",
+                deleted, PhotoRetentionMonths);
+        return deleted;
+    }
+
+    public async Task<int> ReprocessLegacyImagesAsync(int maxCount)
+    {
+        var ids = await _context.FurniturePickupImages
+            .Where(i => i.Data.ThumbnailData == null)
+            .OrderBy(i => i.Id)
+            .Select(i => i.Id)
+            .Take(maxCount)
+            .ToListAsync();
+
+        foreach (var id in ids)
+        {
+            var image = await _context.FurniturePickupImages
+                .Include(i => i.Data)
+                .FirstAsync(i => i.Id == id);
+
+            var processed = PickupImageProcessor.Process(image.Data.ImageData);
+            if (processed == null)
+            {
+                // Unlesbares Altbild unverändert lassen, aber nicht jedes Mal neu versuchen
+                _logger.LogWarning("Möbelfoto {Id} konnte nicht aufbereitet werden und bleibt unverändert.", id);
+                image.Data.ThumbnailData = Array.Empty<byte>();
+            }
+            else
+            {
+                image.Data.ImageData     = processed.Data;
+                image.Data.ThumbnailData = processed.Thumbnail;
+                image.ContentType        = ProcessedImage.ContentType;
+                image.FileName           = Path.ChangeExtension(image.FileName, ".jpg");
+            }
+
+            await _context.SaveChangesAsync();
+            _context.ChangeTracker.Clear();
+        }
+
+        return ids.Count;
     }
 }

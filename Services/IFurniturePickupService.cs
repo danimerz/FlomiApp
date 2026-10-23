@@ -1,5 +1,6 @@
 // Services/IFurniturePickupService.cs
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 
 namespace FlomiApp.Services;
 
@@ -7,7 +8,7 @@ public interface IFurniturePickupService
 {
     Task<FurniturePickupRequest> CreateRequestAsync(
         FurniturePickupRequest request,
-        List<(byte[] Data, string ContentType, string FileName)> images);
+        List<(ProcessedImage Image, string FileName)> images);
 
     Task<List<FurniturePickupRequest>> GetUserRequestsAsync(string userId);
     Task<List<FurniturePickupRequest>> GetAllRequestsAsync();
@@ -45,5 +46,15 @@ public interface IFurniturePickupService
     Task AssignVehicleAsync(int requestId, int? vehicleId);
 
     /// <summary>Fügt einem bestehenden Auftrag ein weiteres Foto hinzu (Nacherfassung durch Admin)</summary>
-    Task AddImageAsync(int requestId, byte[] imageData, string contentType, string fileName, string? caption);
+    Task AddImageAsync(int requestId, ProcessedImage image, string fileName, string? caption);
+
+    // ── Bilder ───────────────────────────────────────────────────────────────
+    /// <summary>Bilddaten für die Auslieferung; Vorschau fällt bei Altbildern aufs volle Bild zurück. Null wenn nicht vorhanden.</summary>
+    Task<(byte[] Data, string ContentType)?> GetImageContentAsync(int imageId, bool thumbnail);
+
+    /// <summary>Löscht Fotos von Anfragen, deren Event länger als die Löschfrist zurückliegt. Liefert die Anzahl.</summary>
+    Task<int> DeleteExpiredImagesAsync(DateTime now);
+
+    /// <summary>Verkleinert bis zu <paramref name="maxCount"/> Altbilder ohne Vorschau. Liefert die Anzahl bearbeiteter Bilder.</summary>
+    Task<int> ReprocessLegacyImagesAsync(int maxCount);
 }

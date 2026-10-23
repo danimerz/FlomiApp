@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlomiApp.Services
@@ -396,7 +397,7 @@ namespace FlomiApp.Services
         public async Task<byte[]> ExportPickupCleanupAsync(int? eventId = null)
         {
             var query = _db.FurniturePickupRequests
-                .Include(r => r.Images)
+                .Include(r => r.Images).ThenInclude(i => i.Data)
                 .Include(r => r.Event)
                 .Where(r => r.Status != PickupRequestStatus.Deleted)
                 .AsQueryable();
@@ -494,8 +495,10 @@ namespace FlomiApp.Services
                     {
                         try
                         {
-                            using var imgStream = new MemoryStream(img.ImageData);
-                            var format = img.ContentType.ToLower() switch
+                            // Vorschaubild reicht für die kleinen Zellen und hält die Datei schlank
+                            var hasThumb = img.Data.ThumbnailData is { Length: > 0 };
+                            using var imgStream = new MemoryStream(hasThumb ? img.Data.ThumbnailData! : img.Data.ImageData);
+                            var format = (hasThumb ? ProcessedImage.ContentType : img.ContentType).ToLower() switch
                             {
                                 "image/png" => XLPictureFormat.Png,
                                 "image/gif" => XLPictureFormat.Gif,

@@ -109,7 +109,8 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 
 **Benutzerseite:**
 - Auswahl des Events, Eingabe von Adresse, Möbel-Beschreibung, Abholdatum
-- **Bild-Upload** (bis zu 5 Fotos, je max. 5 MB)
+- **Bild-Upload** (bis zu 5 Fotos, je max. 5 MB): Fotos werden beim Hochladen gedreht, auf max. 1600 px verkleinert (JPEG, Qualität 80) und von Metadaten inkl. GPS-Position befreit; dazu ein Vorschaubild mit 400 px
+- Fotos werden 3 Monate nach dem Event automatisch gelöscht (Hintergrunddienst, täglich); ältere, noch unkomprimierte Fotos verkleinert derselbe Dienst nachträglich
 - Echtzeit-Anzeige der verfügbaren Plätze; Datumssperre wenn Tag voll
 
 **Admin-Einstellungen pro Event:**
@@ -119,7 +120,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 - «📅 Aus Event»-Button: Datumsbereich per Klick aus Event-Datum berechnen
 
 **Admin-Anfragenverwaltung:**
-- Sortierbare Tabelle, Detail-Modal mit Fotos und Admin-Notiz
+- Sortierbare Tabelle, Detail-Modal mit Fotos und Admin-Notiz (Fotos über `/pickup-images/{id}`, nur für Möbel-Admins)
 - Status: Ausstehend → Akzeptiert / Abgelehnt / Gelöscht
 
 ---
@@ -437,7 +438,8 @@ Beim ersten Start werden automatisch angelegt:
 
 Automatisierte Tests (xUnit) decken die zentrale Buchungslogik ab — Kapazitäts-, Alters- und
 Zeitkonflikt-Prüfung, Verkauf-/Kuchen-Sonderregeln, Stornierung inkl. Fahrzeugzuweisung, sowie die
-reinen Helper (Telefonnummer-/Zeit-Formatierung, Bild-Signatur-Erkennung). Sie laufen gegen eine
+reinen Helper (Telefonnummer-/Zeit-Formatierung, Bild-Signatur-Erkennung, Foto-Aufbereitung) und die
+Löschfrist der Möbelfotos. Sie laufen gegen eine
 SQLite-In-Memory-Datenbank, keine echte MySQL-Instanz nötig:
 
 ```bash

@@ -21,7 +21,8 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - `Data/Models/` – EF-Entitäten, `Data/ApplicationDbContext.cs`
 - `Security/Roles.cs` – Rollen-Konstanten; `Security/AuditActions.cs` – Audit-Log-Texte
 - `Security/ExternalAuth.cs` – Google/Microsoft/MiData-Login, nur aktiv wenn unter `ExternalAuth` konfiguriert; Ablauf in `Areas/Identity/Pages/Account/ExternalLogin` und `LinkLogin`. Admin-Rollen sind von externen Logins ausgeschlossen.
-- `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur)
+- `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur, Foto-Aufbereitung mit SkiaSharp)
+- `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`)
 - `FlomiApp.Tests/` – Testprojekt; wird in `FlomiApp.csproj` explizit vom Glob ausgeschlossen
 
 ## Konventionen
@@ -30,6 +31,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - Admin-Seiten: `[Authorize(Roles = Roles.AdminOr…)]` **plus** `[Authorize(Policy = Roles.RequireTwoFactorForAdmins)]`. Rollen: `Admin`, `FahrzeugAdmin`, `MoebelAdmin`, `BereichsAdmin`.
 - Admin-Aktionen mit Tragweite (löschen, sperren, Rollen, Stornierung) über `IAuditLogService` protokollieren.
 - Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`).
+- Möbelfotos nie roh speichern – immer über `PickupImageProcessor` (verkleinert, entfernt GPS). Bilddaten liegen per Table Splitting in `FurniturePickupImageData`; Listen laden sie nicht mit, angezeigt wird über `/pickup-images/{id}?thumb=true` statt Base64.
 - CSP in `Program.cs`: externe Scripts nur von `cdn.jsdelivr.net` (Chart.js, jsQR). Neue externe Quellen dort ergänzen.
 - `ChatService` ist Singleton (Echtzeit-Events), die übrigen Services sind Scoped.
 - Buchungslogik (`AppointmentService`, `VehicleService`) ist durch Tests abgedeckt – bei Änderungen Tests anpassen/ergänzen.
