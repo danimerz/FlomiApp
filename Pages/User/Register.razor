@@ -167,7 +167,7 @@
                 var isCollapsed = collapsedCategories.Contains(categoryKey);
                 var isList      = listCategories.Contains(categoryKey);
 
-                <section class="category-block @(isCollapsed ? "is-collapsed" : "")">
+                <section class="category-block @(isCollapsed ? "is-collapsed" : "")" data-category="@categoryKey">
                     <div class="category-block__header"
                          @onclick="() => ToggleCategory(categoryKey)">
                         <h3>🎪 @group.Key</h3>
@@ -620,12 +620,30 @@
     }
 
     // ── Kategorie ein-/ausklappen ─────────────────────────────────────────────
-    private void ToggleCategory(string categoryKey)
+    // Akkordeon: Es ist immer höchstens eine Kategorie offen
+    private async Task ToggleCategory(string categoryKey)
     {
         if (collapsedCategories.Contains(categoryKey))
-            collapsedCategories.Remove(categoryKey);
+            await ExpandOnlyAsync(categoryKey);
         else
             collapsedCategories.Add(categoryKey);
+    }
+
+    private async Task ExpandOnlyAsync(string categoryKey)
+    {
+        var wasOpen = !collapsedCategories.Contains(categoryKey);
+
+        collapsedCategories = (areas ?? new List<Area>())
+            .Select(a => a.AreaTemplate?.AreaCategory?.Name ?? "Sonstiges")
+            .Where(key => key != categoryKey)
+            .ToHashSet();
+
+        // Klappt eine Kategorie darüber zu, rutscht die geöffnete aus dem Bild – zurückholen
+        if (!wasOpen)
+        {
+            try { await JS.InvokeVoidAsync("scrollCategoryIntoView", categoryKey); }
+            catch (JSException) { /* Scrollen ist nur Komfort */ }
+        }
     }
 
     // ── Ansicht Kacheln/Liste ─────────────────────────────────────────────────
@@ -653,7 +671,7 @@
         else        listCategories.Remove(categoryKey);
 
         // Wer die Ansicht wählt, will die Bereiche auch sehen
-        collapsedCategories.Remove(categoryKey);
+        await ExpandOnlyAsync(categoryKey);
 
         try
         {
