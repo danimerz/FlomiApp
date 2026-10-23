@@ -1,0 +1,35 @@
+@page
+@model LockoutModel
+
+@{
+    ViewData["Title"] = "Konto vorübergehend gesperrt";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Gesperrt</span>
+            <h1>Konto vorübergehend gesperrt</h1>
+            <p>Zu viele fehlgeschlagene Anmeldeversuche.</p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__body" style="text-align:center;padding:2rem">
+            <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+            <h2 style="margin:0 0 .75rem">Bitte warte @Model.LockoutMinutes Minuten</h2>
+            <p style="color:var(--color-text-medium);margin-bottom:1.5rem">
+                Zum Schutz deines Kontos ist die Anmeldung nach mehreren falschen Versuchen kurz gesperrt.
+                Danach kannst du dich wieder anmelden.
+            </p>
+            <a href="/Identity/Account/Login" class="register-submit-btn" style="display:inline-block;text-decoration:none">
+                → Zum Login
+            </a>
+            <p style="margin-top:1rem">
+                <a href="/Identity/Account/ForgotPassword">Passwort vergessen?</a>
+            </p>
+        </div>
+    </section>
+</div>
