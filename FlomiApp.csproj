@@ -21,6 +21,9 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.13" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="MailKit" Version="4.16.0" />
     <!-- EF-Core-Pakete bleiben auf 9.0.x: Pomelo 9 erlaubt nur EF Core 9. Auf 10 heben, sobald Pomelo 10 erscheint. -->

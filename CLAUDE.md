@@ -20,6 +20,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - `Services/` – Geschäftslogik, immer Interface + Implementierung (`IXService`/`XService`), Registrierung in `Program.cs`
 - `Data/Models/` – EF-Entitäten, `Data/ApplicationDbContext.cs`
 - `Security/Roles.cs` – Rollen-Konstanten; `Security/AuditActions.cs` – Audit-Log-Texte
+- `Security/ExternalAuth.cs` – Google/Microsoft/MiData-Login, nur aktiv wenn unter `ExternalAuth` konfiguriert; Ablauf in `Areas/Identity/Pages/Account/ExternalLogin` und `LinkLogin`. Admin-Rollen sind von externen Logins ausgeschlossen.
 - `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur)
 - `FlomiApp.Tests/` – Testprojekt; wird in `FlomiApp.csproj` explizit vom Glob ausgeschlossen
 

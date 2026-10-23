@@ -1,0 +1,126 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "Profil vervollständigen";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Fast geschafft</span>
+            <h1>Profil vervollständigen</h1>
+            <p>
+                Du bist mit @Model.ProviderDisplayName angemeldet. Für die Einteilung brauchen wir
+                noch ein paar Angaben, die @Model.ProviderDisplayName nicht mitliefert.
+            </p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__header">
+            <div class="register-card__topline">Benutzerdaten</div>
+            <h2>Persönliche Angaben</h2>
+            <p>Bereits bekannte Angaben sind ausgefüllt. Bitte prüfe sie und ergänze den Rest.</p>
+        </div>
+
+        <div class="register-card__body">
+            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="register-form">
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="register-validation"></div>
+                }
+
+                <div class="register-grid register-grid--full">
+                    <div class="register-field">
+                        <label asp-for="Input.Email" class="register-label">
+                            E-Mail <span class="register-required">*</span>
+                        </label>
+                        <input asp-for="Input.Email" class="register-input" />
+                        @if (Model.EmailTrusted)
+                        {
+                            <span class="register-hint">Von @Model.ProviderDisplayName bestätigt. Änderst du die Adresse, schicken wir dir einen Bestätigungslink.</span>
+                        }
+                        else
+                        {
+                            <span class="register-hint">Du bekommst einen Link, um die Adresse zu bestätigen.</span>
+                        }
+                        <span asp-validation-for="Input.Email" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.FirstName" class="register-label">
+                            Vorname <span class="register-required">*</span>
+                        </label>
+                        <input asp-for="Input.FirstName" class="register-input" />
+                        <span asp-validation-for="Input.FirstName" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.LastName" class="register-label">
+                            Nachname <span class="register-required">*</span>
+                        </label>
+                        <input asp-for="Input.LastName" class="register-input" />
+                        <span asp-validation-for="Input.LastName" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.Pfadiname" class="register-label">
+                            Pfadiname
+                        </label>
+                        <input asp-for="Input.Pfadiname" class="register-input" />
+                        <span class="register-hint">Optional</span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.Stufe" class="register-label">
+                            Stufe <span class="register-required">*</span>
+                        </label>
+                        <select asp-for="Input.Stufe" class="register-input">
+                            <option value="">Bitte wählen</option>
+                            <option value="Biber">Biber</option>
+                            <option value="Wolf">Wolf</option>
+                            <option value="Pfadi">Pfadi</option>
+                            <option value="Pio">Pio</option>
+                            <option value="Leiter">Leiter</option>
+                            <option value="Sonstiges">Sonstiges</option>
+                        </select>
+                        <span asp-validation-for="Input.Stufe" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-grid">
+                    <div class="register-field">
+                        <label asp-for="Input.Birthday" class="register-label">
+                            Geburtstag <span class="register-required">*</span>
+                        </label>
+                        <input asp-for="Input.Birthday" type="date" class="register-input" />
+                        <span asp-validation-for="Input.Birthday" class="register-error"></span>
+                    </div>
+
+                    <div class="register-field">
+                        <label asp-for="Input.PhoneNumber" class="register-label">
+                            Telefonnummer <span class="register-required">*</span>
+                        </label>
+                        <input asp-for="Input.PhoneNumber" class="register-input" placeholder="+41 79 999 99 99" />
+                        <span asp-validation-for="Input.PhoneNumber" class="register-error"></span>
+                    </div>
+                </div>
+
+                <div class="register-actions">
+                    <button type="submit" class="register-button">Konto erstellen</button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

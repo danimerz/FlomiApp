@@ -1,4 +1,6 @@
+using System.Net;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -50,6 +52,19 @@ builder.Services.Configure<SmtpSettings>(
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
+// Externe Logins (Google, Microsoft, MiData) – nur aktiv, wenn unter "ExternalAuth" konfiguriert
+var externalLogins = builder.Services.AddExternalLogins(builder.Configuration);
+
+// Hinter dem Reverse Proxy: https-Schema übernehmen, sonst stimmen die Redirect-URIs
+// der externen Logins nicht (redirect_uri_mismatch). Vertraut wird standardmässig nur
+// localhost; ein Proxy auf einer anderen IP gehört in "ForwardedHeaders:KnownProxies".
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    foreach (var proxy in builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? [])
+        options.KnownProxies.Add(IPAddress.Parse(proxy));
+});
+
 builder.Services.AddAuthorization(options =>
 {
     // Zusätzlich zur Rollen-Prüfung: Admin-Rollen müssen 2FA aktiviert haben.
@@ -82,6 +97,12 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
+// form-action gilt auch für Weiterleitungen nach dem Absenden – der Login-Button
+// leitet zum externen Anbieter weiter, dessen Host muss deshalb erlaubt sein.
+var formActionSources = string.Join(" ", externalLogins.FormActionHosts.Prepend("'self'"));
+
 // Sicherheits-Header für alle Antworten (CSP abgestimmt auf Chart.js/jsQR via jsdelivr,
 // Blazor Server WebSocket-Verbindung und die vielen Inline-style-Attribute im Markup).
 app.Use(async (context, next) =>
@@ -101,7 +122,7 @@ app.Use(async (context, next) =>
         "frame-ancestors 'none'; " +
         "object-src 'none'; " +
         "base-uri 'self'; " +
-        "form-action 'self';");
+        $"form-action {formActionSources};");
     await next();
 });
 

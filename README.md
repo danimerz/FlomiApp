@@ -24,6 +24,7 @@
 - [Rollen & Berechtigungen](#rollen--berechtigungen)
 - [Zwei-Faktor-Authentifizierung (2FA)](#zwei-faktor-authentifizierung-2fa)
 - [Audit-Log](#audit-log)
+- [Externe Anmeldung (Google, Microsoft, MiData)](#externe-anmeldung-google-microsoft-midata)
 - [Installation & Setup](#installation--setup)
 - [Konfiguration](#konfiguration)
 
@@ -293,6 +294,96 @@ Jeder Eintrag enthält Zeitpunkt, Admin, Aktion, betroffene Person und Details
 
 Die Übersicht lässt sich nach Admin-Name, Aktion und Zeitraum filtern und zeigt die neuesten
 300 Einträge.
+
+---
+
+## Externe Anmeldung (Google, Microsoft, MiData)
+
+Benutzer können sich zusätzlich zu E-Mail/Passwort mit **Google**, **Microsoft** oder **MiData**
+(Mitgliederdatenbank der Pfadibewegung Schweiz, `db.scout.ch`) anmelden. Ein Anbieter erscheint nur,
+wenn er konfiguriert ist; ohne Konfiguration bleibt alles beim Passwort-Login.
+
+**Ablauf für Benutzer:**
+- **Erste Anmeldung:** Name, E-Mail und (bei MiData) Pfadiname und Geburtstag werden übernommen,
+  Stufe und Telefonnummer ergänzt die Person auf «Profil vervollständigen».
+- **Bestehendes Konto mit gleicher E-Mail:** Wird automatisch verknüpft, wenn der Anbieter die
+  E-Mail als bestätigt meldet (`TrustEmail`, siehe unten). Sonst meldet sich die Person mit Passwort
+  an und verknüpft unter *Einstellungen → Sicherheit → Verknüpfte Konten*.
+- **Unbestätigte E-Mail** (oder im Formular geändert): Es geht wie bei der normalen Registrierung
+  ein Bestätigungslink raus.
+- **Konten ohne Passwort** können unter *Einstellungen → Sicherheit* eines festlegen und bestätigen
+  das Löschen des Kontos mit ihrer E-Mail-Adresse.
+- **Admin-Konten** (alle vier Admin-Rollen) können sich nicht extern anmelden und nichts verknüpfen –
+  für sie gelten Passwort und 2FA.
+
+### Konfiguration
+
+Auf dem Server als Umgebungsvariablen (doppelter Unterstrich = Abschnitt), lokal per User Secrets:
+
+```bash
+ExternalAuth__Google__ClientId=...
+ExternalAuth__Google__ClientSecret=...
+ExternalAuth__Microsoft__ClientId=...
+ExternalAuth__Microsoft__ClientSecret=...
+ExternalAuth__MiData__Authority=https://db.scout.ch      # Test: https://pbs.puzzle.ch
+ExternalAuth__MiData__ClientId=...
+ExternalAuth__MiData__ClientSecret=...
+```
+
+`TrustEmail` (Standard in `appsettings.json`: Google `true`, Microsoft `false`, MiData `false`) legt
+fest, ob die E-Mail des Anbieters als bestätigt gilt. Bei Microsoft ist sie bei Geschäftskonten nicht
+zuverlässig verifiziert; bei MiData nach Rücksprache mit der PBS entscheiden.
+
+**Callback-URLs**, die bei den Anbietern eingetragen werden müssen (öffentliche Adresse der App: `https://flomiapp.familie-merz.ch`):
+
+| Anbieter | Callback-URL |
+|---|---|
+| Google | `https://flomiapp.familie-merz.ch/signin-google` |
+| Microsoft | `https://flomiapp.familie-merz.ch/signin-microsoft` |
+| MiData | `https://flomiapp.familie-merz.ch/signin-midata` |
+
+Die App muss hinter dem Reverse Proxy das `https`-Schema erkennen (`X-Forwarded-Proto`), sonst lehnt der
+Anbieter mit `redirect_uri_mismatch` ab. Läuft der Proxy nicht auf demselben Host, seine IP unter
+`ForwardedHeaders__KnownProxies__0=<IP>` eintragen.
+
+### Google einrichten
+
+1. In der [Google Cloud Console](https://console.cloud.google.com/) ein Projekt anlegen (z.B. «FlomiApp»).
+2. *APIs & Dienste → OAuth-Zustimmungsbildschirm*: Typ **Extern**, App-Name, Support-E-Mail, Logo
+   optional. Bereiche: `openid`, `email`, `profile`. Autorisierte Domain `familie-merz.ch`,
+   Datenschutzerklärung `https://flomiapp.familie-merz.ch/datenschutz`.
+3. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID*, Typ **Webanwendung**, autorisierte
+   Weiterleitungs-URI `https://flomiapp.familie-merz.ch/signin-google`.
+4. Client-ID und Clientschlüssel in die Konfiguration übernehmen.
+5. Den Zustimmungsbildschirm auf **In Produktion** stellen, sonst können sich nur eingetragene
+   Testbenutzer anmelden.
+
+### Microsoft einrichten
+
+1. Im [Microsoft Entra Admin Center](https://entra.microsoft.com/) anmelden. App-Registrierungen
+   brauchen ein Entra-Verzeichnis (Mandant); wer keins hat, legt es z.B. über ein kostenloses
+   Azure-Konto an.
+2. *Anwendungen → App-Registrierungen → Neue Registrierung*, unterstützte Kontotypen:
+   **Konten in einem beliebigen Organisationsverzeichnis und persönliche Microsoft-Konten**.
+3. Umleitungs-URI: Plattform **Web**, `https://flomiapp.familie-merz.ch/signin-microsoft`.
+4. *Zertifikate & Geheimnisse → Neuer geheimer Clientschlüssel*. Den **Wert** (nicht die ID) als
+   `ClientSecret` übernehmen, die *Anwendungs-ID (Client)* als `ClientId`.
+5. Der Schlüssel läuft nach höchstens 24 Monaten ab – Ablaufdatum notieren und rechtzeitig erneuern.
+
+### MiData einrichten
+
+MiData ist ein OpenID-Connect-Anbieter (hitobito). Die Anwendung muss vom IT-Support der PBS registriert
+werden: [Antragsformular](https://forms.cloud.microsoft/e/926Aw4Seh0),
+[Dokumentation](https://docu.scout.ch/de/documentation/article-15).
+
+- Im Antrag angeben: Callback-URL `https://flomiapp.familie-merz.ch/signin-midata`, Scopes `openid email name with_roles`,
+  zuerst für die **Integrationsumgebung** (`https://pbs.puzzle.ch`), danach für Produktion.
+- Technische Details: Endpunkte kommen aus `https://db.scout.ch/.well-known/openid-configuration`.
+  MiData unterstützt PKCE nur im Modus `plain`, deshalb ist PKCE für MiData abgeschaltet (vertraulicher
+  Client mit Secret).
+- Über `with_roles` liefert MiData auch die Rollen und Gruppen der Person. Die App wertet sie noch nicht
+  aus; später liesse sich damit z.B. die Stufe vorschlagen oder der Zugang auf die eigene Abteilung
+  beschränken.
 
 ---
 

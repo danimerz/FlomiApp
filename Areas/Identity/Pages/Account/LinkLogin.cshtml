@@ -1,0 +1,32 @@
+@page
+@model LinkLoginModel
+@{
+    ViewData["Title"] = "Konto verknüpfen";
+}
+
+<link rel="stylesheet" href="/css/register.css" />
+
+<div class="register-page">
+    <section class="register-hero">
+        <div class="register-hero__content">
+            <span class="register-hero__badge">Einstellungen</span>
+            <h1>@Model.ProviderDisplayName verknüpfen</h1>
+            <p>Danach kannst du dich auch mit deinem @Model.ProviderDisplayName-Konto anmelden.</p>
+        </div>
+    </section>
+
+    <section class="register-card">
+        <div class="register-card__body" style="text-align:center;padding:2rem">
+            <p style="color:var(--color-text-medium);margin-bottom:1.5rem">
+                Du wirst zu @Model.ProviderDisplayName weitergeleitet und kommst danach zurück zu deinen Einstellungen.
+                Dein Passwort bleibt gültig.
+            </p>
+            <form method="post" asp-route-provider="@Model.Provider">
+                <button type="submit" class="register-submit-btn">→ Weiter zu @Model.ProviderDisplayName</button>
+            </form>
+            <p style="margin-top:1rem">
+                <a href="/user/settings?tab=security">Abbrechen</a>
+            </p>
+        </div>
+    </section>
+</div>
