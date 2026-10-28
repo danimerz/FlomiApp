@@ -199,9 +199,9 @@
                     </div>
 
                     <div class="category-block__body">
-                        @* Spontane Bereiche (ohne Datum/Zeit) als eigene Gruppe nach den Tagen *@
+                        @* Spontane Bereiche (ohne Datum/Zeit) als eigene Gruppe zuoberst *@
                         @foreach (var dateGroup in group
-                            .OrderBy(a => a.IsSpontaneous)
+                            .OrderByDescending(a => a.IsSpontaneous)
                             .ThenBy(a => a.Date)
                             .GroupBy(a => a.IsSpontaneous ? SpontaneousGroupKey : a.Date.ToShortDateString()))
                         {
