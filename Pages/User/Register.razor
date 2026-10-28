@@ -238,7 +238,7 @@
                                                         <span class="area-row__note">@note</span>
                                                     }
                                                 </div>
-                                                <div class="area-row__cell" data-label="Zeit">
+                                                <div class="area-row__cell @(slot.AltOk ? "area-row__cell--choice" : "")" data-label="Zeit">
                                                     @if (slot.AltOk)
                                                     {
                                                         @SlotChoice(area, slot, compact: true)
