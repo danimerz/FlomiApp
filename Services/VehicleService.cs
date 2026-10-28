@@ -228,8 +228,12 @@ public class VehicleService : IVehicleService
                 driversAssigned++;
             }
 
+            // Übrig gebliebene Fahrer springen als Helfer ein, wenn die Beifahrer nicht reichen
             var freeHelpers = new Queue<ApplicationUser>(
-                helpers.GetValueOrDefault(dayGroup.Key, new()).Where(u => !busy.Contains(u.Id)));
+                helpers.GetValueOrDefault(dayGroup.Key, new())
+                       .Concat(freeDrivers)
+                       .Where(u => !busy.Contains(u.Id))
+                       .DistinctBy(u => u.Id));
             foreach (var slot in slots.Where(s => !s.HasHelper))
             {
                 if (!freeHelpers.TryDequeue(out var u)) break;

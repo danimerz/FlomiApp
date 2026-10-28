@@ -131,7 +131,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 **Einsatzplan (Tab «Einsatzplan»):**
 - Eine Tabelle pro Event: Zeilen = Fahrzeuge, Spalten = Einsatztage. Klick auf ein Feld trägt das Fahrzeug für den Tag ein bzw. ändert Fahrer und Helfer; «Bereit ab», «Abgeholt durch» und «Zurückgebracht durch» liegen unter «Mehr»
 - Fahrer und Helfer in einem Feld: Name tippen – passt er zu einem Konto, wird es verknüpft (für den Tag Angemeldete zuerst vorgeschlagen), sonst bleibt es ein freier Name
-- **🤖 Fahrer automatisch einteilen**: verteilt die für «Fahrer» resp. «Beifahrer» angemeldeten Personen auf Fahrzeuge ohne Besatzung (ganzes Event oder pro Tag); bestehende Einteilungen bleiben
+- **🤖 Fahrer automatisch einteilen**: verteilt die für «Fahrer» resp. «Beifahrer» angemeldeten Personen auf Fahrzeuge ohne Besatzung (ganzes Event oder pro Tag); reichen die Beifahrer nicht, springen übrige Fahrer als Helfer ein; bestehende Einteilungen bleiben
 - Tagesstatus im Spaltenkopf: rot = Abholungen, aber kein Fahrzeug mit Fahrer; gelb = Fahrzeug ohne Fahrer; grün = besetzt. Darunter die Liste «Angemeldet, aber noch nicht eingeteilt»
 - **🔁 Fahrzeuge übernehmen**: Ist ein Event noch leer, werden die Fahrzeuge eines früheren Events mit denselben Tagen relativ zum Flomi übernommen (ohne Fahrer und Helfer). «🚀 Neues Jahr starten» macht das auf Wunsch gleich mit
 - Neue Fahrzeuge direkt im Einsatzplan erfassen

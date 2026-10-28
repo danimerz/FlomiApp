@@ -207,6 +207,21 @@ public class VehicleServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AutoAssignCrewAsync_UsesLeftoverDrivers_AsHelpers()
+    {
+        var (evt, a, _) = await SeedPlanAsync();
+        await RegisterForAreaAsync(evt, "Fahrer", FlomiDay, "anna", "beat");
+        var service = CreateService();
+        await service.SaveAssignmentDayAsync(a.Id, evt.Id, new AssignmentDate { Date = FlomiDay });
+
+        var result = await service.AutoAssignCrewAsync(evt.Id);
+
+        Assert.Equal(new CrewAssignmentResult(1, 1), result);
+        var day = DaysOf(evt.Id).Single();
+        Assert.Equal(("anna", "beat"), (day.DriverUserId, day.HelperUserId));
+    }
+
+    [Fact]
     public async Task AutoAssignCrewAsync_KeepsExistingCrew_AndSkipsBusyUsers()
     {
         var (evt, a, b) = await SeedPlanAsync();
