@@ -1431,6 +1431,26 @@
             : new();
     }
 
+    // Erklärt, warum die automatische Einteilung nichts tun konnte
+    private string NobodyAssignedReason(DateTime? day)
+    {
+        var days      = day.HasValue ? new List<DateTime> { day.Value } : planDays;
+        var slots     = days.SelectMany(SlotsOn).ToList();
+        var crewDays  = days.Where(d => OpenCrew(d).Any()).ToList();
+        var noVehicle = crewDays.Where(d => !SlotsOn(d).Any()).Select(d => d.ToString("ddd dd.MM")).ToList();
+
+        if (!slots.Any())
+            return "Noch keine Fahrzeuge eingetragen. Klicke zuerst bei jedem Fahrzeug an den Tagen auf ＋, an denen es " +
+                   "zur Verfügung steht – danach verteilt dieser Knopf die angemeldeten Fahrer darauf." +
+                   (noVehicle.Any() ? $" Angemeldet sind Fahrer/Beifahrer an: {string.Join(", ", noVehicle)}." : "");
+        if (slots.All(s => s.HasDriver && s.HasHelper))
+            return "Alle eingetragenen Fahrzeuge haben schon Fahrer und Helfer.";
+        if (noVehicle.Any())
+            return $"An den Tagen mit freien Plätzen ist niemand mehr frei angemeldet. Freie Fahrer/Beifahrer gibt es an " +
+                   $"{string.Join(", ", noVehicle)} – dort ist aber noch kein Fahrzeug eingetragen.";
+        return "Niemand eingeteilt: An den Tagen mit freien Plätzen hat sich niemand als «Fahrer» oder «Beifahrer» angemeldet.";
+    }
+
     private async Task AutoAssignCrew(DateTime? day)
     {
         if (planEventId == 0) return;
@@ -1441,7 +1461,7 @@
             await ReloadPlanAsync();
             planMessageIsError = false;
             planMessage = result.DriversAssigned + result.HelpersAssigned == 0
-                ? "Niemand eingeteilt: Es gibt keine freien angemeldeten Fahrer oder Beifahrer für Fahrzeuge ohne Besatzung."
+                ? NobodyAssignedReason(day)
                 : $"🤖 {result.DriversAssigned} Fahrer und {result.HelpersAssigned} Beifahrer eingeteilt" +
                   (day.HasValue ? $" ({day.Value:ddd dd.MM})" : "") +
                   ". Jedes Feld lässt sich danach von Hand anpassen.";
