@@ -203,6 +203,7 @@
                         @foreach (var dateGroup in group
                             .OrderByDescending(a => a.IsSpontaneous)
                             .ThenBy(a => a.Date)
+                            .ThenBy(a => a.AreaTemplate?.Name, StringComparer.CurrentCultureIgnoreCase)
                             .GroupBy(a => a.IsSpontaneous ? SpontaneousGroupKey : a.Date.ToShortDateString()))
                         {
                             <div class="date-subgroup">
