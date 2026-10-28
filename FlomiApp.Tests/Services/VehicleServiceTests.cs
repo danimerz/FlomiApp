@@ -233,9 +233,11 @@ public class VehicleServiceTests : IDisposable
 
         var result = await service.AutoAssignCrewAsync(evt.Id);
 
-        Assert.Equal(new CrewAssignmentResult(0, 0), result);
+        // Kein Fahrer überschrieben; der übrige Beat springt beim ersten Fahrzeug als Helfer ein
+        Assert.Equal(new CrewAssignmentResult(0, 1), result);
         var days = DaysOf(evt.Id);
-        Assert.Equal("anna", days.Single(d => d.Assignment.VehicleId == a.Id).DriverUserId);
+        var arnold = days.Single(d => d.Assignment.VehicleId == a.Id);
+        Assert.Equal(("anna", "beat"), (arnold.DriverUserId, arnold.HelperUserId));
         Assert.Null(days.Single(d => d.Assignment.VehicleId == b.Id).DriverUserId);
     }
 
