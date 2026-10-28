@@ -165,7 +165,7 @@
             {
                 var categoryKey = group.Key;
                 var isCollapsed = collapsedCategories.Contains(categoryKey);
-                var isList      = listCategories.Contains(categoryKey);
+                var isList      = !tileCategories.Contains(categoryKey);
 
                 <section class="category-block @(isCollapsed ? "is-collapsed" : "")" data-category="@categoryKey">
                     <div class="category-block__header"
@@ -410,9 +410,9 @@
     private CancellationTokenSource? successMessageCts;
     private HashSet<string>      collapsedCategories  = new();
 
-    // Kategorien, die als Liste statt als Kacheln angezeigt werden (pro Browser gemerkt)
-    private HashSet<string>      listCategories       = new();
-    private const string         ListViewStorageKey   = "flomi.register.listCategories";
+    // Standard ist die Liste; Kategorien, die als Kacheln angezeigt werden (pro Browser gemerkt)
+    private HashSet<string>      tileCategories       = new();
+    private const string         TileViewStorageKey   = "flomi.register.tileCategories";
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? registeringAreaId = null;
@@ -652,30 +652,30 @@
         if (!firstRender) return;
         try
         {
-            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", ListViewStorageKey);
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", TileViewStorageKey);
             if (!string.IsNullOrEmpty(stored))
             {
-                listCategories = stored.Split('|', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+                tileCategories = stored.Split('|', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
                 StateHasChanged();
             }
         }
         catch
         {
-            // Kein localStorage (z.B. privater Modus) – dann bleibt es bei Kacheln
+            // Kein localStorage (z.B. privater Modus) – dann bleibt es bei der Liste
         }
     }
 
     private async Task SetViewMode(string categoryKey, bool asList)
     {
-        if (asList) listCategories.Add(categoryKey);
-        else        listCategories.Remove(categoryKey);
+        if (asList) tileCategories.Remove(categoryKey);
+        else        tileCategories.Add(categoryKey);
 
         // Wer die Ansicht wählt, will die Bereiche auch sehen
         await ExpandOnlyAsync(categoryKey);
 
         try
         {
-            await JS.InvokeVoidAsync("localStorage.setItem", ListViewStorageKey, string.Join('|', listCategories));
+            await JS.InvokeVoidAsync("localStorage.setItem", TileViewStorageKey, string.Join('|', tileCategories));
         }
         catch
         {
