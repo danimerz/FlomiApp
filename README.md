@@ -73,6 +73,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 **Bereichs-Zuweisungen** verknüpfen eine Vorlage mit einem Event und definieren:
 - Datum, Zeitslot, Maximale Kapazität (oder «Unbegrenzt»)
 - **Alternativer Zeitslot** (z.B. Halbtagsschicht): Kapazität und Zeit separat konfigurierbar
+- **Spontan** («Ich komme spontan vorbei»): Bereich ohne Datum und Zeit – eigene Gruppe in der Anmeldung, keine Überschneidungsprüfung, pro Person nur einmal buchbar; Mails/Dashboard zeigen «spontan» statt Datum
 
 **Anmeldung für Benutzer:**
 - Bestätigungs-Modal mit optionalem Kommentar vor der Buchung

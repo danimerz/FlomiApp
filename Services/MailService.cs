@@ -1,4 +1,5 @@
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -50,7 +51,7 @@ public class MailService : IMailService
     // ─── Benutzer-Mails ───────────────────────────────────────────────────────
     public async Task SendRegistrationConfirmationAsync(
         string toEmail, string toName, string areaName,
-        string eventName, DateTime date, string timeSlot,
+        string eventName, DateTime? date, string timeSlot,
         string? comment = null, int? appointmentId = null, string? forPerson = null)
     {
         var subject = $"✅ Anmeldebestätigung – {areaName} · {eventName}";
@@ -91,7 +92,7 @@ public class MailService : IMailService
                   {forPersonRow}
                   <tr><td style="padding:6px 12px;color:#64748b;width:40%">Event:</td><td style="padding:6px 12px;font-weight:700;">{eventName}</td></tr>
                   <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Bereich:</td><td style="padding:6px 12px;font-weight:700;">{areaName}</td></tr>
-                  <tr><td style="padding:6px 12px;color:#64748b;">Datum:</td><td style="padding:6px 12px;font-weight:700;">{date:dddd, dd. MMMM yyyy}</td></tr>
+                  <tr><td style="padding:6px 12px;color:#64748b;">Datum:</td><td style="padding:6px 12px;font-weight:700;">{AreaSchedule.FormatDate(date, "dddd, dd. MMMM yyyy")}</td></tr>
                   <tr style="background:#f8fafc;"><td style="padding:6px 12px;color:#64748b;">Zeit:</td><td style="padding:6px 12px;font-weight:700;">{timeSlot}</td></tr>
                   {commentRow}
                 </table>
@@ -107,7 +108,7 @@ public class MailService : IMailService
 
     public async Task SendCancellationConfirmationAsync(
         string toEmail, string toName, string areaName,
-        string eventName, DateTime date, string timeSlot)
+        string eventName, DateTime? date, string timeSlot)
     {
         var subject = $"Stornierung – {areaName}";
         var body = $"""
@@ -116,7 +117,7 @@ public class MailService : IMailService
             <table cellpadding="8" style="border-collapse:collapse;">
                 <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
                 <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{date:dd.MM.yyyy}</td></tr>
+                <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>
                 <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
             </table>
             <p>Du kannst dich jederzeit neu anmelden.</p>
@@ -140,7 +141,7 @@ public class MailService : IMailService
         {
             var rows = new System.Text.StringBuilder();
             int i = 0;
-            foreach (var a in group.OrderBy(x => x.Date))
+            foreach (var a in group.OrderBy(x => x.Date ?? DateTime.MaxValue))
             {
                 var bg         = i++ % 2 == 0 ? "" : "background:#f8fafc;";
                 var personCell = string.IsNullOrEmpty(a.ForPerson)
@@ -149,7 +150,7 @@ public class MailService : IMailService
                 rows.Append($"""
                     <tr style="{bg}">
                       <td style='padding:6px 12px;font-weight:600;color:#1e293b;'>{a.AreaName}</td>
-                      <td style='padding:6px 12px;color:#374151;'>{a.Date.ToString("dd.MM.yyyy", new System.Globalization.CultureInfo("de-CH"))}</td>
+                      <td style='padding:6px 12px;color:#374151;'>{AreaSchedule.FormatDate(a.Date, "dd.MM.yyyy")}</td>
                       <td style='padding:6px 12px;color:#374151;'>{a.TimeSlot}</td>
                       <td style='padding:6px 12px;color:#374151;'>{a.Location ?? "–"}</td>
                       {personCell}
@@ -203,7 +204,7 @@ public class MailService : IMailService
     // ─── Admin-Mails ──────────────────────────────────────────────────────────
     public async Task SendAdminNewRegistrationAsync(
         string areaName, string eventName,
-        string userName, DateTime date, string timeSlot)
+        string userName, DateTime? date, string timeSlot)
     {
         var subject = $"Neue Anmeldung – {userName}";
         var body = $"""
@@ -212,7 +213,7 @@ public class MailService : IMailService
                 <tr><td><strong>Person:</strong></td><td>{userName}</td></tr>
                 <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
                 <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{date:dd.MM.yyyy}</td></tr>
+                <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>
                 <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
             </table>
             """;
@@ -223,7 +224,7 @@ public class MailService : IMailService
     // ✅ NEU
     public async Task SendAdminCancellationAsync(
         string areaName, string eventName,
-        string userName, DateTime date, string timeSlot)
+        string userName, DateTime? date, string timeSlot)
     {
         var subject = $"Stornierung – {userName}";
         var body = $"""
@@ -232,7 +233,7 @@ public class MailService : IMailService
                 <tr><td><strong>Person:</strong></td><td>{userName}</td></tr>
                 <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
                 <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{date:dd.MM.yyyy}</td></tr>
+                <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>
                 <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
             </table>
             """;

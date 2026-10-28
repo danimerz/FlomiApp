@@ -90,6 +90,7 @@ public class AreaService : IAreaService
                 MaxCapacity            = src.MaxCapacity,
                 AlternativeTimeSlot    = src.AlternativeTimeSlot,
                 AlternativeMaxCapacity = src.AlternativeMaxCapacity,
+                IsSpontaneous          = src.IsSpontaneous,
             });
         }
 
@@ -162,6 +163,7 @@ public class AreaService : IAreaService
             existing.EventId                 = area.EventId;
             existing.AlternativeTimeSlot     = area.AlternativeTimeSlot;
             existing.AlternativeMaxCapacity  = area.AlternativeMaxCapacity;
+            existing.IsSpontaneous           = area.IsSpontaneous;
             await _context.SaveChangesAsync();
         }
     }

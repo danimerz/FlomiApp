@@ -541,23 +541,35 @@
                                     }
                                 </InputSelect>
                             </div>
+                            @if (!currentArea.IsSpontaneous)
+                            {
+                                <div class="ac-field">
+                                    <label>Datum</label>
+                                    <InputDate @bind-Value="currentArea.Date" class="ac-input" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Zeitslot</label>
+                                    <input type="text" class="ac-input"
+                                           placeholder="z.B. 08:30-15:30"
+                                           value="@currentArea.TimeSlot"
+                                           @onchange="e => currentArea.TimeSlot = FlomiApp.Helpers.TimeHelper.FormatTimeSlot(e.Value?.ToString()) ?? string.Empty" />
+                                </div>
+                            }
                             <div class="ac-field">
-                                <label>Datum</label>
-                                <InputDate @bind-Value="currentArea.Date" class="ac-input" />
-                            </div>
-                            <div class="ac-field">
-                                <label>Zeitslot</label>
-                                <input type="text" class="ac-input"
-                                       placeholder="z.B. 08:30-15:30"
-                                       value="@currentArea.TimeSlot"
-                                       @onchange="e => currentArea.TimeSlot = FlomiApp.Helpers.TimeHelper.FormatTimeSlot(e.Value?.ToString()) ?? string.Empty" />
-                            </div>
-                            <div class="ac-field">
-                                <label>Max. Kapazität</label>
+                                <label>Max. Kapazität <small>(999 = unbegrenzt)</small></label>
                                 <InputNumber @bind-Value="currentArea.MaxCapacity" class="ac-input" />
                             </div>
                         </div>
 
+                        <div class="ac-checkbox-row" style="margin-top:1rem">
+                            <InputCheckbox @bind-Value="currentArea.IsSpontaneous"
+                                           @bind-Value:after="OnSpontaneousChanged"
+                                           id="spontaneousCheck" class="ac-checkbox" />
+                            <label for="spontaneousCheck">🙋 Spontan – ohne Datum und Zeit («Ich komme spontan vorbei»)</label>
+                        </div>
+
+                        @if (!currentArea.IsSpontaneous)
+                        {
                         <!-- Alternativer Zeitslot -->
                         <div style="margin-top:1rem;padding:1rem;border-radius:12px;background:var(--color-info-bg);border:1px solid var(--color-info-border)">
                             <p style="margin:0 0 .75rem;font-size:.85rem;font-weight:700;color:var(--color-info-text)">
@@ -580,6 +592,7 @@
                                 </div>
                             </div>
                         </div>
+                        }
 
                         <div class="ac-form-actions">
                             <button type="submit" class="ac-submit-btn">
@@ -700,8 +713,15 @@
                                     </span>
                                 </td>
                                 <td>@(area.AreaTemplate?.MinAge ?? 0)</td>
-                                <td>@area.Date.ToShortDateString()</td>
-                                <td>@area.TimeSlot</td>
+                                @if (area.IsSpontaneous)
+                                {
+                                    <td colspan="2"><span class="ac-badge ac-badge--category">🙋 Spontan</span></td>
+                                }
+                                else
+                                {
+                                    <td>@area.Date.ToShortDateString()</td>
+                                    <td>@area.TimeSlot</td>
+                                }
                                 <td>
                                     @if (area.MaxCapacity >= 999)
                                     {
@@ -1448,8 +1468,24 @@
         currentArea   = new Area();
     }
 
+    private void OnSpontaneousChanged()
+    {
+        // Spontan heisst meist «so viele wie kommen» – leere Kapazität auf unbegrenzt setzen
+        if (currentArea.IsSpontaneous && currentArea.MaxCapacity <= 0)
+            currentArea.MaxCapacity = 999;
+    }
+
     private async Task SubmitAreaForm()
     {
+        // Spontan: kein Zeitslot, kein halber Tag; Datum bleibt der Eventtag (Sortierung, Löschfristen)
+        if (currentArea.IsSpontaneous)
+        {
+            SyncAreaDateToEvent();
+            currentArea.TimeSlot               = string.Empty;
+            currentArea.AlternativeTimeSlot    = null;
+            currentArea.AlternativeMaxCapacity = null;
+        }
+
         if (isEditingArea)
             await AreaService.UpdateAreaAsync(currentArea);
         else
@@ -1473,7 +1509,8 @@
             TimeSlot                 = area.TimeSlot,
             EventId                  = area.EventId,
             AlternativeTimeSlot      = area.AlternativeTimeSlot,
-            AlternativeMaxCapacity   = area.AlternativeMaxCapacity
+            AlternativeMaxCapacity   = area.AlternativeMaxCapacity,
+            IsSpontaneous            = area.IsSpontaneous
         };
     }
 

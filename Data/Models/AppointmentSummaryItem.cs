@@ -4,7 +4,7 @@ public class AppointmentSummaryItem
 {
     public string   EventName  { get; set; } = string.Empty;
     public string   AreaName   { get; set; } = string.Empty;
-    public DateTime Date       { get; set; }
+    public DateTime? Date      { get; set; }   // null = spontan
     public string   TimeSlot   { get; set; } = string.Empty;
     public string   Category   { get; set; } = string.Empty;
     public string?  Location   { get; set; }

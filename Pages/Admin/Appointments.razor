@@ -150,7 +150,14 @@
                                 <span class="appt-accordion__chevron @(isExpanded ? "appt-accordion__chevron--open" : "")">▾</span>
                                 <span class="appt-accordion__name">@area.AreaTemplate?.Name</span>
                                 <span class="appt-accordion__date">
-                                    @area.Date.ToString("ddd dd.MM.yyyy", new CultureInfo("de-CH"))
+                                    @if (area.IsSpontaneous)
+                                    {
+                                        <text>🙋 spontan</text>
+                                    }
+                                    else
+                                    {
+                                        @area.Date.ToString("ddd dd.MM.yyyy", new CultureInfo("de-CH"))
+                                    }
                                     @if (!string.IsNullOrEmpty(slot.timeSlot))
                                     {
                                         <span class="appt-accordion__time">@slot.timeSlot</span>

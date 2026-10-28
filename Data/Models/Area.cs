@@ -10,6 +10,11 @@ public class Area
     public int      MaxCapacity            { get; set; }
     public string?  AlternativeTimeSlot    { get; set; }
     public int?     AlternativeMaxCapacity { get; set; }
+    /// <summary>
+    /// «Ich komme spontan vorbei»: ohne fixes Datum und Zeit. <see cref="Date"/> bleibt der Eventtag
+    /// (für Sortierung und Aufbewahrungsfristen), wird aber nicht angezeigt.
+    /// </summary>
+    public bool     IsSpontaneous          { get; set; }
 
     public AreaTemplate? AreaTemplate { get; set; }
     public Event?        Event        { get; set; }

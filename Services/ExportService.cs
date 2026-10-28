@@ -65,9 +65,7 @@ namespace FlomiApp.Services
 
                 foreach (var a in group)
                 {
-                    var timeSlot = a.UseAlternativeSlot && !string.IsNullOrEmpty(a.Area.AlternativeTimeSlot)
-                        ? a.Area.AlternativeTimeSlot
-                        : a.Area.TimeSlot;
+                    var timeSlot = AreaSchedule.TimeSlot(a.Area, a.UseAlternativeSlot);
 
                     var vorname   = a.FamilyMember?.FirstName ?? a.User.FirstName;
                     var nachname  = a.FamilyMember?.LastName  ?? a.User.LastName;

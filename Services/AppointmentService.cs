@@ -1,5 +1,6 @@
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlomiApp.Services;
@@ -216,6 +217,10 @@ public class AppointmentService : IAppointmentService
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId, useAlternativeSlot);
         if (current >= capacity) return false;
 
+        // Spontan: keine fixe Zeit, also auch keine Überschneidung – aber nur einmal pro Bereich
+        if (area.IsSpontaneous)
+            return !await PersonIsRegisteredForAreaAsync(userId, familyMemberId, areaId);
+
         if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, timeSlot))
             return false;
 
@@ -238,14 +243,12 @@ public class AppointmentService : IAppointmentService
         var eventName = area.Event?.Name ?? "";
         var areaName  = area.AreaTemplate?.Name ?? "";
         var forPerson = await GetPersonNameAsync(userId, familyMemberId);
-        var timeSlot  = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
-            ? area.AlternativeTimeSlot
-            : area.TimeSlot;
+        var timeSlot  = AreaSchedule.TimeSlot(area, useAlternativeSlot);
         var notifications = user.EmailNotificationsEnabled;
 
         // Capture all values; lambdas must not close over EF entities
         var email       = user.Email;
-        var date        = area.Date;
+        var date        = AreaSchedule.Date(area);
         var aptId       = appointmentId;
         var person      = forPerson;
         var adminEmail  = default(string?); // resolved inside queue via IMailService
@@ -269,8 +272,8 @@ public class AppointmentService : IAppointmentService
         var email     = user.Email;
         var areaName  = appointment.Area?.AreaTemplate?.Name ?? "";
         var eventName = appointment.Area?.Event?.Name ?? "";
-        var date      = appointment.Area?.Date ?? DateTime.MinValue;
-        var timeSlot  = appointment.Area?.TimeSlot ?? "";
+        var date      = AreaSchedule.Date(appointment.Area);
+        var timeSlot  = AreaSchedule.TimeSlot(appointment.Area, appointment.UseAlternativeSlot);
         var notifications = user.EmailNotificationsEnabled;
 
         if (notifications)
@@ -303,7 +306,7 @@ public class AppointmentService : IAppointmentService
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null)
-            .Where(a => a.Area.Date.Date == date.Date)
+            .Where(a => a.Area.Date.Date == date.Date && !a.Area.IsSpontaneous)
             .ToListAsync();
 
         foreach (var existing in existingAppointments)
@@ -314,6 +317,13 @@ public class AppointmentService : IAppointmentService
 
         return false;
     }
+
+    private async Task<bool> PersonIsRegisteredForAreaAsync(string userId, int? familyMemberId, int areaId) =>
+        await _context.Appointments
+            .Where(a => a.UserId == userId && a.AreaId == areaId && a.Status == AppointmentStatus.Registered)
+            .AnyAsync(a => familyMemberId.HasValue
+                ? a.FamilyMemberId == familyMemberId
+                : a.FamilyMemberId == null);
 
     private async Task<bool> IsPersonBelowMinAgeAsync(string userId, int? familyMemberId, int minAge)
     {

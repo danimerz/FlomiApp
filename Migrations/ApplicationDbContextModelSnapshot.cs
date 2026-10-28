@@ -186,6 +186,9 @@ namespace FlomiApp.Migrations
                     b.Property<int>("EventId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsSpontaneous")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("MaxCapacity")
                         .HasColumnType("int");
 

@@ -356,4 +356,77 @@ public class AppointmentServiceTests : IDisposable
         Assert.Null(assignedDate.DriverUserId);
         Assert.Null(assignedDate.DriverPhone);
     }
+
+    // ── Spontan (ohne Datum/Zeit) ────────────────────────────────────────────
+
+    [Fact]
+    public async Task CanRegisterAsync_SpontaneousArea_DoesNotConflictWithFixedSlotSameDay()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var fixedArea = MakeArea(evt, template, capacity: 5, timeSlot: "08:00-17:00");
+        var spontaneous = MakeArea(evt, template, capacity: 999, timeSlot: "");
+        spontaneous.IsSpontaneous = true;
+        ctx.Areas.AddRange(fixedArea, spontaneous);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(ctx);
+        await service.RegisterForAppointmentAsync("u1", fixedArea.Id);
+
+        Assert.True(await service.CanRegisterAsync("u1", spontaneous.Id));
+    }
+
+    [Fact]
+    public async Task CanRegisterAsync_SpontaneousArea_ReturnsFalse_WhenAlreadyRegistered()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var spontaneous = MakeArea(evt, template, capacity: 999, timeSlot: "");
+        spontaneous.IsSpontaneous = true;
+        ctx.Areas.Add(spontaneous);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(ctx);
+        await service.RegisterForAppointmentAsync("u1", spontaneous.Id);
+
+        Assert.False(await service.CanRegisterAsync("u1", spontaneous.Id));
+    }
+
+    [Fact]
+    public async Task CanRegisterAsync_SpontaneousArea_AllowsFamilyMemberOfRegisteredUser()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var spontaneous = MakeArea(evt, template, capacity: 999, timeSlot: "");
+        spontaneous.IsSpontaneous = true;
+        ctx.Areas.Add(spontaneous);
+        ctx.Users.Add(MakeUser("u1"));
+        var kid = new FamilyMember { UserId = "u1", FirstName = "Kind", LastName = "u1", Birthday = new DateTime(2015, 1, 1) };
+        ctx.FamilyMembers.Add(kid);
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(ctx);
+        await service.RegisterForAppointmentAsync("u1", spontaneous.Id);
+
+        Assert.True(await service.CanRegisterAsync("u1", spontaneous.Id, kid.Id));
+    }
+
+    [Fact]
+    public async Task CanRegisterAsync_SpontaneousArea_RespectsCapacity()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var spontaneous = MakeArea(evt, template, capacity: 1, timeSlot: "");
+        spontaneous.IsSpontaneous = true;
+        ctx.Areas.Add(spontaneous);
+        ctx.Users.AddRange(MakeUser("u1"), MakeUser("u2"));
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(ctx);
+        await service.RegisterForAppointmentAsync("u1", spontaneous.Id);
+
+        Assert.False(await service.CanRegisterAsync("u2", spontaneous.Id));
+    }
 }

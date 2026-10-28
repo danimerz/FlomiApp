@@ -1,5 +1,6 @@
 ﻿@page "/user/register"
 @using FlomiApp.Data.Models
+@using FlomiApp.Helpers
 @using Microsoft.AspNetCore.Identity
 @inject IAreaService AreaService
 @inject IAppointmentService AppointmentService
@@ -198,12 +199,21 @@
                     </div>
 
                     <div class="category-block__body">
+                        @* Spontane Bereiche (ohne Datum/Zeit) als eigene Gruppe nach den Tagen *@
                         @foreach (var dateGroup in group
-                            .OrderBy(a => a.Date)
-                            .GroupBy(a => a.Date.ToShortDateString()))
+                            .OrderBy(a => a.IsSpontaneous)
+                            .ThenBy(a => a.Date)
+                            .GroupBy(a => a.IsSpontaneous ? SpontaneousGroupKey : a.Date.ToShortDateString()))
                         {
                             <div class="date-subgroup">
-                                <h4>📅 @GetGermanDayName(dateGroup.Key), @dateGroup.Key</h4>
+                                @if (dateGroup.Key == SpontaneousGroupKey)
+                                {
+                                    <h4>🙋 Spontan – ohne fixes Datum und Zeit</h4>
+                                }
+                                else
+                                {
+                                    <h4>📅 @GetGermanDayName(dateGroup.Key), @dateGroup.Key</h4>
+                                }
 
                                 @if (isList)
                                 {
@@ -242,7 +252,7 @@
                                                 <div class="area-row__cell" data-label="Standort">
                                                     @(string.IsNullOrEmpty(area.AreaTemplate?.Location) ? "–" : area.AreaTemplate!.Location)
                                                 </div>
-                                                <div class="area-row__action">@RegisterAction(area, slot, "Registrieren")</div>
+                                                <div class="area-row__action">@RegisterAction(area, slot, area.IsSpontaneous ? "🙋 Ich komme spontan" : "Registrieren")</div>
                                             </div>
                                         }
                                     </div>
@@ -270,7 +280,7 @@
                                                     <div class="area-info-list">
                                                         <div class="area-info-item">
                                                             <span class="label">Datum</span>
-                                                            <span class="value">@area.Date.ToShortDateString()</span>
+                                                            <span class="value">@(area.IsSpontaneous ? "spontan" : area.Date.ToShortDateString())</span>
                                                         </div>
                                                         <div class="area-info-item">
                                                             <span class="label">Zeit</span>
@@ -296,7 +306,7 @@
                                                         }
                                                     </div>
 
-                                                    @RegisterAction(area, slot, "Jetzt registrieren")
+                                                    @RegisterAction(area, slot, area.IsSpontaneous ? "🙋 Ich komme spontan vorbei" : "Jetzt registrieren")
 
                                                     @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
                                                     {
@@ -335,12 +345,12 @@
                     </div>
                     <div class="reg-modal__info-row">
                         <span class="reg-modal__label">Datum</span>
-                        <span class="reg-modal__value">@confirmArea.Date.ToString("dddd, dd.MM.yyyy", new System.Globalization.CultureInfo("de-CH"))</span>
+                        <span class="reg-modal__value">@AreaSchedule.FormatDate(AreaSchedule.Date(confirmArea), "dddd, dd.MM.yyyy")</span>
                     </div>
                     <div class="reg-modal__info-row">
                         <span class="reg-modal__label">Zeit</span>
                         <span class="reg-modal__value">
-                            @(confirmUseAlt ? confirmArea.AlternativeTimeSlot : confirmArea.TimeSlot)
+                            @AreaSchedule.TimeSlot(confirmArea, confirmUseAlt)
                             @if (confirmUseAlt)
                             {
                                 <span style="margin-left:.4rem;font-size:.75rem;color:var(--color-info-text);font-weight:600">
@@ -413,6 +423,7 @@
     // Standard ist die Liste; Kategorien, die als Kacheln angezeigt werden (pro Browser gemerkt)
     private HashSet<string>      tileCategories       = new();
     private const string         TileViewStorageKey   = "flomi.register.tileCategories";
+    private const string         SpontaneousGroupKey  = "spontan";
 
     // ── Loading State ─────────────────────────────────────────────────────────
     private int? registeringAreaId = null;
@@ -688,7 +699,7 @@
 
     private SlotInfo GetSlot(Area area)
     {
-        var hasAlt = !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
+        var hasAlt = !area.IsSpontaneous && !string.IsNullOrEmpty(area.AlternativeTimeSlot) && area.AlternativeMaxCapacity.HasValue;
         var altOk  = hasAlt && IsAlternativeAllowed(area);
         var isAlt  = altOk && useAltSlot.GetValueOrDefault(area.Id, false);
 
@@ -696,7 +707,7 @@
             ? new SlotInfo(altOk, true, area.AlternativeTimeSlot,
                            altRegistrations.GetValueOrDefault(area.Id, 0), area.AlternativeMaxCapacity!.Value,
                            canRegisterAlt.GetValueOrDefault(area.Id, false))
-            : new SlotInfo(altOk, false, area.TimeSlot,
+            : new SlotInfo(altOk, false, AreaSchedule.TimeSlot(area),
                            currentRegistrations.GetValueOrDefault(area.Id, 0), area.MaxCapacity,
                            canRegister.GetValueOrDefault(area.Id, false));
     }
@@ -781,6 +792,9 @@
 
         if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
             return "Bereich ist bereits belegt.";
+
+        if (area.IsSpontaneous)
+            return "Du bist hier bereits angemeldet.";
 
         if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
             return "Nur eine Verkauf-Registrierung ist möglich.";

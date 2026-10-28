@@ -1,5 +1,6 @@
 @page "/user/dashboard"
 @using FlomiApp.Data.Models
+@using FlomiApp.Helpers
 @using System.Text
 @using Microsoft.AspNetCore.Identity
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -133,10 +134,12 @@
                                     <button class="group-date__toggle"
                                             aria-expanded="@(dateOpen ? "true" : "false")"
                                             @onclick="() => ToggleSubgroup(eventKey, groupKey)">
-                                        <span class="group-date__icon">📅</span>
+                                        <span class="group-date__icon">@(dateKey == SpontaneousDate ? "🙋" : "📅")</span>
                                         <span class="group-date__name">
-                                            @dateKey.ToString("dddd, dd. MMMM yyyy",
-                                                new System.Globalization.CultureInfo("de-CH"))
+                                            @(dateKey == SpontaneousDate
+                                                ? "Spontan – ohne fixes Datum"
+                                                : dateKey.ToString("dddd, dd. MMMM yyyy",
+                                                    new System.Globalization.CultureInfo("de-CH")))
                                         </span>
                                         <span class="group-date__count">@dateGroup.Value.Count Einträge</span>
                                         <span class="group-chevron @(dateOpen ? "group-chevron--open" : "")">▾</span>
@@ -297,7 +300,8 @@
             {
                 var d = cellStart.AddDays(i);
                 var apts = FilteredAppointments
-                    .Where(a => a.Area?.Date.Date == d && a.Status != AppointmentStatus.Cancelled)
+                    .Where(a => a.Area?.Date.Date == d && a.Area?.IsSpontaneous != true
+                             && a.Status != AppointmentStatus.Cancelled)
                     .ToList();
                 var picks = pickupRequests
                     .Where(r => r.PickupDate.Date == d)
@@ -393,6 +397,9 @@
             ? appointments
             : appointments.Where(a => a.Status != AppointmentStatus.Cancelled).ToList();
 
+    // Spontane Anmeldungen (ohne Datum) als eigene Gruppe nach allen Tagen
+    private static readonly DateTime SpontaneousDate = DateTime.MaxValue.Date;
+
     private Dictionary<string, Dictionary<DateTime, List<Appointment>>> GroupedAppointments =>
         FilteredAppointments
             .GroupBy(a => a.Area.Event?.Name ?? "Unbekanntes Event")
@@ -400,7 +407,7 @@
             .ToDictionary(
                 g => g.Key,
                 g => g
-                    .GroupBy(a => a.Area.Date.Date)
+                    .GroupBy(a => a.Area.IsSpontaneous ? SpontaneousDate : a.Area.Date.Date)
                     .OrderBy(d => d.Key)
                     .ToDictionary(
                         d => d.Key,
@@ -680,10 +687,8 @@
             {
                 EventName = a.Area?.Event?.Name ?? "–",
                 AreaName  = a.Area?.AreaTemplate?.Name ?? "–",
-                Date      = a.Area?.Date ?? DateTime.MinValue,
-                TimeSlot  = a.UseAlternativeSlot && !string.IsNullOrEmpty(a.Area?.AlternativeTimeSlot)
-                                ? a.Area!.AlternativeTimeSlot!
-                                : a.Area?.TimeSlot ?? "–",
+                Date      = AreaSchedule.Date(a.Area),
+                TimeSlot  = a.Area == null ? "–" : AreaSchedule.TimeSlot(a.Area, a.UseAlternativeSlot),
                 Category  = a.Area?.AreaTemplate?.AreaCategory?.Name ?? string.Empty,
                 Location  = a.Area?.AreaTemplate?.Location,
                 ForPerson = a.FamilyMember != null
@@ -727,9 +732,7 @@
             : $"{a.User.FirstName} {a.User.LastName}";
 
     private static string TimeSlot(Appointment a) =>
-        (a.UseAlternativeSlot && !string.IsNullOrEmpty(a.Area?.AlternativeTimeSlot)
-            ? a.Area!.AlternativeTimeSlot
-            : a.Area?.TimeSlot) ?? string.Empty;
+        AreaSchedule.TimeSlot(a.Area, a.UseAlternativeSlot);
 
     private static bool ShowCheckInQr(Appointment a) =>
         a.Area?.Event?.CheckInEnabled == true
@@ -776,11 +779,14 @@
                             @onclick="() => CancelAppointment(appointment.Id)">
                         Absagen
                     </button>
-                    <button class="ics-icon-btn @(compact ? "ics-icon-btn--compact" : "")"
-                            title="Zum Kalender hinzufügen"
-                            @onclick="() => DownloadIcs(appointment)">
-                        📅
-                    </button>
+                    @if (appointment.Area?.IsSpontaneous != true)
+                    {
+                        <button class="ics-icon-btn @(compact ? "ics-icon-btn--compact" : "")"
+                                title="Zum Kalender hinzufügen"
+                                @onclick="() => DownloadIcs(appointment)">
+                            📅
+                        </button>
+                    }
                 }
             }
         </text>;
