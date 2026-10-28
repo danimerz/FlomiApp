@@ -12,6 +12,14 @@ using FlomiApp.Data.Models;
 using FlomiApp.Services;
 using FlomiApp.Security;
 using FlomiApp.Endpoints;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+
+// Schweizer Formate (17.04.2027, Samstag) unabhängig von der Sprache des Servers –
+// auch für Hintergrund-Threads wie die Mail-Queue
+var swissCulture = new CultureInfo("de-CH");
+CultureInfo.DefaultThreadCurrentCulture   = swissCulture;
+CultureInfo.DefaultThreadCurrentUICulture = swissCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,6 +119,14 @@ builder.Services.AddScoped<ISampleDataService, SampleDataService>();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+
+// Browser-Sprache ignorieren: alle Anfragen (und damit die Blazor-Verbindung) laufen auf de-CH
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(swissCulture),
+    SupportedCultures     = [swissCulture],
+    SupportedUICultures   = [swissCulture]
+});
 
 // form-action gilt auch für Weiterleitungen nach dem Absenden – der Login-Button
 // leitet zum externen Anbieter weiter, dessen Host muss deshalb erlaubt sein.

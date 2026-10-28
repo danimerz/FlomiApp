@@ -239,10 +239,13 @@
                                                     }
                                                 </div>
                                                 <div class="area-row__cell" data-label="Zeit">
-                                                    <span>@slot.Time</span>
                                                     @if (slot.AltOk)
                                                     {
-                                                        @SlotToggle(area, slot, compact: true)
+                                                        @SlotChoice(area, slot, compact: true)
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@slot.Time</span>
                                                     }
                                                 </div>
                                                 <div class="area-row__cell" data-label="Belegt">@CapacityChip(slot)</div>
@@ -274,7 +277,7 @@
 
                                                     @if (slot.AltOk)
                                                     {
-                                                        @SlotToggle(area, slot, compact: false)
+                                                        @SlotChoice(area, slot, compact: false)
                                                     }
 
                                                     <div class="area-info-list">
@@ -282,10 +285,14 @@
                                                             <span class="label">Datum</span>
                                                             <span class="value">@(area.IsSpontaneous ? "spontan" : area.Date.ToShortDateString())</span>
                                                         </div>
-                                                        <div class="area-info-item">
-                                                            <span class="label">Zeit</span>
-                                                            <span class="value">@slot.Time</span>
-                                                        </div>
+                                                        @* Mit Wahl ganzer/halber Tag stehen die Zeiten schon in den Feldern darüber *@
+                                                        @if (!slot.AltOk)
+                                                        {
+                                                            <div class="area-info-item">
+                                                                <span class="label">Zeit</span>
+                                                                <span class="value">@slot.Time</span>
+                                                            </div>
+                                                        }
                                                         <div class="area-info-item">
                                                             <span class="label">Belegt</span>
                                                             <span class="value">@CapacityChip(slot)</span>
@@ -473,9 +480,9 @@
         return !mandatory.Contains(stufe ?? "", StringComparer.OrdinalIgnoreCase);
     }
 
-    private void ToggleAltSlot(int areaId)
+    private void SetAltSlot(int areaId, bool alternative)
     {
-        useAltSlot[areaId] = !useAltSlot.GetValueOrDefault(areaId, false);
+        useAltSlot[areaId] = alternative;
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -725,19 +732,21 @@
             }
         </text>;
 
-    private RenderFragment SlotToggle(Area area, SlotInfo slot, bool compact) =>
-        @<div class="area-slot-toggle @(compact ? "area-slot-toggle--compact" : "")">
-            <span class="area-slot-toggle__label">
-                @(slot.IsAlt ? "⏰ Halber Tag" : "⏰ Ganzer Tag")
-            </span>
-            <label class="toggle-switch" title="Zeitslot wechseln">
-                <input type="checkbox"
-                       checked="@slot.IsAlt"
-                       aria-label="Halber Tag"
-                       @onchange="() => ToggleAltSlot(area.Id)" />
-                <span class="slider round"></span>
-            </label>
+    // Wahl ganzer/halber Tag als zwei Felder – der gewählte Einsatz ist gefüllt, beide Zeiten sichtbar
+    private RenderFragment SlotChoice(Area area, SlotInfo slot, bool compact) =>
+        @<div class="slot-choice @(compact ? "slot-choice--compact" : "")" role="radiogroup" aria-label="Einsatzdauer">
+            @SlotChoiceButton(area.Id, false, !slot.IsAlt, "Ganzer Tag", area.TimeSlot)
+            @SlotChoiceButton(area.Id, true, slot.IsAlt, "Halber Tag", area.AlternativeTimeSlot)
         </div>;
+
+    private RenderFragment SlotChoiceButton(int areaId, bool alternative, bool active, string label, string? time) =>
+        @<button type="button" role="radio"
+                 class="slot-choice__btn @(active ? "is-active" : "")"
+                 aria-checked="@(active ? "true" : "false")"
+                 @onclick="() => SetAltSlot(areaId, alternative)">
+            <span class="slot-choice__label">@label</span>
+            <span class="slot-choice__time">@time</span>
+        </button>;
 
     private RenderFragment RegisterAction(Area area, SlotInfo slot, string label) =>
         @<text>
