@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace FlomiApp.Data.Models;
 
 public class AssignmentDate
@@ -16,4 +18,8 @@ public class AssignmentDate
     public string?  ReturnedBy    { get; set; }
 
     public VehicleAssignment Assignment { get; set; } = null!;
+
+    /// <summary>Fahrer eingeteilt – als Konto oder als freier Name.</summary>
+    [NotMapped] public bool HasDriver => !string.IsNullOrEmpty(DriverUserId) || !string.IsNullOrWhiteSpace(DriverName);
+    [NotMapped] public bool HasHelper => !string.IsNullOrEmpty(HelperUserId) || !string.IsNullOrWhiteSpace(HelperName);
 }

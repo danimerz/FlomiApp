@@ -351,3 +351,29 @@
 .adm-day-cell--warn      { background: #fef9c3; color: #854d0e; border-color: #fde047; }
 .adm-day-cell--warn-high { background: #ffedd5; color: #9a3412; border-color: #fdba74; }
 .adm-day-cell--full      { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+/* ── Fahrzeug-Lücken ──────────────────────────────────────────────────────── */
+.adm-gaps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .5rem;
+}
+
+.adm-gap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem .75rem;
+    padding: .55rem .85rem;
+    border-radius: 10px;
+    border-left: 4px solid;
+    font-size: .9rem;
+}
+
+.adm-gap strong { min-width: 5.5rem; }
+.adm-gap small  { opacity: .75; }
+
+.adm-gap--alert { background: var(--color-error-bg);   color: var(--color-error-text);   border-color: var(--color-error-border); }
+.adm-gap--warn  { background: var(--color-warning-bg); color: var(--color-warning-text); border-color: var(--color-warning-border); }

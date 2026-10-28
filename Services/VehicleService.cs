@@ -1,5 +1,6 @@
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
+using FlomiApp.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -93,18 +94,7 @@ public class VehicleService : IVehicleService
         assignment.AssignedDates = dates
             .GroupBy(d => d.Date.Date)
             .Select(g => g.First())
-            .Select(d => new AssignmentDate
-            {
-                Date         = d.Date.Date,
-                DriverUserId = d.DriverUserId,
-                DriverName   = d.DriverName,
-                DriverPhone  = d.DriverPhone,
-                HelperUserId = d.HelperUserId,
-                HelperName   = d.HelperName,
-                ReadyFrom    = d.ReadyFrom,
-                PickedUpBy   = d.PickedUpBy,
-                ReturnedBy   = d.ReturnedBy,
-            })
+            .Select(CopyDay)
             .ToList();
 
         db.VehicleAssignments.Add(assignment);
@@ -125,19 +115,7 @@ public class VehicleService : IVehicleService
         existing.AssignedDates = dates
             .GroupBy(d => d.Date.Date)
             .Select(g => g.First())
-            .Select(d => new AssignmentDate
-            {
-                AssignmentId = existing.Id,
-                Date         = d.Date.Date,
-                DriverUserId = d.DriverUserId,
-                DriverName   = d.DriverName,
-                DriverPhone  = d.DriverPhone,
-                HelperUserId = d.HelperUserId,
-                HelperName   = d.HelperName,
-                ReadyFrom    = d.ReadyFrom,
-                PickedUpBy   = d.PickedUpBy,
-                ReturnedBy   = d.ReturnedBy,
-            })
+            .Select(CopyDay)
             .ToList();
 
         await db.SaveChangesAsync();
@@ -154,6 +132,205 @@ public class VehicleService : IVehicleService
 
         db.VehicleAssignments.Remove(assignment);
         await db.SaveChangesAsync();
+    }
+
+    private static AssignmentDate CopyDay(AssignmentDate d) => new()
+    {
+        Date         = d.Date.Date,
+        DriverUserId = d.DriverUserId,
+        DriverName   = d.DriverName,
+        DriverPhone  = d.DriverPhone,
+        HelperUserId = d.HelperUserId,
+        HelperName   = d.HelperName,
+        ReadyFrom    = d.ReadyFrom,
+        PickedUpBy   = d.PickedUpBy,
+        ReturnedBy   = d.ReturnedBy,
+    };
+
+    // ── Einsatzplan ───────────────────────────────────────────────────────────
+    public async Task SaveAssignmentDayAsync(int vehicleId, int eventId, AssignmentDate day)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var date     = day.Date.Date;
+        var existing = await db.VehicleAssignments
+            .Include(a => a.AssignedDates)
+            .Where(a => a.VehicleId == vehicleId && a.EventId == eventId)
+            .OrderBy(a => a.Id)
+            .ToListAsync();
+
+        // Ältere Daten können pro Fahrzeug und Event mehrere Zuweisungen haben – den Tag überall ersetzen
+        foreach (var a in existing)
+            db.AssignmentDates.RemoveRange(a.AssignedDates.Where(d => d.Date.Date == date));
+
+        var target = existing.FirstOrDefault();
+        if (target is null)
+        {
+            target = new VehicleAssignment { VehicleId = vehicleId, EventId = eventId };
+            db.VehicleAssignments.Add(target);
+        }
+
+        target.AssignedDates.Add(CopyDay(day));
+        await db.SaveChangesAsync();
+    }
+
+    public async Task RemoveAssignmentDayAsync(int vehicleId, int eventId, DateTime date)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var existing = await db.VehicleAssignments
+            .Include(a => a.AssignedDates)
+            .Where(a => a.VehicleId == vehicleId && a.EventId == eventId)
+            .ToListAsync();
+
+        foreach (var a in existing)
+        {
+            var remove = a.AssignedDates.Where(d => d.Date.Date == date.Date).ToList();
+            db.AssignmentDates.RemoveRange(remove);
+            // Ohne Einsatztage bleibt keine leere Zuweisung stehen
+            if (a.AssignedDates.Count == remove.Count)
+                db.VehicleAssignments.Remove(a);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<CrewAssignmentResult> AutoAssignCrewAsync(int eventId, DateTime? date = null)
+    {
+        var drivers = await GetUsersByAreaNameAndEventAsync(eventId, VehicleCrewAreas.Driver);
+        var helpers = await GetUsersByAreaNameAndEventAsync(eventId, VehicleCrewAreas.Helper);
+
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var days = await db.AssignmentDates
+            .Include(d => d.Assignment)
+                .ThenInclude(a => a.Vehicle)
+            .Where(d => d.Assignment.EventId == eventId)
+            .ToListAsync();
+
+        int driversAssigned = 0, helpersAssigned = 0;
+
+        foreach (var dayGroup in days.GroupBy(d => d.Date.Date))
+        {
+            if (date.HasValue && dayGroup.Key != date.Value.Date) continue;
+
+            var slots = dayGroup.OrderBy(d => d.Assignment.Vehicle.OwnerName).ToList();
+            // Wer an diesem Tag schon auf einem Fahrzeug ist, wird nicht nochmals eingeteilt
+            var busy  = slots.SelectMany(d => new[] { d.DriverUserId, d.HelperUserId })
+                             .Where(id => id != null).Select(id => id!)
+                             .ToHashSet();
+
+            var freeDrivers = new Queue<ApplicationUser>(
+                drivers.GetValueOrDefault(dayGroup.Key, new()).Where(u => !busy.Contains(u.Id)));
+            foreach (var slot in slots.Where(s => !s.HasDriver))
+            {
+                if (!freeDrivers.TryDequeue(out var u)) break;
+                slot.DriverUserId = u.Id;
+                slot.DriverPhone  = PhoneHelper.FormatSwissPhone(u.PhoneNumber) ?? slot.DriverPhone;
+                busy.Add(u.Id);
+                driversAssigned++;
+            }
+
+            var freeHelpers = new Queue<ApplicationUser>(
+                helpers.GetValueOrDefault(dayGroup.Key, new()).Where(u => !busy.Contains(u.Id)));
+            foreach (var slot in slots.Where(s => !s.HasHelper))
+            {
+                if (!freeHelpers.TryDequeue(out var u)) break;
+                slot.HelperUserId = u.Id;
+                busy.Add(u.Id);
+                helpersAssigned++;
+            }
+        }
+
+        await db.SaveChangesAsync();
+        return new CrewAssignmentResult(driversAssigned, helpersAssigned);
+    }
+
+    public async Task<int> CopyAssignmentsFromEventAsync(int sourceEventId, int targetEventId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var source = await db.Events.FindAsync(sourceEventId);
+        var target = await db.Events.FindAsync(targetEventId);
+        if (source is null || target is null || sourceEventId == targetEventId) return 0;
+
+        // Tage relativ zum Flomi übernehmen: «2 Tage vorher» bleibt «2 Tage vorher»
+        var offset = target.Date.Date - source.Date.Date;
+
+        var alreadyInTarget = await db.VehicleAssignments
+            .Where(a => a.EventId == targetEventId)
+            .Select(a => a.VehicleId)
+            .ToListAsync();
+
+        var sourceAssignments = await db.VehicleAssignments
+            .Include(a => a.AssignedDates)
+            .Where(a => a.EventId == sourceEventId
+                     && !a.Vehicle.IsSample
+                     && !alreadyInTarget.Contains(a.VehicleId))
+            .AsNoTracking()
+            .ToListAsync();
+
+        var copied = 0;
+        foreach (var group in sourceAssignments.GroupBy(a => a.VehicleId))
+        {
+            // Fahrer und Helfer wechseln jedes Jahr – übernommen werden nur Tag und «Bereit ab»
+            var dates = group
+                .SelectMany(a => a.AssignedDates)
+                .GroupBy(d => d.Date.Date)
+                .Select(g => new AssignmentDate { Date = g.Key + offset, ReadyFrom = g.First().ReadyFrom })
+                .ToList();
+            if (dates.Count == 0) continue;
+
+            db.VehicleAssignments.Add(new VehicleAssignment
+            {
+                VehicleId     = group.Key,
+                EventId       = targetEventId,
+                AssignedDates = dates,
+            });
+            copied++;
+        }
+
+        await db.SaveChangesAsync();
+        return copied;
+    }
+
+    public async Task<List<VehicleDayCoverage>> GetDayCoverageAsync(IEnumerable<int> eventIds)
+    {
+        var ids = eventIds.ToList();
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
+        var days = await db.AssignmentDates
+            .Where(d => ids.Contains(d.Assignment.EventId))
+            .Select(d => new
+            {
+                d.Assignment.EventId,
+                d.Assignment.VehicleId,
+                d.Date,
+                HasDriver = d.DriverUserId != null || (d.DriverName != null && d.DriverName != ""),
+            })
+            .ToListAsync();
+
+        var pickups = await db.FurniturePickupRequests
+            .Where(r => r.EventId != null && ids.Contains(r.EventId.Value)
+                     && r.Status == PickupRequestStatus.Accepted)
+            .Select(r => new { EventId = r.EventId!.Value, r.PickupDate })
+            .ToListAsync();
+
+        var keys = days.Select(d => (d.EventId, Date: d.Date.Date))
+            .Concat(pickups.Select(p => (p.EventId, Date: p.PickupDate.Date)))
+            .Distinct();
+
+        return keys
+            .Select(k =>
+            {
+                var vehiclesOnDay = days.Where(d => d.EventId == k.EventId && d.Date.Date == k.Date)
+                                        .GroupBy(d => d.VehicleId)
+                                        .ToList();
+                return new VehicleDayCoverage(
+                    k.EventId,
+                    k.Date,
+                    pickups.Count(p => p.EventId == k.EventId && p.PickupDate.Date == k.Date),
+                    vehiclesOnDay.Count,
+                    vehiclesOnDay.Count(g => g.Any(d => d.HasDriver)));
+            })
+            .OrderBy(c => c.Date)
+            .ToList();
     }
 
     // ── Users ─────────────────────────────────────────────────────────────────

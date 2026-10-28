@@ -4,6 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @inject IAreaService AreaService
 @inject IMailService MailService
+@inject IVehicleService VehicleService
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
@@ -114,6 +115,10 @@
                             <input type="date" class="ac-input" @bind="newYearDate" />
                         </div>
                     </div>
+                    <label style="display:flex;align-items:center;gap:.5rem;margin-top:.85rem;font-size:.9rem;cursor:pointer">
+                        <input type="checkbox" @bind="newYearCopyVehicles" />
+                        🚗 Fahrzeuge mit ihren Einsatztagen übernehmen (ohne Fahrer und Helfer)
+                    </label>
                     @if (!string.IsNullOrEmpty(newYearMessage))
                     {
                         <div class="ac-state-card @(newYearSuccess ? "ac-state-card--success" : "ac-state-card--error")" style="margin-top:.75rem">
@@ -1124,6 +1129,7 @@
     private string?  newYearMessage       = null;
     private bool     newYearSuccess       = false;
     private bool     isCreatingNewYear    = false;
+    private bool     newYearCopyVehicles  = true;
 
     // ── Categories ────────────────────────────────────────────────────────────
     private AreaCategory currentCategory   = new();
@@ -1286,14 +1292,19 @@
             };
             await AreaService.CreateEventAsync(newEvent);
 
-            var copiedCount = await AreaService.CopyAreasToEventAsync(newYearSourceEventId, newEvent.Id);
+            var copiedCount  = await AreaService.CopyAreasToEventAsync(newYearSourceEventId, newEvent.Id);
+            var vehicleCount = newYearCopyVehicles
+                ? await VehicleService.CopyAssignmentsFromEventAsync(newYearSourceEventId, newEvent.Id)
+                : 0;
 
             events     = await AreaService.GetAllEventsAsync();
             areas      = await AreaService.GetAllAreasAsync();
 
             newYearSuccess = true;
-            newYearMessage = $"Event «{newEvent.Name}» erstellt, {copiedCount} Bereich-Zuweisung(en) kopiert. " +
-                              "Im Tab «Bereich-Zuweisungen» kannst du die Details jetzt anpassen.";
+            newYearMessage = $"Event «{newEvent.Name}» erstellt, {copiedCount} Bereich-Zuweisung(en) kopiert" +
+                             (newYearCopyVehicles ? $" und {vehicleCount} Fahrzeug(e) mit ihren Einsatztagen übernommen" : "") +
+                             ". Im Tab «Bereich-Zuweisungen» kannst du die Details jetzt anpassen" +
+                             (vehicleCount > 0 ? ", die Fahrer teilst du unter «Fahrzeuge → Einsatzplan» ein." : ".");
         }
         catch (Exception ex)
         {

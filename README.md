@@ -128,8 +128,13 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 
 ### Fahrzeugverwaltung
 
-**Fahrzeug-Zuweisungen:**
-- Pro Einsatztag: Fahrer + Beifahrer aus gefilterten Dropdowns (nur Personen, die sich für «Fahrer» resp. «Beifahrer»-Bereiche am jeweiligen Tag angemeldet haben)
+**Einsatzplan (Tab «Einsatzplan»):**
+- Eine Tabelle pro Event: Zeilen = Fahrzeuge, Spalten = Einsatztage. Klick auf ein Feld trägt das Fahrzeug für den Tag ein bzw. ändert Fahrer und Helfer; «Bereit ab», «Abgeholt durch» und «Zurückgebracht durch» liegen unter «Mehr»
+- Fahrer und Helfer in einem Feld: Name tippen – passt er zu einem Konto, wird es verknüpft (für den Tag Angemeldete zuerst vorgeschlagen), sonst bleibt es ein freier Name
+- **🤖 Fahrer automatisch einteilen**: verteilt die für «Fahrer» resp. «Beifahrer» angemeldeten Personen auf Fahrzeuge ohne Besatzung (ganzes Event oder pro Tag); bestehende Einteilungen bleiben
+- Tagesstatus im Spaltenkopf: rot = Abholungen, aber kein Fahrzeug mit Fahrer; gelb = Fahrzeug ohne Fahrer; grün = besetzt. Darunter die Liste «Angemeldet, aber noch nicht eingeteilt»
+- **🔁 Fahrzeuge übernehmen**: Ist ein Event noch leer, werden die Fahrzeuge eines früheren Events mit denselben Tagen relativ zum Flomi übernommen (ohne Fahrer und Helfer). «🚀 Neues Jahr starten» macht das auf Wunsch gleich mit
+- Neue Fahrzeuge direkt im Einsatzplan erfassen
 - Telefonnummer wird automatisch aus dem Benutzerprofil übernommen
 - **Doppelbuchungsschutz**: Eine Person kann pro Tag nur einem Fahrzeug zugeteilt werden
 - Storniert ein Benutzer seinen Fahrer/Beifahrer-Bereich → automatische Entfernung aus der Fahrzeugzuweisung
@@ -164,6 +169,7 @@ Zentrale Verwaltung unter `/admin/config` mit 4 Tabs:
 
 **Tab «Übersicht»:**
 - 6 KPI-Kacheln: Anmeldungen, Offene Plätze, Offene Abholungen, Fahrzeuge, Benutzer, Stornierungen
+- Hinweis auf kommende Tage, an denen Fahrer fehlen (Abholungen ohne Fahrzeug mit Fahrer, Fahrzeuge ohne Fahrer)
 - Bereichs-Auslastungsbalken (Top 8)
 - Aktivitäts-Feed: Chronologische Timeline (Heute/Gestern/Datum) aller Anmeldungen, Stornierungen und Möbelanfragen
 - Neueste ausstehende Möbelanfragen
