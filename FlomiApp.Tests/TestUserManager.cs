@@ -1,5 +1,6 @@
 using FlomiApp.Data;
 using FlomiApp.Data.Models;
+using FlomiApp.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,7 +18,8 @@ public static class TestUserManager
 {
     public static UserManager<ApplicationUser> Create(ApplicationDbContext context)
     {
-        var store = new UserStore<ApplicationUser, IdentityRole, ApplicationDbContext>(context);
+        // Wie in Program.cs: UserStore mit Passkey-Speicher
+        var store = new ApplicationUserStore(context);
 
         return new UserManager<ApplicationUser>(
             store,

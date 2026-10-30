@@ -10,6 +10,7 @@
 @inject IVehicleService VehicleService
 @inject IMailQueue MailQueue
 @inject UserManager<ApplicationUser> UserManager
+@inject IPasskeyService PasskeyService
 @using QRCoder
 
 <PageTitle>Dashboard</PageTitle>
@@ -24,6 +25,22 @@
             </p>
         </div>
     </section>
+
+    @* Einmaliger Hinweis: Passkey einrichten (nur ohne Passkey, nur wenn der Browser es kann) *@
+    @if (showPasskeyHint)
+    {
+        <div class="state-card state-card--info passkey-hint">
+            <div class="state-card__icon">🔑</div>
+            <div class="state-card__content">
+                <h3>Nächstes Mal ohne Passwort?</h3>
+                <p>Mit einem Passkey meldest du dich per Face ID, Fingerabdruck oder Geräte-PIN an.</p>
+                <div class="passkey-hint__actions">
+                    <a class="passkey-hint__btn" href="/user/settings?tab=security">Passkey einrichten</a>
+                    <button type="button" class="passkey-hint__btn passkey-hint__btn--ghost" @onclick="DismissPasskeyHint">Nicht mehr anzeigen</button>
+                </div>
+            </div>
+        </div>
+    }
 
     @if (appointments == null)
     {
@@ -391,6 +408,10 @@
     private const string UnassignedKey      = "__weitere-abholungen";
     private HashSet<string> tileEvents = new();
 
+    // Hinweis «Passkey einrichten» – weggeklickt bleibt er auf diesem Gerät aus
+    private const string PasskeyHintStorageKey = "flomi.passkeyHint.dismissed";
+    private bool showPasskeyHint;
+
     // ── Gefilterte & gruppierte Appointments ──────────────────────────────────
     private List<Appointment> FilteredAppointments =>
         showCancelledAppointments
@@ -535,7 +556,23 @@
                 tileEvents = stored.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
                 StateHasChanged();
             }
+
+            if (!string.IsNullOrEmpty(userId)
+                && await JS.InvokeAsync<string?>("localStorage.getItem", PasskeyHintStorageKey) == null
+                && await JS.InvokeAsync<bool>("flomiPasskeys.isSupported")
+                && await PasskeyService.CountForUserAsync(userId) == 0)
+            {
+                showPasskeyHint = true;
+                StateHasChanged();
+            }
         }
+        catch (JSException) { }
+    }
+
+    private async Task DismissPasskeyHint()
+    {
+        showPasskeyHint = false;
+        try { await JS.InvokeVoidAsync("localStorage.setItem", PasskeyHintStorageKey, "1"); }
         catch (JSException) { }
     }
 

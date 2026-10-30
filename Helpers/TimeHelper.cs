@@ -53,4 +53,12 @@ public static class TimeHelper
 
         return FormatTime(input);
     }
+
+    /// <summary>UTC-Zeitpunkt in Schweizer Zeit (Sommer-/Winterzeit); ohne Zeitzonendaten unverändert.</summary>
+    public static DateTime ToSwissTime(DateTime utc)
+    {
+        try   { return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich")); }
+        catch (TimeZoneNotFoundException) { return utc; }
+        catch (InvalidTimeZoneException)  { return utc; }
+    }
 }

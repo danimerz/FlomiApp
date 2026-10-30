@@ -1,4 +1,6 @@
 using System.Net;
+using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Rewrite;
@@ -57,6 +59,38 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// Passkeys: Prüfung durch Identity 10, Speicherung im eigenen Store (Tabelle UserPasskeys),
+// solange Identity.EntityFrameworkCore wegen Pomelo auf 9 bleibt. Ersetzt den UserStore
+// aus AddEntityFrameworkStores (spätere Registrierung gewinnt).
+builder.Services.AddScoped<IUserStore<ApplicationUser>, ApplicationUserStore>();
+builder.Services.TryAddScoped<IPasskeyHandler<ApplicationUser>, PasskeyHandler<ApplicationUser>>();
+builder.Services.Configure<IdentityPasskeyOptions>(options =>
+{
+    // Gerät muss den Benutzer prüfen (Face ID, Fingerabdruck, PIN) – nur so zählt der
+    // Passkey als zwei Faktoren. Passkeys werden auffindbar gespeichert: Anmeldung ohne E-Mail.
+    options.UserVerificationRequirement = "required";
+    options.ResidentKeyRequirement      = "required";
+    // Leer = Host der Anfrage (pfadiflomi.ch bzw. localhost). Nur setzen, wenn der
+    // Reverse Proxy einen anderen Host weitergibt. Passkeys gelten nur für diese Domain.
+    var serverDomain = builder.Configuration["Passkeys:ServerDomain"];
+    if (!string.IsNullOrWhiteSpace(serverDomain))
+        options.ServerDomain = serverDomain;
+});
+
+// Der amr-Claim (Anmeldemethode, z.B. «passkey») muss die periodische Prüfung des
+// Security-Stamps überleben – sonst verlieren Admins nach 30 Min. den Passkey-Status.
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    options.OnRefreshingPrincipal = context =>
+    {
+        var amr = context.CurrentPrincipal?.FindFirst(Passkeys.AmrClaimType);
+        if (amr != null && context.NewPrincipal?.Identity is ClaimsIdentity identity
+            && !identity.HasClaim(c => c.Type == Passkeys.AmrClaimType))
+        {
+            identity.AddClaim(new Claim(Passkeys.AmrClaimType, amr.Value));
+        }
+        return Task.CompletedTask;
+    });
+
 builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection("Smtp"));
 
@@ -77,15 +111,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    // Zusätzlich zur Rollen-Prüfung: Admin-Rollen müssen 2FA aktiviert haben.
-    // Wer keine Admin-Rolle hat, erfüllt diese Policy trivial (betrifft nur
-    // Seiten, die zusätzlich auch [Authorize(Roles = ...)] verlangen).
+    // Zusätzlich zur Rollen-Prüfung: Admin-Rollen müssen 2FA aktiviert haben
+    // oder mit Passkey angemeldet sein. Wer keine Admin-Rolle hat, erfüllt diese
+    // Policy trivial (betrifft nur Seiten, die zusätzlich auch [Authorize(Roles = ...)] verlangen).
     options.AddPolicy(Roles.RequireTwoFactorForAdmins, policy =>
-        policy.RequireAssertion(ctx =>
-        {
-            var isAdmin = Roles.AllAdminRoles.Any(ctx.User.IsInRole);
-            return !isAdmin || ctx.User.HasClaim("tfa_enrolled", "true");
-        }));
+        policy.RequireAssertion(ctx => Passkeys.MeetsAdminTwoFactorRequirement(ctx.User)));
 });
 
 builder.Services.AddRazorPages();
@@ -104,6 +134,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddSingleton<IChatService, ChatService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IPasskeyService, PasskeyService>();
 builder.Services.AddHostedService<PickupImageMaintenanceService>();
 
 // Routenplanung: Adresssuche (geo.admin.ch) und Fahrzeiten (OpenRouteService, optional)
@@ -183,6 +214,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapPickupImages();
 app.MapNewsImages();
+app.MapPasskeys();
 app.MapSeo();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

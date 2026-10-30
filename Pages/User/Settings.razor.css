@@ -899,3 +899,98 @@
         gap: 0.6rem;
     }
 }
+
+/* ── Passkeys ─────────────────────────────────────────────────────────────── */
+.passkey-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.passkey-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--color-border-light);
+    border-radius: 12px;
+    background: var(--color-surface-input);
+}
+
+.passkey-item__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.passkey-item__info strong {
+    color: var(--color-text-strong);
+    overflow-wrap: anywhere;
+}
+
+.passkey-item__meta,
+.passkey-item__confirm {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.passkey-item__actions,
+.passkey-item__rename {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.passkey-item__rename {
+    flex: 1 1 100%;
+}
+
+.passkey-item__rename ::deep input {
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.passkey-add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.passkey-add .form-group {
+    flex: 1 1 14rem;
+    margin: 0;
+}
+
+.passkey-error,
+.passkey-success {
+    margin: 0.75rem 0 0;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+.passkey-error {
+    color: var(--color-error-text);
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+}
+
+.passkey-success {
+    color: var(--color-success-text);
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+}
+
+.passkey-note {
+    margin: 0.9rem 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}

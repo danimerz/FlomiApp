@@ -384,3 +384,27 @@
     height: 1px;
     background: #e2e8f0;
 }
+
+/* ── Passkey-Anmeldung (Login) ─────────────────────────────────────────── */
+.passkey-login {
+    margin-bottom: 0.75rem;
+}
+
+.passkey-btn__icon {
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.passkey-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.passkey-login__error {
+    margin: 0.6rem 0 0;
+    font-size: 0.88rem;
+    color: #b91c1c;
+    text-align: center;
+}

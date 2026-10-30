@@ -1051,3 +1051,39 @@ input:checked + .slider:before {
         display: none;
     }
 }
+
+/* ── Hinweis «Passkey einrichten» ─────────────────────────────────────────── */
+.passkey-hint {
+    margin-bottom: 1.25rem;
+}
+
+.passkey-hint__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.passkey-hint__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1rem;
+    border: 1.5px solid var(--color-primary);
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.passkey-hint__btn:hover {
+    filter: brightness(1.05);
+}
+
+.passkey-hint__btn--ghost {
+    background: transparent;
+    color: inherit;
+    border-color: currentColor;
+}

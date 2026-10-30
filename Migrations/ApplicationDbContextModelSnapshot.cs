@@ -757,6 +757,71 @@ namespace FlomiApp.Migrations
                     b.ToTable("NewsItems");
                 });
 
+            modelBuilder.Entity("FlomiApp.Data.Models.UserPasskey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte[]>("AttestationObject")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<byte[]>("ClientDataJson")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<byte[]>("CredentialId")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("varbinary(1024)");
+
+                    b.Property<bool>("IsBackedUp")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsBackupEligible")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsUserVerified")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<byte[]>("PublicKey")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<uint>("SignCount")
+                        .HasColumnType("int unsigned");
+
+                    b.Property<string>("Transports")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CredentialId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPasskeys", (string)null);
+                });
+
             modelBuilder.Entity("FlomiApp.Data.Models.Vehicle", b =>
                 {
                     b.Property<int>("Id")
@@ -1139,6 +1204,17 @@ namespace FlomiApp.Migrations
                         .HasForeignKey("FlomiApp.Data.Models.NewsImageData", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.UserPasskey", b =>
+                {
+                    b.HasOne("FlomiApp.Data.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>

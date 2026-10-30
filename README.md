@@ -23,6 +23,7 @@
 - [Datenexport](#datenexport)
 - [Rollen & Berechtigungen](#rollen--berechtigungen)
 - [Zwei-Faktor-Authentifizierung (2FA)](#zwei-faktor-authentifizierung-2fa)
+- [Passkeys (Anmeldung ohne Passwort)](#passkeys-anmeldung-ohne-passwort)
 - [Audit-Log](#audit-log)
 - [Externe Anmeldung (Google, Microsoft, MiData)](#externe-anmeldung-google-microsoft-midata)
 - [Installation & Setup](#installation--setup)
@@ -55,8 +56,9 @@
 - **Familienmitglieder** können pro Konto hinterlegt werden (eigene Anmeldungen für Kinder / Begleitpersonen)
 - **E-Mail-Benachrichtigungen** können pro Benutzer aktiviert/deaktiviert werden
 - **Passwort vergessen**: Reset-Link per E-Mail, gestylte Reset-Seite mit PW-Generator und Stärke-Indikator
+- **Passkeys**: Anmeldung mit Face ID, Fingerabdruck oder Geräte-PIN statt Passwort, siehe [Passkeys](#passkeys-anmeldung-ohne-passwort)
 - **Admin-Rollen**: Vollzugriff (`Admin`) oder auf einen Bereich beschränkte Rollen (`BereichsAdmin`, `FahrzeugAdmin`, `MoebelAdmin`), siehe [Rollen & Berechtigungen](#rollen--berechtigungen)
-- **2FA-Pflicht** für alle Admin-Rollen (Authenticator-App), siehe [Zwei-Faktor-Authentifizierung](#zwei-faktor-authentifizierung-2fa)
+- **2FA-Pflicht** für alle Admin-Rollen (Authenticator-App oder Passkey), siehe [Zwei-Faktor-Authentifizierung](#zwei-faktor-authentifizierung-2fa)
 
 ---
 
@@ -198,7 +200,7 @@ Seite `/admin/users`:
 - Tabelle mit allen Benutzern, Suche, Filter nach Stufe, sortierbare Spalten
 - Tabs: Alle / Admins / Gesperrt
 - **Anmeldungszähler**: Offene Anmeldungen pro Benutzer direkt in der Tabelle
-- Aktionen: Edit (Name/Mail/Stufe/Admin-Rollen), PW manuell setzen oder per 🔑 PW-Mail, 2FA zurücksetzen, Sperren/Entsperren, Löschen
+- Aktionen: Edit (Name/Mail/Stufe/Admin-Rollen), PW manuell setzen oder per 🔑 PW-Mail, 2FA zurücksetzen, 🔑 Passkeys entfernen, Sperren/Entsperren, Löschen
 - Rollenänderungen, gesetzte Passwörter, versendete PW-Mails, 2FA-Resets, Sperrungen und Löschungen werden im [Audit-Log](#audit-log) protokolliert
 
 ---
@@ -277,8 +279,9 @@ Server-Logs an; beim ersten Login muss es sofort geändert werden
 
 ## Zwei-Faktor-Authentifizierung (2FA)
 
-Für alle Admin-Rollen ist 2FA mit einer Authenticator-App (z.B. Google Authenticator, Microsoft
-Authenticator, 1Password) **Pflicht**. Normale Benutzer brauchen keine 2FA.
+Für alle Admin-Rollen ist 2FA **Pflicht**: entweder mit einer Authenticator-App (z.B. Google
+Authenticator, Microsoft Authenticator, 1Password) oder durch die Anmeldung mit einem
+[Passkey](#passkeys-anmeldung-ohne-passwort). Normale Benutzer brauchen keine 2FA.
 
 - **Einrichtung beim Login:** Meldet sich jemand mit Admin-Rolle ohne aktive 2FA an, leitet die App
   direkt auf die Einrichtungsseite weiter. Dort erscheint ein QR-Code (alternativ der Schlüssel zum
@@ -286,11 +289,77 @@ Authenticator, 1Password) **Pflicht**. Normale Benutzer brauchen keine 2FA.
 - **Wiederherstellungscodes:** Nach der Aktivierung werden einmalig 10 Recovery-Codes angezeigt.
   Sie ersetzen beim Login den Authenticator-Code, falls das Gerät verloren geht – sicher aufbewahren.
 - **Durchsetzung:** Die Policy `RequireTwoFactorForAdmins` prüft auf jeder Admin-Seite, ob 2FA aktiv
-  ist. Ohne 2FA bleiben die Admin-Seiten gesperrt, auch wenn die Rolle vergeben ist.
+  ist. Erfüllt ist sie, wenn die Authenticator-App eingerichtet ist (Claim `tfa_enrolled`) oder
+  die aktuelle Sitzung mit einem Passkey eröffnet wurde (Claim `amr=passkey`). Ohne 2FA bleiben die
+  Admin-Seiten gesperrt, auch wenn die Rolle vergeben ist.
 - **Zurücksetzen:** Ein `Admin` kann die 2FA eines Benutzers unter `/admin/users` zurücksetzen
   (z.B. bei Gerätewechsel ohne Recovery-Codes). Die Person richtet 2FA beim nächsten Login neu ein.
 - **Reihenfolge beim ersten Login:** Ein automatisch generiertes Passwort muss zuerst geändert
   werden, danach folgt die 2FA-Einrichtung.
+
+---
+
+## Passkeys (Anmeldung ohne Passwort)
+
+Ein Passkey ersetzt Passwort und Code: Man meldet sich mit Face ID, Fingerabdruck oder der
+Geräte-PIN an. iPhone/Mac speichern Passkeys im iCloud-Schlüsselbund, Android/Chrome im
+Google-Passwortmanager, Windows in Windows Hello – über diese Dienste sind sie auf allen eigenen
+Geräten verfügbar. Passkeys sind freiwillig; Passwort und «Passwort vergessen» funktionieren weiterhin.
+
+**Für Benutzer**
+
+- **Einrichten:** `/user/settings` → Tab «🔒 Sicherheit» → Karte «🔑 Passkeys» → Namen vergeben
+  (Vorschlag aus dem Gerät, z.B. «iPhone») → «Passkey hinzufügen» → am Gerät bestätigen.
+  Bis zu 10 Passkeys pro Konto (mehrere Geräte, Sicherheitsschlüssel).
+- **Anmelden:** Login-Seite → «🔑 Mit Passkey anmelden». Auf neueren Geräten schlägt schon das
+  E-Mail-Feld den Passkey vor (Autofill). «Angemeldet bleiben» gilt auch für Passkeys.
+- **Verwalten:** In derselben Karte umbenennen oder entfernen; angezeigt werden «hinzugefügt» und
+  «zuletzt verwendet». Ein entfernter Passkey sollte auch im Passwortmanager des Geräts gelöscht werden.
+- **Hinweis im Dashboard:** Wer noch keinen Passkey hat und einen passenden Browser nutzt, sieht
+  im Dashboard einmal «Nächstes Mal ohne Passwort?». «Nicht mehr anzeigen» merkt sich das Gerät
+  (`localStorage` `flomi.passkeyHint.dismissed`).
+
+**Für Admins**
+
+- Eine Anmeldung mit Passkey **erfüllt die 2FA-Pflicht** – kein Authenticator-Code nötig. Der Passkey
+  prüft selbst zwei Faktoren: Besitz des Geräts und Face ID/Fingerabdruck/PIN (User Verification
+  ist Pflicht). Er ist zudem phishing-sicher, weil er nur auf `pfadiflomi.ch` funktioniert.
+- Admins **ohne** Authenticator-App, die sich mit Passwort anmelden, landen wie bisher auf der
+  2FA-Einrichtung. Dort steht der Hinweis, alternativ einen Passkey einzurichten bzw. sich mit dem
+  vorhandenen Passkey neu anzumelden.
+- Mit Passwort angemeldete Admins kommen nur mit eingerichteter Authenticator-App auf die Admin-Seiten
+  (wie bisher). Ein vorhandener Passkey allein genügt dafür nicht – entscheidend ist, wie die
+  *aktuelle Sitzung* eröffnet wurde.
+- **Gerät verloren:** Unter `/admin/users` → «🔑 Passkeys (n)» entfernt ein `Admin` alle Passkeys einer
+  Person; offene Sitzungen werden dabei beendet (Security-Stamp). Wird im Audit-Log protokolliert.
+
+**Technik**
+
+- Die WebAuthn-Prüfung (Challenge, Herkunft, Signatur, Signaturzähler) übernimmt ASP.NET Core
+  Identity 10 (`SignInManager.MakePasskeyCreationOptionsAsync`, `PerformPasskeyAttestationAsync`,
+  `MakePasskeyRequestOptionsAsync`, `PerformPasskeyAssertionAsync`). Die Challenge liegt dabei
+  kurzzeitig in einem Identity-Cookie.
+- **Speicherung:** Identity 10 bringt die Passkey-Tabelle erst mit `Identity.EntityFrameworkCore` 10
+  (EF Core 10) – die App bleibt wegen Pomelo auf EF Core 9. Deshalb speichert der eigene
+  `Security/ApplicationUserStore` (erbt vom EF-UserStore, implementiert `IUserPasskeyStore`) in die
+  Tabelle `UserPasskeys` (Migration `AddUserPasskeys`). Gespeichert wird nur der öffentliche
+  Schlüssel samt Metadaten, nichts Geheimes.
+- **Abläufe:** `wwwroot/js/passkey.js` ruft `navigator.credentials` auf. Endpunkte in
+  `Endpoints/PasskeyEndpoints.cs`: `POST /passkeys/creation-options` und `POST /passkeys/register`
+  (angemeldet), `POST /passkeys/request-options` (anonym). Die Anmeldung selbst ist der Handler
+  `Passkey` der Login-Seite. Die Einstellungen (Blazor) rufen `flomiPasskeys.register()` per JS-Interop
+  auf, weil das Erstellen den HttpContext braucht.
+- **Sitzungsmerkmal:** Nach der Passkey-Anmeldung trägt das Login-Cookie den Claim `amr=passkey`.
+  `SecurityStampValidatorOptions.OnRefreshingPrincipal` übernimmt ihn bei der periodischen
+  Prüfung (alle 30 Min.), sonst verlören Admins mitten in der Sitzung den Zugang.
+- **Domain:** Passkeys sind an die Domain gebunden (Relying Party ID = Host der Anfrage, also
+  `pfadiflomi.ch`; `www.` wird vorher umgeleitet). Nach einem Domainwechsel funktionieren bestehende
+  Passkeys nicht mehr – das Passwort schon. Gibt ein Reverse Proxy einen anderen Host weiter, die
+  Domain fest setzen: `Passkeys__ServerDomain=pfadiflomi.ch`. Lokal (`localhost`) funktionieren
+  Passkeys ebenfalls.
+- **Später mit EF Core 10:** `Identity.EntityFrameworkCore` 10 nutzen (Identity-Schema-Version 3,
+  Tabelle `AspNetUserPasskeys`), Daten aus `UserPasskeys` übernehmen, `ApplicationUserStore`
+  entfernen. Die Abläufe und das JavaScript bleiben gleich.
 
 ---
 
@@ -308,6 +377,8 @@ Jeder Eintrag enthält Zeitpunkt, Admin, Aktion, betroffene Person und Details
 | Passwort gesetzt | `/admin/users` (manuell gesetztes Passwort) |
 | PW-Reset-Mail gesendet | `/admin/users` (Reset-Link per Mail) |
 | 2FA zurückgesetzt | `/admin/users` |
+| Passkeys zurückgesetzt | `/admin/users` (alle Passkeys einer Person entfernt) |
+| Passkey hinzugefügt / entfernt | `/user/settings` (die Person selbst; Name des Passkeys in den Details) |
 | Anmeldung storniert (Admin) | `/admin/appointments` |
 
 Die Übersicht lässt sich nach Admin-Name, Aktion und Zeitraum filtern und zeigt die neuesten
@@ -493,6 +564,10 @@ ein fehlschlagender Test stoppt den Deploy. Die Version `1.0.<Lauf-Nummer> (<Com
 ```
 
 > **Sicherheit:** Connection-String und SMTP-Credentials gehören **nicht** in `appsettings.json`. Für Entwicklung `.NET User Secrets` verwenden (`dotnet user-secrets set ...`), für Produktion Umgebungsvariablen oder einen Secret Manager.
+
+Optional: `Passkeys:ServerDomain` (Umgebungsvariable `Passkeys__ServerDomain`) legt die Domain der
+Passkeys fest. Leer = Host der Anfrage; nur nötig, wenn der Reverse Proxy einen anderen Host
+weitergibt. Siehe [Passkeys](#passkeys-anmeldung-ohne-passwort).
 
 ### Suchmaschinen (SEO)
 

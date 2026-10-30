@@ -29,10 +29,27 @@
         </div>
 
         <div class="register-card__body">
+            @* Passkey: erscheint nur, wenn der Browser Passkeys kann (wwwroot/js/passkey.js) *@
+            <div class="passkey-login" data-passkey-login hidden>
+                <form method="post" asp-page-handler="Passkey" asp-route-returnUrl="@Model.ReturnUrl">
+                    <input type="hidden" name="credentialJson" data-passkey-credential />
+                    <input type="hidden" name="rememberMe" value="false" data-passkey-remember />
+                    <button type="button" class="social-btn passkey-btn" data-passkey-start>
+                        <span class="social-btn__icon passkey-btn__icon" aria-hidden="true">🔑</span>
+                        <span>Mit Passkey anmelden</span>
+                    </button>
+                </form>
+                <p class="passkey-login__error" role="alert" data-passkey-error hidden></p>
+                @if (!(Model.ExternalLogins?.Count > 0))
+                {
+                    <div class="social-divider"><span>oder mit E-Mail</span></div>
+                }
+            </div>
+
             <partial name="_ExternalLoginButtons"
                      model='new ExternalLoginButtonsModel(Model.ExternalLogins ?? new List<Microsoft.AspNetCore.Authentication.AuthenticationScheme>(), Model.ReturnUrl,
                          "oder mit E-Mail",
-                         "Admin-Konten melden sich mit E-Mail, Passwort und 2FA an.")' />
+                         "Admin-Konten melden sich mit Passkey oder mit E-Mail, Passwort und 2FA an.")' />
 
             <form id="account" method="post" class="register-form">
                 <div asp-validation-summary="ModelOnly" class="register-validation"></div>
@@ -42,7 +59,7 @@
                         <label asp-for="Input.Email" class="register-label"></label>
                         <input asp-for="Input.Email"
                                class="register-input"
-                               autocomplete="username"
+                               autocomplete="username webauthn"
                                aria-required="true"
                                placeholder="name@example.com" />
                         <span asp-validation-for="Input.Email" class="register-error"></span>
@@ -95,4 +112,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/passkey.js" asp-append-version="true"></script>
 }

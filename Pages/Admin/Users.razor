@@ -9,6 +9,7 @@
 @inject RoleManager<IdentityRole>     RoleManager
 @inject IMailService                  MailService
 @inject IAuditLogService              AuditLogService
+@inject IPasskeyService               PasskeyService
 @inject NavigationManager             Navigation
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
@@ -187,6 +188,13 @@
                                 <button class="usr-btn usr-btn--unlock" @onclick="() => confirmResetTfa = u"
                                         title="2FA zurücksetzen (z.B. bei verlorenem Handy)">
                                     🔐 2FA reset
+                                </button>
+                            }
+                            @if (passkeyCounts.TryGetValue(u.Id, out var pkCount))
+                            {
+                                <button class="usr-btn usr-btn--unlock" @onclick="() => confirmResetPasskeys = u"
+                                        title="Alle Passkeys entfernen (z.B. bei verlorenem Gerät)">
+                                    🔑 Passkeys (@pkCount)
                                 </button>
                             }
                             <button class="usr-btn usr-btn--delete"
@@ -378,6 +386,34 @@
     </div>
 }
 
+<!-- ════════════════════════════════════════════════════
+     PASSKEY-RESET CONFIRM MODAL
+════════════════════════════════════════════════════ -->
+@if (confirmResetPasskeys != null)
+{
+    <div class="usr-modal-backdrop" @onclick="() => confirmResetPasskeys = null">
+        <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
+            <div class="usr-modal__header">
+                <h3>🔑 Passkeys entfernen</h3>
+                <button class="usr-modal__close" @onclick="() => confirmResetPasskeys = null">✕</button>
+            </div>
+            <div class="usr-modal__body">
+                <p style="margin:0;font-size:.95rem">
+                    Alle Passkeys von <strong>@confirmResetPasskeys.FirstName @confirmResetPasskeys.LastName</strong>
+                    (@confirmResetPasskeys.Email) entfernen? Offene Sitzungen werden beendet. Die Person meldet sich
+                    danach mit E-Mail und Passwort an (Admins zusätzlich mit 2FA) und kann neue Passkeys einrichten.
+                </p>
+            </div>
+            <div class="usr-modal__footer">
+                <button class="usr-submit-btn" @onclick="ResetPasskeys" disabled="@isSaving">
+                    @(isSaving ? "⏳ Wird entfernt..." : "🔑 Ja, alle entfernen")
+                </button>
+                <button class="usr-cancel-btn" @onclick="() => confirmResetPasskeys = null">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [CascadingParameter]
     private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
@@ -418,6 +454,10 @@
 
     // ── 2FA-Reset ─────────────────────────────────────────────────────────────
     private ApplicationUser? confirmResetTfa = null;
+
+    // ── Passkey-Reset ─────────────────────────────────────────────────────────
+    private ApplicationUser?        confirmResetPasskeys = null;
+    private Dictionary<string, int> passkeyCounts        = new();
 
     // ── PW-Reset ──────────────────────────────────────────────────────────────
     private ApplicationUser? pwUser      = null;
@@ -476,6 +516,7 @@
     private async Task LoadUsers()
     {
         users    = await UserManager.Users.OrderBy(u => u.LastName).ThenBy(u => u.FirstName).ToListAsync();
+        passkeyCounts = await PasskeyService.CountByUserAsync();
         adminIds     = new HashSet<string>();
         allUserRoles = new();
         var allRoles = new[] { "Admin", "FahrzeugAdmin", "MoebelAdmin", "BereichsAdmin" };
@@ -773,6 +814,33 @@
             await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.TwoFactorReset,
                 $"{user.FirstName} {user.LastName} ({user.Email})");
             confirmResetTfa = null;
+            await LoadUsers();
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // ── Passkeys entfernen (z.B. verlorenes Gerät) ───────────────────────────
+    private async Task ResetPasskeys()
+    {
+        if (confirmResetPasskeys == null) return;
+        isSaving = true;
+
+        try
+        {
+            var user = await UserManager.FindByIdAsync(confirmResetPasskeys.Id);
+            if (user == null) return;
+
+            var count = await PasskeyService.DeleteAllAsync(user.Id);
+            // Sitzungen beenden, die mit einem der Passkeys eröffnet wurden
+            await UserManager.UpdateSecurityStampAsync(user);
+
+            successMessage = $"{count} Passkey(s) von «{user.FirstName} {user.LastName}» entfernt.";
+            await AuditLogService.LogAsync(await CurrentAdminAsync(), AuditActions.PasskeysReset,
+                $"{user.FirstName} {user.LastName} ({user.Email})", $"{count} Passkey(s)");
+            confirmResetPasskeys = null;
             await LoadUsers();
         }
         finally

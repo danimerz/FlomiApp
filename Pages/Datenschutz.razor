@@ -21,6 +21,7 @@
     <p>Je nachdem, wie du die App nutzt, bearbeiten wir folgende Personendaten:</p>
     <ul>
         <li><strong>Kontodaten:</strong> Vorname, Nachname, Pfadiname, Stufe, Geburtsdatum, Telefonnummer, E-Mail-Adresse, Passwort (verschlüsselt gespeichert).</li>
+        <li><strong>Passkeys (freiwillig):</strong> Wenn du dich mit einem Passkey anmeldest, speichern wir nur dessen öffentlichen Schlüssel, einen von dir gewählten Namen (z.B. «iPhone») sowie wann er erstellt und zuletzt verwendet wurde. Fingerabdruck, Gesichtsbild oder Geräte-PIN verlassen dein Gerät nie; wir erhalten sie nicht.</li>
         <li><strong>Familienmitglieder:</strong> Falls du Kinder oder Angehörige ohne eigenes Konto anmeldest, erfassen wir deren Vorname, Nachname, Pfadiname, Stufe und Geburtsdatum unter deinem Konto.</li>
         <li><strong>Anmeldungen zu Einsätzen:</strong> Welcher Bereich, welches Event, Datum, Zeitslot, optionaler Kommentar.</li>
         <li><strong>Möbel-Abholservice:</strong> Name, E-Mail, Telefonnummer, Abholadresse, Beschreibung der Möbel, Fotos der Möbel, gewünschtes Abholdatum.</li>
@@ -99,7 +100,8 @@
     <h2>8. Datensicherheit</h2>
     <p>
         Die Verbindung zur App ist durchgehend verschlüsselt (HTTPS). Passwörter werden nicht im
-        Klartext gespeichert. Admin-Konten benötigen zwingend eine Zwei-Faktor-Authentisierung.
+        Klartext gespeichert. Admin-Konten benötigen zwingend eine Zwei-Faktor-Authentisierung
+        (Authenticator-App oder Passkey).
         Sicherheitsrelevante Admin-Aktionen werden protokolliert.
     </p>
 
@@ -126,7 +128,9 @@
     <h2>10. Cookies und lokale Speicherung</h2>
     <p>
         Die App verwendet ein technisch notwendiges Login-Cookie, um dich angemeldet zu halten, sowie
-        einen Eintrag im lokalen Speicher deines Browsers für deine Dark-/Light-Mode-Einstellung. Es
+        einen Eintrag im lokalen Speicher deines Browsers für deine Dark-/Light-Mode-Einstellung und
+        die Ansicht im Dashboard. Während einer Passkey-Anmeldung setzt die App kurzzeitig ein weiteres
+        technisch notwendiges Cookie für die Sicherheitsprüfung. Es
         werden keine Tracking- oder Werbe-Cookies eingesetzt.
     </p>
 
@@ -136,5 +140,5 @@
         ändern. Die aktuelle Version ist immer auf dieser Seite abrufbar.
     </p>
 
-    <p class="legal-date">Stand: 12. Oktober 2026</p>
+    <p class="legal-date">Stand: 30. Oktober 2026</p>
 </div>

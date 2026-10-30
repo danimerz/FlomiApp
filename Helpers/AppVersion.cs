@@ -23,7 +23,7 @@ public static class AppVersion
 
         if (DateTime.TryParse(buildTimeUtc, CultureInfo.InvariantCulture,
                               DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var utc))
-            text += $" · {ToSwissTime(utc):dd.MM.yyyy HH:mm}";
+            text += $" · {TimeHelper.ToSwissTime(utc):dd.MM.yyyy HH:mm}";
 
         return text;
     }
@@ -38,12 +38,5 @@ public static class AppVersion
 
         var commit = parts[1].Length > 7 ? parts[1][..7] : parts[1];
         return $"{version} ({commit})";
-    }
-
-    private static DateTime ToSwissTime(DateTime utc)
-    {
-        try   { return TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich")); }
-        catch (TimeZoneNotFoundException) { return utc; }
-        catch (InvalidTimeZoneException)  { return utc; }
     }
 }

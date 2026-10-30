@@ -28,6 +28,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
     public DbSet<AssignmentDate>    AssignmentDates    { get; set; }
     public DbSet<AuditLogEntry>     AuditLogEntries    { get; set; }
+    public DbSet<UserPasskey>       UserPasskeys       { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -93,6 +94,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Navigation(i => i.Data).IsRequired();
         });
         modelBuilder.Entity<NewsImageData>().ToTable("NewsImages");
+
+        // ── UserPasskey: Passkeys gehen mit dem Konto ────────────────────────
+        modelBuilder.Entity<UserPasskey>(b =>
+        {
+            b.ToTable("UserPasskeys");
+            b.Property(p => p.CredentialId).HasMaxLength(1024);
+            b.HasIndex(p => p.CredentialId).IsUnique();
+            b.Property(p => p.Name).HasMaxLength(100);
+            b.Property(p => p.Transports).HasMaxLength(200);
+            b.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         // ── AreaTemplate → AreaCategory ───────────────────────────────────────
         modelBuilder.Entity<AreaTemplate>()

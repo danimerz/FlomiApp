@@ -21,8 +21,9 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - `Data/Models/` – EF-Entitäten, `Data/ApplicationDbContext.cs`
 - `Security/Roles.cs` – Rollen-Konstanten; `Security/AuditActions.cs` – Audit-Log-Texte
 - `Security/ExternalAuth.cs` – Google/Microsoft/MiData-Login, nur aktiv wenn unter `ExternalAuth` konfiguriert; Ablauf in `Areas/Identity/Pages/Account/ExternalLogin` und `LinkLogin`. Admin-Rollen sind von externen Logins ausgeschlossen.
+- Passkeys: WebAuthn-Prüfung von Identity 10 (`SignInManager.*Passkey*`), Speicherung im eigenen `Security/ApplicationUserStore` (Tabelle `UserPasskeys`, weil der EF-Store dafür EF Core 10 bräuchte). Regeln/Konstanten in `Security/Passkeys.cs`, Endpunkte `Endpoints/PasskeyEndpoints.cs`, Browser-Teil `wwwroot/js/passkey.js`, Anmeldung im Handler `Passkey` der Login-Seite, Verwaltung `IPasskeyService`. Passkey-Sitzungen tragen `amr=passkey` und erfüllen die Admin-2FA-Policy.
 - `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur, Foto-Aufbereitung mit SkiaSharp)
-- `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`, News-Bilder unter `/news-images/{id}`, robots/sitemap)
+- `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`, News-Bilder unter `/news-images/{id}`, Passkeys unter `/passkeys/*`, robots/sitemap)
 - Routenplanung: `Helpers/RouteOptimizer.cs` (reine Tourenoptimierung, getestet), `Services/RoutePlanningService.cs` (Adresssuche `GeocodingService` via geo.admin.ch, Fahrzeiten `TravelTimeService` via OpenRouteService oder Luftlinie). Beispieldaten: `SampleDataService` (`Event.IsSample`/`Vehicle.IsSample`)
 - `FlomiApp.Tests/` – Testprojekt; wird in `FlomiApp.csproj` explizit vom Glob ausgeschlossen
 

@@ -38,4 +38,13 @@ public class TimeHelperTests
     {
         Assert.Equal("07:30", TimeHelper.FormatTimeSlot("730"));
     }
+
+    [Theory]
+    [InlineData("2026-07-15T10:00:00", "2026-07-15 12:00")] // Sommerzeit UTC+2
+    [InlineData("2026-12-15T10:00:00", "2026-12-15 11:00")] // Winterzeit UTC+1
+    public void ToSwissTime_ConvertsUtcWithDaylightSaving(string utc, string expected)
+    {
+        var swiss = TimeHelper.ToSwissTime(DateTime.Parse(utc, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal(expected, swiss.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
+    }
 }

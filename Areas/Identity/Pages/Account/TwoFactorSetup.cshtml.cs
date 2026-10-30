@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
 using FlomiApp.Data.Models;
+using FlomiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +17,20 @@ public class TwoFactorSetupModel : PageModel
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UrlEncoder _urlEncoder;
+    private readonly IPasskeyService _passkeyService;
 
     private const string Issuer = "FlomiApp";
 
     public TwoFactorSetupModel(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        UrlEncoder urlEncoder)
+        UrlEncoder urlEncoder,
+        IPasskeyService passkeyService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _urlEncoder = urlEncoder;
+        _passkeyService = passkeyService;
     }
 
     [BindProperty]
@@ -44,6 +48,9 @@ public class TwoFactorSetupModel : PageModel
     public string SharedKey { get; set; } = string.Empty;
     public string AuthenticatorUri { get; set; } = string.Empty;
     public string QrCodeDataUri { get; set; } = string.Empty;
+
+    // Admins können statt der App auch einen Passkey nutzen (Hinweis auf der Seite)
+    public bool HasPasskeys { get; set; }
 
     // Nach erfolgreicher Aktivierung einmalig angezeigt
     public bool JustEnabled { get; set; }
@@ -104,6 +111,8 @@ public class TwoFactorSetupModel : PageModel
 
     private async Task LoadAuthenticatorKeyAsync(ApplicationUser user)
     {
+        HasPasskeys = await _passkeyService.CountForUserAsync(user.Id) > 0;
+
         var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
         if (string.IsNullOrEmpty(unformattedKey))
         {

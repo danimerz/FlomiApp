@@ -47,6 +47,10 @@
         background: var(--color-surface-card-soft); border: 1px solid var(--color-border-soft);
         border-radius: 12px; padding: 1rem; margin: 1rem 0;
     }
+    .tfa-info {
+        background: var(--color-info-bg); border: 1px solid var(--color-info-border); color: var(--color-info-text);
+        border-radius: 10px; padding: .75rem 1rem; font-size: .88rem; margin-bottom: 1rem;
+    }
     .tfa-warning {
         background: #fef9c3; border: 1px solid #fde68a; color: #854d0e;
         border-radius: 10px; padding: .75rem 1rem; font-size: .88rem; font-weight: 600;
@@ -59,7 +63,7 @@
         <div class="register-hero__content">
             <span class="register-hero__badge">Sicherheit</span>
             <h1>Zwei-Faktor-Authentisierung</h1>
-            <p>Admin-Konten brauchen eine Authenticator-App zusätzlich zum Passwort.</p>
+            <p>Admin-Konten brauchen eine Authenticator-App zusätzlich zum Passwort. Alternativ meldest du dich mit einem Passkey an.</p>
         </div>
     </section>
 
@@ -113,6 +117,20 @@
                 </ol>
             </div>
             <div class="register-card__body">
+                @if (Model.HasPasskeys)
+                {
+                    <div class="tfa-info">
+                        🔑 <strong>Du hast bereits einen Passkey.</strong> Melde dich ab und mit «Mit Passkey anmelden»
+                        wieder an – dann brauchst du keine Authenticator-App.
+                    </div>
+                }
+                else
+                {
+                    <div class="tfa-info">
+                        🔑 <strong>Lieber ohne App?</strong> Richte unter <a href="/user/settings?tab=security">Einstellungen → Sicherheit</a>
+                        einen Passkey ein und melde dich danach damit an. Ein Passkey ersetzt den Code.
+                    </div>
+                }
                 <div class="tfa-qr">
                     <img src="@Model.QrCodeDataUri" alt="QR-Code für Authenticator-App" />
                 </div>

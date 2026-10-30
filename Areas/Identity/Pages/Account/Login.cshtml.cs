@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using FlomiApp.Data.Models;
 using FlomiApp.Security;
+using FlomiApp.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -24,15 +26,18 @@ namespace FlomiApp.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IPasskeyService _passkeyService;
 
         public LoginModel(
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
-            ILogger<LoginModel> logger)
+            ILogger<LoginModel> logger,
+            IPasskeyService passkeyService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _passkeyService = passkeyService;
         }
 
         /// <summary>
@@ -169,6 +174,65 @@ namespace FlomiApp.Areas.Identity.Pages.Account
 
             // If we got this far, something failed, redisplay form
             return Page();
+        }
+
+        /// <summary>
+        /// Anmeldung mit Passkey: <paramref name="credentialJson"/> ist die Antwort von
+        /// navigator.credentials.get() (wwwroot/js/passkey.js). Ein Passkey zählt als zwei Faktoren –
+        /// auch Admins kommen so ohne Authenticator-Code rein (amr-Claim «passkey», siehe Security/Passkeys.cs).
+        /// </summary>
+        public async Task<IActionResult> OnPostPasskeyAsync(string credentialJson, bool rememberMe, string returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+            ReturnUrl = returnUrl;
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            // Die E-Mail/Passwort-Felder gehören nicht zu diesem Formular
+            ModelState.Clear();
+
+            if (string.IsNullOrEmpty(credentialJson))
+            {
+                ModelState.AddModelError(string.Empty, "Die Anmeldung mit Passkey hat nicht geklappt. Bitte erneut versuchen.");
+                return Page();
+            }
+
+            var assertion = await _signInManager.PerformPasskeyAssertionAsync(credentialJson);
+            if (!assertion.Succeeded || !assertion.Passkey.IsUserVerified)
+            {
+                _logger.LogWarning("Passkey-Anmeldung fehlgeschlagen: {Message}",
+                    assertion.Succeeded ? "ohne Benutzerprüfung" : assertion.Failure.Message);
+                ModelState.AddModelError(string.Empty,
+                    "Dieser Passkey ist nicht (mehr) bei der FlomiApp gespeichert. Melde dich mit E-Mail und Passwort an.");
+                return Page();
+            }
+
+            var user = assertion.User;
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                _logger.LogWarning("Passkey-Anmeldung für gesperrtes Konto.");
+                return RedirectToPage("./Lockout");
+            }
+            if (!await _signInManager.CanSignInAsync(user))
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bitte bestätige zuerst deine E-Mail-Adresse (Link aus der Mail nach der Registrierung).");
+                return Page();
+            }
+
+            // Signaturzähler nachführen (Schutz vor geklonten Schlüsseln) und «zuletzt verwendet» merken
+            await _userManager.AddOrUpdatePasskeyAsync(user, assertion.Passkey);
+            await _passkeyService.MarkUsedAsync(assertion.Passkey.CredentialId);
+
+            await _signInManager.SignInWithClaimsAsync(user, rememberMe,
+                new[] { new Claim(Passkeys.AmrClaimType, Passkeys.AuthenticationMethod) });
+            _logger.LogInformation("User logged in with passkey.");
+
+            if (user.MustChangePassword)
+            {
+                return RedirectToPage("./ChangePasswordRequired");
+            }
+
+            return LocalRedirect(returnUrl);
         }
     }
 }

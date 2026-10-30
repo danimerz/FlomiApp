@@ -7,6 +7,9 @@
 @inject IAppointmentService AppointmentService
 @inject NavigationManager NavigationManager
 @inject SignInManager<ApplicationUser> SignInManager
+@inject IPasskeyService PasskeyService
+@inject IAuditLogService AuditLogService
+@inject IJSRuntime JS
 
 <PageTitle>Settings</PageTitle>
 
@@ -327,6 +330,118 @@
         {
             <div class="settings-column">
 
+                @* ── Passkeys (Anmeldung ohne Passwort) ── *@
+                <section class="settings-card">
+                    <div class="settings-card__header">
+                        <div>
+                            <div class="settings-card__topline">Anmeldung ohne Passwort</div>
+                            <h2>🔑 Passkeys</h2>
+                        </div>
+                    </div>
+                    <div class="settings-card__body">
+                        <p style="margin-top:0">
+                            Mit einem Passkey meldest du dich mit Face ID, Fingerabdruck oder der Geräte-PIN an –
+                            ohne Passwort. iPhone und Android speichern ihn im iCloud-Schlüsselbund bzw. im
+                            Google-Passwortmanager, so hast du ihn auf all deinen Geräten.
+                            @if (isAdmin)
+                            {
+                                <strong>Für Admins ersetzt der Passkey den Code aus der Authenticator-App.</strong>
+                            }
+                        </p>
+
+                        @if (passkeys.Count > 0)
+                        {
+                            <ul class="passkey-list">
+                                @foreach (var pk in passkeys)
+                                {
+                                    var id = pk.Id;
+                                    <li class="passkey-item">
+                                        @if (renamePasskeyId == id)
+                                        {
+                                            <div class="passkey-item__rename">
+                                                <InputText @bind-Value="renamePasskeyName" class="form-control-modern"
+                                                           maxlength="@FlomiApp.Security.Passkeys.MaxNameLength" aria-label="Name des Passkeys" />
+                                                <button type="button" class="primary-btn" disabled="@isSavingPasskey" @onclick="() => RenamePasskey(id)">Speichern</button>
+                                                <button type="button" class="secondary-btn" @onclick="() => renamePasskeyId = null">Abbrechen</button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="passkey-item__info">
+                                                <strong>@(pk.Name ?? "Passkey")</strong>
+                                                <span class="passkey-item__meta">
+                                                    hinzugefügt @FlomiApp.Helpers.TimeHelper.ToSwissTime(pk.CreatedAt).ToString("dd.MM.yyyy")
+                                                    · @(pk.LastUsedAt is { } used
+                                                        ? $"zuletzt verwendet {FlomiApp.Helpers.TimeHelper.ToSwissTime(used):dd.MM.yyyy HH:mm}"
+                                                        : "noch nie verwendet")
+                                                </span>
+                                            </div>
+                                            @if (confirmDeletePasskeyId == id)
+                                            {
+                                                <div class="passkey-item__actions">
+                                                    <span class="passkey-item__confirm">Wirklich entfernen?</span>
+                                                    <button type="button" class="danger-btn" disabled="@isSavingPasskey" @onclick="() => DeletePasskey(id)">Ja, entfernen</button>
+                                                    <button type="button" class="secondary-btn" @onclick="() => confirmDeletePasskeyId = null">Abbrechen</button>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="passkey-item__actions">
+                                                    <button type="button" class="secondary-btn" @onclick="() => StartRenamePasskey(pk)">Umbenennen</button>
+                                                    <button type="button" class="secondary-btn" @onclick="() => confirmDeletePasskeyId = id">Entfernen</button>
+                                                </div>
+                                            }
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                        @if (passkeysSupported == false)
+                        {
+                            <p class="passkey-note">
+                                Dieser Browser kann keine Passkeys erstellen. Öffne die FlomiApp auf deinem Handy
+                                oder in einem aktuellen Browser (Safari, Chrome, Edge, Firefox).
+                            </p>
+                        }
+                        else if (passkeysSupported == true && passkeys.Count < FlomiApp.Security.Passkeys.MaxPerUser)
+                        {
+                            <div class="passkey-add">
+                                <div class="form-group">
+                                    <label for="passkeyName">Name für den neuen Passkey</label>
+                                    <InputText id="passkeyName" @bind-Value="newPasskeyName" class="form-control-modern"
+                                               maxlength="@FlomiApp.Security.Passkeys.MaxNameLength" placeholder="z.B. iPhone" />
+                                </div>
+                                @if (isSavingPasskey)
+                                {
+                                    <div class="btn-loading btn-loading--primary">
+                                        <span class="btn-spinner btn-spinner--blue"></span>
+                                        <span>Bitte am Gerät bestätigen...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button type="button" class="primary-btn" @onclick="AddPasskey">🔑 Passkey hinzufügen</button>
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(passkeyError))
+                        {
+                            <p class="passkey-error" role="alert">@passkeyError</p>
+                        }
+                        @if (!string.IsNullOrEmpty(passkeySuccess))
+                        {
+                            <p class="passkey-success">@passkeySuccess</p>
+                        }
+
+                        <p class="passkey-note">
+                            Gerät verloren? Entferne den Passkey hier und ändere zur Sicherheit dein Passwort.
+                            Dein Passwort funktioniert weiterhin, auch wenn du Passkeys nutzt.
+                        </p>
+                    </div>
+                </section>
+
                 @* ── Verknüpfte Konten (Google, Microsoft, MiData) ── *@
                 @if (externalSchemes.Count > 0 && !isAdmin)
                 {
@@ -576,6 +691,19 @@
     // Ohne Passwort muss mindestens ein Login übrig bleiben
     private bool CanRemoveLogin => hasPassword || externalLogins.Count > 1;
 
+    // ── Passkeys ──────────────────────────────────────────────────────────────
+    private List<UserPasskey> passkeys       = new();
+    private bool?   passkeysSupported;          // null = noch nicht geprüft (erst nach dem Rendern via JS)
+    private string  newPasskeyName           = string.Empty;
+    private int?    renamePasskeyId;
+    private string  renamePasskeyName        = string.Empty;
+    private int?    confirmDeletePasskeyId;
+    private bool    isSavingPasskey;
+    private string  passkeyError             = string.Empty;
+    private string  passkeySuccess           = string.Empty;
+
+    private sealed record PasskeyRegisterResult(bool Ok, string? Name, string? Error);
+
     // Rückmeldung von /Identity/Account/LinkLogin
     [SupplyParameterFromQuery] public string? Tab       { get; set; }
     [SupplyParameterFromQuery] public string? Linked    { get; set; }
@@ -629,6 +757,116 @@
         hasPassword     = await UserManager.HasPasswordAsync(user);
         var roles       = await UserManager.GetRolesAsync(user);
         isAdmin         = roles.Any(FlomiApp.Security.Roles.AllAdminRoles.Contains);
+        passkeys        = await PasskeyService.GetForUserAsync(user.Id);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Ob der Browser Passkeys kann, weiss nur das JavaScript (wwwroot/js/passkey.js)
+        try
+        {
+            passkeysSupported = await JS.InvokeAsync<bool>("flomiPasskeys.isSupported");
+            if (passkeysSupported == true && string.IsNullOrEmpty(newPasskeyName))
+                newPasskeyName = await JS.InvokeAsync<string>("flomiPasskeys.defaultName");
+        }
+        catch (JSException)
+        {
+            passkeysSupported = false;
+        }
+        StateHasChanged();
+    }
+
+    private void ClearPasskeyMessages()
+    {
+        passkeyError   = string.Empty;
+        passkeySuccess = string.Empty;
+    }
+
+    private async Task AddPasskey()
+    {
+        ClearPasskeyMessages();
+        isSavingPasskey = true;
+        try
+        {
+            // Erstellen braucht den HttpContext (Challenge im Cookie) → läuft über /passkeys/* im Browser
+            // Das Gerät wartet bis 5 Min. auf die Bestätigung – länger als der Standard-Timeout von Blazor
+            var result = await JS.InvokeAsync<PasskeyRegisterResult>("flomiPasskeys.register", TimeSpan.FromMinutes(6),
+                FlomiApp.Security.Passkeys.NormalizeName(newPasskeyName));
+            if (result.Ok)
+            {
+                passkeySuccess = $"Passkey «{result.Name}» gespeichert. Ab jetzt kannst du dich damit anmelden.";
+                passkeys       = await PasskeyService.GetForUserAsync(user.Id);
+            }
+            else
+            {
+                passkeyError = result.Error ?? "Der Passkey konnte nicht gespeichert werden.";
+            }
+        }
+        catch (Exception ex) when (ex is JSException or TaskCanceledException)
+        {
+            passkeyError = "Der Passkey konnte nicht gespeichert werden. Bitte Seite neu laden und erneut versuchen.";
+        }
+        finally
+        {
+            isSavingPasskey = false;
+        }
+    }
+
+    private void StartRenamePasskey(UserPasskey passkey)
+    {
+        ClearPasskeyMessages();
+        confirmDeletePasskeyId = null;
+        renamePasskeyId        = passkey.Id;
+        renamePasskeyName      = passkey.Name ?? string.Empty;
+    }
+
+    private async Task RenamePasskey(int passkeyId)
+    {
+        ClearPasskeyMessages();
+        isSavingPasskey = true;
+        try
+        {
+            if (await PasskeyService.RenameAsync(user.Id, passkeyId, renamePasskeyName))
+                passkeySuccess = "Passkey umbenannt.";
+            else
+                passkeyError = "Der Passkey wurde nicht gefunden.";
+            renamePasskeyId = null;
+            passkeys        = await PasskeyService.GetForUserAsync(user.Id);
+        }
+        finally
+        {
+            isSavingPasskey = false;
+        }
+    }
+
+    private async Task DeletePasskey(int passkeyId)
+    {
+        ClearPasskeyMessages();
+        isSavingPasskey = true;
+        try
+        {
+            var deleted = await PasskeyService.DeleteAsync(user.Id, passkeyId);
+            if (deleted != null)
+            {
+                passkeySuccess = $"Passkey «{deleted.Name}» entfernt. Lösche ihn auch im Passwortmanager des Geräts, " +
+                                  "damit er dort nicht mehr vorgeschlagen wird.";
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                await AuditLogService.LogAsync(authState.User, FlomiApp.Security.AuditActions.PasskeyRemoved,
+                    $"{user.FirstName} {user.LastName} ({user.Email})", deleted.Name);
+            }
+            else
+            {
+                passkeyError = "Der Passkey wurde nicht gefunden.";
+            }
+            confirmDeletePasskeyId = null;
+            passkeys               = await PasskeyService.GetForUserAsync(user.Id);
+        }
+        finally
+        {
+            isSavingPasskey = false;
+        }
     }
 
     // Weiterleitung zum Anbieter braucht einen vollen Seitenaufruf (Razor Page)
