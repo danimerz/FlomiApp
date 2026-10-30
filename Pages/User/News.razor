@@ -47,7 +47,9 @@
                                 new System.Globalization.CultureInfo("de-CH"))
                         </span>
                     </div>
-                    <div class="news-card__body @(item.Images.Count > 0 ? "news-card__body--media" : "")">
+                    <div class="news-card__body">
+                        <h2 class="news-card__title">@item.Title</h2>
+                        <div class="@(item.Images.Count > 0 ? "news-card__media" : "")">
                         @if (item.Images.Count > 0)
                         {
                             <div class="news-gallery">
@@ -66,8 +68,8 @@
                             </div>
                         }
                         <div class="news-card__text">
-                            <h2 class="news-card__title">@item.Title</h2>
                             <p class="news-card__content">@item.Content</p>
+                        </div>
                         </div>
                     </div>
                 </article>

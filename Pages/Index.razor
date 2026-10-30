@@ -97,6 +97,7 @@
                         @if (n.IsPinned) { <span class="notice-box__pin">📌 Wichtig</span> }
                         📅 @n.CreatedAt.ToString("dd. MMMM yyyy", new System.Globalization.CultureInfo("de-CH"))
                     </div>
+                    <strong class="notice-box__title">@n.Title</strong>
                     <div class="notice-box__main">
                         @if (n.Images.Count > 0)
                         {
@@ -110,7 +111,6 @@
                             </a>
                         }
                         <div class="notice-box__text">
-                            <strong class="notice-box__title">@n.Title</strong>
                             <p class="notice-box__content">@n.Content</p>
                         </div>
                     </div>

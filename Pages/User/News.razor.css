@@ -81,8 +81,8 @@
     content: "📌 ";
 }
 
-/* ── Bilder: klein links, Text daneben; weitere Bilder darunter ──────────── */
-.news-card__body--media {
+/* ── Bilder: Titel oben, darunter Bild klein links und Text daneben ──────── */
+.news-card__media {
     display: flex;
     align-items: flex-start;
     gap: 1.1rem;
