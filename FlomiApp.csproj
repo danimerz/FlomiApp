@@ -9,6 +9,14 @@
     <UserSecretsId>aspnet-FlomiApp-cae2207e-3c7f-404f-8f14-5012a2de13bb</UserSecretsId>
   </PropertyGroup>
 
+  <!-- Build-Zeitpunkt für den Footer (nur Release, sonst würde jeder lokale Build neu kompilieren) -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildTime</_Parameter1>
+      <_Parameter2>$([System.DateTime]::UtcNow.ToString("o"))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
