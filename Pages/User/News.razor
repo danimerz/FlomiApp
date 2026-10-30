@@ -51,10 +51,15 @@
                         @if (item.Images.Count > 0)
                         {
                             <div class="news-gallery">
-                                @foreach (var img in item.Images)
+                                @for (var i = 0; i < item.Images.Count; i++)
                                 {
+                                    var img    = item.Images[i];
+                                    var start  = i;
+                                    var images = item.Images;
+                                    var title  = item.Title;
                                     <a href="/news-images/@img.Id" target="_blank" rel="noopener" class="news-gallery__item"
-                                       title="Bild in voller Grösse öffnen">
+                                       title="Bild vergrössern"
+                                       @onclick="() => lightbox.Open(images, start, title)" @onclick:preventDefault>
                                         <img src="/news-images/@img.Id?thumb=true" alt="Bild zu «@item.Title»" loading="lazy" />
                                     </a>
                                 }
@@ -73,8 +78,11 @@
 
 </div>
 
+<ImageLightbox @ref="lightbox" />
+
 @code {
     private List<NewsItem>? news;
+    private ImageLightbox   lightbox = null!;
 
     protected override async Task OnInitializedAsync()
     {

@@ -100,7 +100,8 @@
                     <div class="notice-box__main">
                         @if (n.Images.Count > 0)
                         {
-                            <a href="/news" class="notice-box__image" title="Zur Meldung">
+                            <a href="/news" class="notice-box__image" title="Bild vergrössern"
+                               @onclick="() => lightbox.Open(n.Images, 0, n.Title)" @onclick:preventDefault>
                                 <img src="/news-images/@n.Images[0].Id?thumb=true" alt="Bild zu «@n.Title»" loading="lazy" />
                                 @if (n.Images.Count > 1)
                                 {
@@ -207,10 +208,13 @@
     </section>
 </div>
 
+<ImageLightbox @ref="lightbox" />
+
 @code {
     private string           welcomeText  = "Willkommen bei der Flomi App";
     private bool             isAuthenticated = false;
     private List<NewsItem>?  latestNews   = null;
+    private ImageLightbox    lightbox     = null!;
     private Event?           nextMarket   = null;
 
     protected override async Task OnInitializedAsync()

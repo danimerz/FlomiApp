@@ -1,0 +1,110 @@
+@* Bild-Popup mit Blättern: Pfeile, Pfeiltasten, Wischen auf dem Handy; schliessen mit ✕, Esc oder Klick daneben. *@
+
+@if (images.Count > 0)
+{
+    var current = images[index];
+
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Bild @(index + 1) von @images.Count"
+         tabindex="-1" @ref="overlay"
+         @onclick="Close" @onkeydown="OnKey"
+         @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
+
+        <button type="button" class="lightbox__close" title="Schliessen (Esc)"
+                @onclick="Close" @onclick:stopPropagation>✕</button>
+
+        @if (images.Count > 1)
+        {
+            <button type="button" class="lightbox__nav lightbox__nav--prev" title="Vorheriges Bild"
+                    @onclick="Prev" @onclick:stopPropagation>‹</button>
+            <button type="button" class="lightbox__nav lightbox__nav--next" title="Nächstes Bild"
+                    @onclick="Next" @onclick:stopPropagation>›</button>
+        }
+
+        <figure class="lightbox__figure">
+            <img class="lightbox__image" src="/news-images/@current.Id" alt="Bild @(index + 1) zu «@title»"
+                 @onclick:stopPropagation />
+            <figcaption class="lightbox__caption" @onclick:stopPropagation>
+                @title
+                @if (images.Count > 1)
+                {
+                    <span class="lightbox__counter">@(index + 1) / @images.Count</span>
+                }
+            </figcaption>
+        </figure>
+
+        @if (images.Count > 1)
+        {
+            <div class="lightbox__thumbs" @onclick:stopPropagation>
+                @for (var i = 0; i < images.Count; i++)
+                {
+                    var target = i;
+                    <button type="button" class="lightbox__thumb @(i == index ? "is-active" : "")"
+                            title="Bild @(i + 1)" @onclick="() => Show(target)">
+                        <img src="/news-images/@images[i].Id?thumb=true" alt="" />
+                    </button>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<NewsImage> images = Array.Empty<NewsImage>();
+    private int             index;
+    private string          title = string.Empty;
+    private ElementReference overlay;
+    private bool            focusPending;
+    private double?         touchStartX;
+
+    /// <summary>Öffnet das Popup mit allen Bildern einer Meldung, beginnend bei <paramref name="startIndex"/>.</summary>
+    public void Open(IReadOnlyList<NewsImage> newsImages, int startIndex, string newsTitle)
+    {
+        if (newsImages.Count == 0) return;
+        images       = newsImages;
+        index        = Math.Clamp(startIndex, 0, newsImages.Count - 1);
+        title        = newsTitle;
+        focusPending = true;
+        StateHasChanged();
+    }
+
+    private void Close() => images = Array.Empty<NewsImage>();
+
+    private void Show(int i) => index = i;
+    private void Next()      => index = (index + 1) % images.Count;
+    private void Prev()      => index = (index - 1 + images.Count) % images.Count;
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Escape":     Close(); break;
+            case "ArrowRight": if (images.Count > 1) Next(); break;
+            case "ArrowLeft":  if (images.Count > 1) Prev(); break;
+        }
+    }
+
+    private void OnTouchStart(TouchEventArgs e) =>
+        touchStartX = e.ChangedTouches.FirstOrDefault()?.ClientX;
+
+    private void OnTouchEnd(TouchEventArgs e)
+    {
+        var endX = e.ChangedTouches.FirstOrDefault()?.ClientX;
+        if (touchStartX is { } start && endX is { } end && images.Count > 1)
+        {
+            var delta = end - start;
+            if (delta < -50) Next();
+            else if (delta > 50) Prev();
+        }
+        touchStartX = null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Fokus aufs Popup, damit Esc und Pfeiltasten sofort funktionieren
+        if (focusPending && images.Count > 0)
+        {
+            focusPending = false;
+            try { await overlay.FocusAsync(); } catch (JSException) { }
+        }
+    }
+}

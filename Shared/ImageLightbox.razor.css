@@ -1,0 +1,150 @@
+/* Bild-Popup: bewusst immer dunkel, unabhängig vom Theme (wie ein Fotobetrachter) */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .9rem;
+    padding: 3.5rem 4rem 1.25rem;
+    background: rgba(8, 10, 20, .92);
+    outline: none;
+    animation: lightbox-in .15s ease-out;
+}
+
+@keyframes lightbox-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.lightbox__figure {
+    margin: 0;
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    max-width: 100%;
+}
+
+.lightbox__image {
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+    cursor: default;
+}
+
+.lightbox__caption {
+    color: #f1f5f9;
+    font-size: .95rem;
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    gap: .75rem;
+    align-items: baseline;
+}
+
+.lightbox__counter {
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: .85rem;
+}
+
+.lightbox__close,
+.lightbox__nav {
+    position: absolute;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease;
+}
+
+.lightbox__close:hover,
+.lightbox__nav:hover { background: rgba(255, 255, 255, .25); }
+
+.lightbox__close {
+    top: max(.9rem, env(safe-area-inset-top, 0px));
+    right: max(.9rem, env(safe-area-inset-right, 0px));
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+}
+
+.lightbox__nav {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+    line-height: 1;
+    padding-bottom: .2rem;
+}
+
+.lightbox__nav--prev { left: max(.9rem, env(safe-area-inset-left, 0px)); }
+.lightbox__nav--next { right: max(.9rem, env(safe-area-inset-right, 0px)); }
+
+.lightbox__thumbs {
+    display: flex;
+    gap: .45rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.lightbox__thumb {
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    background: none;
+    cursor: pointer;
+    opacity: .55;
+    transition: opacity .15s ease, border-color .15s ease;
+}
+
+.lightbox__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lightbox__thumb:hover { opacity: .85; }
+
+.lightbox__thumb.is-active {
+    opacity: 1;
+    border-color: #ffffff;
+}
+
+/* Handy: Pfeile unten neben die Vorschauen, Wischen geht auch */
+@media (max-width: 640px) {
+    .lightbox { padding: 3.5rem .75rem 1rem; }
+
+    .lightbox__nav {
+        top: auto;
+        bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+        transform: none;
+        width: 42px;
+        height: 42px;
+    }
+
+    .lightbox__thumbs { padding: 0 3.25rem; }
+
+    .lightbox__thumb {
+        width: 42px;
+        height: 42px;
+    }
+}
