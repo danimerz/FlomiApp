@@ -297,3 +297,39 @@
         width: 100%;
     }
 }
+
+/* ── Nächster Flohmarkt ───────────────────────────────────────────────────── */
+.home-market__body {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.home-card__body .home-market__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-strong);
+}
+
+.home-market__icon {
+    flex-shrink: 0;
+    width: 1.4rem;
+    text-align: center;
+}
+
+.home-market__map {
+    margin-left: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    white-space: nowrap;
+}
+
+.home-card__body .home-market__text {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+}

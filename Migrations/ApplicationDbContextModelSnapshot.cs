@@ -417,6 +417,10 @@ namespace FlomiApp.Migrations
                     b.Property<bool>("CheckInEnabled")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime(6)");
 
@@ -430,9 +434,27 @@ namespace FlomiApp.Migrations
                     b.Property<bool>("IsSample")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("LocationName")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("MarketEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("MarketStart")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.HasKey("Id");
 

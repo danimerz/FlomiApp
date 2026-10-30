@@ -156,7 +156,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 
 Zentrale Verwaltung unter `/admin/config` mit 4 Tabs:
 
-- **Events**: CRUD, Aktivieren/Deaktivieren
+- **Events**: CRUD, Aktivieren/Deaktivieren; Ort und Öffnungszeiten des Markts. Das nächste aktive Event erscheint auf der Startseite und mit Ort bei Google als Veranstaltung (schema.org `Event`). «Neues Jahr starten» übernimmt den Ort und verschiebt die Öffnungszeiten mit.
 - **Bereich-Vorlagen**: Stammdaten inkl. Pflicht-Stufen; Reihenfolge-Sortierung via ▲/▼
 - **Bereich-Zuweisungen**: Vorlage + Event + Datum/Zeit/Kapazität + alternativer Zeitslot; Kopierfunktion zwischen Events
 - **Kategorien**: Name, Reihenfolge frei sortierbar via ▲/▼
@@ -500,7 +500,8 @@ ein fehlschlagender Test stoppt den Deploy.
 - Öffentliche Seiten (Start, News, Möbel-Abholservice, Login, Registrierung, Impressum, Datenschutz) haben
   Titel, Beschreibung, Canonical-Link und Open-Graph-Vorschau (Bild und Text beim Teilen, z. B. in WhatsApp)
   über die Komponente `Shared/Seo.razor`. Texte und Seitenliste stehen in `Helpers/SeoHelper.cs`.
-- Die Startseite liefert strukturierte Daten (schema.org `WebSite`), damit Google «Pfadi Flomi» als Namen zeigt.
+- Die Startseite liefert strukturierte Daten: schema.org `WebSite` (Seitenname «Pfadi Flomi») und, sobald beim
+  nächsten Event ein Ort hinterlegt ist, `Event` (Datum, Öffnungszeiten, Ort; `Helpers/MarketEventHelper.cs`).
 - Nach dem Go-live die Domain in der [Google Search Console](https://search.google.com/search-console)
   bestätigen und `https://pfadiflomi.ch/sitemap.xml` einreichen.
 

@@ -206,6 +206,19 @@ public class AreaService : IAreaService
             ?? throw new InvalidOperationException($"Event with id {id} not found.");
     }
 
+    public async Task<Event?> GetNextPublicEventAsync(DateTime now)
+    {
+        var today = now.Date;
+        var candidates = await _context.Events
+            .AsNoTracking()
+            .Where(e => e.IsActive && !e.IsSample && (e.Date >= today || (e.MarketEnd != null && e.MarketEnd >= now)))
+            .OrderBy(e => e.Date)
+            .ToListAsync();
+
+        // Am Markttag selbst nach Ende der Öffnungszeit nicht mehr anzeigen
+        return candidates.FirstOrDefault(e => e.MarketEnd == null || e.MarketEnd >= now);
+    }
+
     public async Task ToggleCheckInAsync(int eventId)
     {
         var evt = await _context.Events.FindAsync(eventId);
@@ -229,6 +242,12 @@ public class AreaService : IAreaService
             existing.Date        = evt.Date;
             existing.Description = evt.Description;
             existing.IsActive    = evt.IsActive;
+            existing.LocationName = evt.LocationName;
+            existing.Street       = evt.Street;
+            existing.PostalCode   = evt.PostalCode;
+            existing.City         = evt.City;
+            existing.MarketStart  = evt.MarketStart;
+            existing.MarketEnd    = evt.MarketEnd;
             await _context.SaveChangesAsync();
         }
         else

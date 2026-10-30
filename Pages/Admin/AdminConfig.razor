@@ -167,6 +167,45 @@
                                           class="ac-input ac-textarea" />
                         </div>
 
+                        <fieldset class="ac-fieldset">
+                            <legend>📍 Ort und Öffnungszeiten des Markts</legend>
+                            <p class="ac-fieldset__hint">
+                                Erscheint auf der Startseite und bei Google als Veranstaltung.
+                                Ohne Ort wird nichts veröffentlicht.
+                            </p>
+                            <div class="ac-form-grid">
+                                <div class="ac-field">
+                                    <label>Ort</label>
+                                    <InputText @bind-Value="currentEvent.LocationName" class="ac-input"
+                                               placeholder="z. B. Dreifachturnhalle" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Strasse</label>
+                                    <InputText @bind-Value="currentEvent.Street" class="ac-input" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>PLZ</label>
+                                    <InputText @bind-Value="currentEvent.PostalCode" class="ac-input" inputmode="numeric" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Ortschaft</label>
+                                    <InputText @bind-Value="currentEvent.City" class="ac-input" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Markt geöffnet ab</label>
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketStart" class="ac-input" />
+                                </div>
+                                <div class="ac-field">
+                                    <label>Markt geöffnet bis</label>
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketEnd" class="ac-input" />
+                                </div>
+                            </div>
+                            @if (currentEvent.MarketStart != null && currentEvent.MarketEnd != null && currentEvent.MarketEnd <= currentEvent.MarketStart)
+                            {
+                                <p class="ac-fieldset__warn">⚠️ «Geöffnet bis» liegt vor «geöffnet ab».</p>
+                            }
+                        </fieldset>
+
                         <div class="ac-checkbox-row">
                             <InputCheckbox @bind-Value="currentEvent.IsActive"
                                            id="activeCheck" class="ac-checkbox" />
@@ -1284,11 +1323,20 @@
 
         try
         {
+            // Ort übernehmen, Öffnungszeiten um denselben Abstand verschieben wie das Datum
+            var source = events?.FirstOrDefault(e => e.Id == newYearSourceEventId);
+            var offset = source != null ? newYearDate.Date - source.Date.Date : TimeSpan.Zero;
             var newEvent = new Event
             {
-                Name     = newYearName.Trim(),
-                Date     = newYearDate,
-                IsActive = true
+                Name         = newYearName.Trim(),
+                Date         = newYearDate,
+                IsActive     = true,
+                LocationName = source?.LocationName,
+                Street       = source?.Street,
+                PostalCode   = source?.PostalCode,
+                City         = source?.City,
+                MarketStart  = source?.MarketStart + offset,
+                MarketEnd    = source?.MarketEnd + offset
             };
             await AreaService.CreateEventAsync(newEvent);
 
@@ -1354,7 +1402,13 @@
             Date           = evt.Date,
             Description    = evt.Description,
             IsActive       = evt.IsActive,
-            CheckInEnabled = evt.CheckInEnabled
+            CheckInEnabled = evt.CheckInEnabled,
+            LocationName   = evt.LocationName,
+            Street         = evt.Street,
+            PostalCode     = evt.PostalCode,
+            City           = evt.City,
+            MarketStart    = evt.MarketStart,
+            MarketEnd      = evt.MarketEnd
         };
     }
 

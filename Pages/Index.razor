@@ -3,9 +3,11 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject INewsService NewsService
+@inject IAreaService AreaService
 @using FlomiApp.Data.Models
+@using FlomiApp.Helpers
 
-<Seo Title="Helfer-Anmeldung für den Flohmarkt" IsHome="true" />
+<Seo Title="Helfer-Anmeldung für den Flohmarkt" IsHome="true" MarketEvent="nextMarket" />
 
 <div class="home-page">
     <section class="home-hero">
@@ -33,6 +35,38 @@
             </div>
         </div>
     </section>
+    @if (nextMarket != null)
+    {
+        <section class="home-card home-market">
+            <div class="home-card__header">
+                <div>
+                    <div class="home-card__topline">Nächster Flohmarkt</div>
+                    <h2>@nextMarket.Name</h2>
+                </div>
+            </div>
+            <div class="home-card__body home-market__body">
+                <p class="home-market__row">
+                    <span class="home-market__icon" aria-hidden="true">📅</span>
+                    <span>@MarketEventHelper.FormatWhen(nextMarket)</span>
+                </p>
+                @if (nextMarket.HasLocation)
+                {
+                    <p class="home-market__row">
+                        <span class="home-market__icon" aria-hidden="true">📍</span>
+                        <span>
+                            @nextMarket.LocationText
+                            <a class="home-market__map" href="@MarketEventHelper.MapsUrl(nextMarket)"
+                               target="_blank" rel="noopener">Karte</a>
+                        </span>
+                    </p>
+                }
+                @if (!string.IsNullOrWhiteSpace(nextMarket.Description))
+                {
+                    <p class="home-market__text">@nextMarket.Description</p>
+                }
+            </div>
+        </section>
+    }
     <section class="home-card">
         <div class="home-card__header">
             <div>
@@ -159,10 +193,12 @@
     private string           welcomeText  = "Willkommen bei der Flomi App";
     private bool             isAuthenticated = false;
     private List<NewsItem>?  latestNews   = null;
+    private Event?           nextMarket   = null;
 
     protected override async Task OnInitializedAsync()
     {
         latestNews = await NewsService.GetPublishedAsync();
+        nextMarket = await AreaService.GetNextPublicEventAsync(MarketEventHelper.SwissNow());
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;

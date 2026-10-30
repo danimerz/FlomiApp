@@ -25,6 +25,9 @@ public interface IAreaService
     // ── Events ────────────────────────────────────────────────────────────────
     Task<List<Event>> GetAllEventsAsync();
     Task<Event>       GetEventByIdAsync(int id);
+
+    /// <summary>Nächstes öffentliches Event (aktiv, keine Beispieldaten, Markt noch nicht vorbei) – für Startseite und Google.</summary>
+    Task<Event?>      GetNextPublicEventAsync(DateTime now);
     Task              ToggleCheckInAsync(int eventId);
     Task              CreateEventAsync(Event evt);
     Task              UpdateEventAsync(Event evt);

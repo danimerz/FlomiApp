@@ -1,0 +1,105 @@
+using System.Globalization;
+using System.Text.Json;
+using FlomiApp.Data.Models;
+
+namespace FlomiApp.Helpers;
+
+/// <summary>
+/// Öffentliche Angaben zum nächsten Markt: Anzeige auf der Startseite und
+/// strukturierte Daten (schema.org Event), damit Google den Flohmarkt als Veranstaltung zeigt.
+/// </summary>
+public static class MarketEventHelper
+{
+    private static readonly CultureInfo De = new("de-CH");
+
+    private static readonly TimeZoneInfo? Zurich = FindZurich();
+
+    /// <summary>
+    /// «Samstag, 13. März 2027, 08:00–15:00 Uhr», mehrtägig «Freitag, 12. März, 18:00 – Samstag, 13. März 2027, 15:00 Uhr»,
+    /// ohne Öffnungszeiten nur das Datum.
+    /// </summary>
+    public static string FormatWhen(Event evt)
+    {
+        if (evt.MarketStart is not { } start)
+            return evt.Date.ToString("dddd, d. MMMM yyyy", De);
+
+        if (evt.MarketEnd is not { } end || end <= start)
+            return start.ToString("dddd, d. MMMM yyyy, 'ab' HH:mm 'Uhr'", De);
+
+        if (start.Date == end.Date)
+            return $"{start.ToString("dddd, d. MMMM yyyy, HH:mm", De)}–{end.ToString("HH:mm", De)} Uhr";
+
+        return $"{start.ToString("dddd, d. MMMM, HH:mm", De)} – {end.ToString("dddd, d. MMMM yyyy, HH:mm", De)} Uhr";
+    }
+
+    /// <summary>Aktuelle Schweizer Ortszeit, auch wenn der Server auf UTC läuft.</summary>
+    public static DateTime SwissNow() =>
+        Zurich != null ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zurich) : DateTime.Now;
+
+    public static string? MapsUrl(Event evt) =>
+        evt.HasLocation
+            ? "https://www.google.com/maps/search/?api=1&query=" + Uri.EscapeDataString(evt.LocationText)
+            : null;
+
+    /// <summary>
+    /// schema.org Event als JSON. Null, wenn kein Ort hinterlegt ist – ohne Ort zeigt Google keine Veranstaltung.
+    /// </summary>
+    public static string? BuildEventJsonLd(Event evt, string baseUrl, string imagePath)
+    {
+        if (!evt.HasLocation) return null;
+
+        var b = SeoHelper.NormalizeBaseUrl(baseUrl);
+
+        var address = new Dictionary<string, object> { ["@type"] = "PostalAddress", ["addressCountry"] = "CH" };
+        if (!string.IsNullOrWhiteSpace(evt.Street))     address["streetAddress"]   = evt.Street.Trim();
+        if (!string.IsNullOrWhiteSpace(evt.PostalCode)) address["postalCode"]      = evt.PostalCode.Trim();
+        if (!string.IsNullOrWhiteSpace(evt.City))       address["addressLocality"] = evt.City.Trim();
+
+        var data = new Dictionary<string, object>
+        {
+            ["@context"]            = "https://schema.org",
+            ["@type"]               = "Event",
+            ["name"]                = evt.Name,
+            ["description"]         = string.IsNullOrWhiteSpace(evt.Description) ? SeoHelper.DefaultDescription : evt.Description,
+            ["startDate"]           = FormatSchemaDate(evt.MarketStart, evt.Date),
+            ["endDate"]             = FormatSchemaDate(evt.MarketEnd ?? evt.MarketStart, evt.Date),
+            ["eventStatus"]         = "https://schema.org/EventScheduled",
+            ["eventAttendanceMode"] = "https://schema.org/OfflineEventAttendanceMode",
+            ["location"] = new Dictionary<string, object>
+            {
+                ["@type"]   = "Place",
+                ["name"]    = string.IsNullOrWhiteSpace(evt.LocationName) ? evt.City!.Trim() : evt.LocationName.Trim(),
+                ["address"] = address,
+            },
+            ["image"]     = new[] { b + imagePath },
+            ["url"]       = b,
+            ["organizer"] = new Dictionary<string, object>
+            {
+                ["@type"] = "Organization",
+                ["name"]  = "Pfadi Morgarten",
+                ["url"]   = "https://www.pfadimorgarten.ch",
+            },
+        };
+
+        return JsonSerializer.Serialize(data).Replace("<", "\\u003c");
+    }
+
+    /// <summary>Mit Uhrzeit: ISO 8601 inkl. Schweizer Zeitzone; ohne: nur das Datum.</summary>
+    public static string FormatSchemaDate(DateTime? time, DateTime fallbackDate)
+    {
+        if (time is not { } t)
+            return fallbackDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        var local = DateTime.SpecifyKind(t, DateTimeKind.Unspecified);
+        return Zurich != null
+            ? new DateTimeOffset(local, Zurich.GetUtcOffset(local)).ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture)
+            : local.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+    }
+
+    private static TimeZoneInfo? FindZurich()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("Europe/Zurich"); }
+        catch (TimeZoneNotFoundException) { return null; }
+        catch (InvalidTimeZoneException) { return null; }
+    }
+}

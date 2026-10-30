@@ -15,6 +15,10 @@
     <meta property="og:url" content="@CanonicalUrl" />
     <meta property="og:image" content="@(Navigation.BaseUri + SeoHelper.DefaultImage)" />
     <meta name="twitter:card" content="summary_large_image" />
+    @if (MarketEventJsonLd != null)
+    {
+        @((MarkupString)$"<script type=\"application/ld+json\">{MarketEventJsonLd}</script>")
+    }
     @if (IsHome)
     {
         @((MarkupString)$"<script type=\"application/ld+json\">{SeoHelper.BuildWebSiteJsonLd(Navigation.BaseUri)}</script>")
@@ -32,6 +36,12 @@
 
     /// <summary>Startseite: zusätzlich strukturierte Daten (schema.org WebSite) ausgeben.</summary>
     [Parameter] public bool IsHome { get; set; }
+
+    /// <summary>Nächster Markt: als Google-Veranstaltung ausgeben (nur mit Ort).</summary>
+    [Parameter] public FlomiApp.Data.Models.Event? MarketEvent { get; set; }
+
+    private string? MarketEventJsonLd => MarketEvent == null ? null
+        : MarketEventHelper.BuildEventJsonLd(MarketEvent, Navigation.BaseUri, SeoHelper.DefaultImage);
 
     private string FullTitle => SeoHelper.FullTitle(Title);
 
