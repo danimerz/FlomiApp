@@ -11,8 +11,8 @@
     position: relative;
     overflow: hidden;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
-    box-shadow: 0 20px 45px rgba(15, 98, 254, 0.18);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
+    box-shadow: 0 20px 45px rgba(var(--brand-bright-rgb), 0.18);
     isolation: isolate;
 }
 
@@ -21,7 +21,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, rgba(15,98,254,.80) 0%, rgba(36,87,214,.82) 45%, rgba(22,62,168,.86) 100%),
+        linear-gradient(135deg, rgba(var(--brand-bright-rgb), .80) 0%, rgba(var(--brand-hero-mid-rgb), .82) 45%, rgba(var(--brand-hero-end-rgb), .86) 100%),
         url('/img/home-hero-bg.jpg') center center / cover no-repeat;
     pointer-events: none;
     z-index: 0;
@@ -120,7 +120,7 @@
 }
 .register-card__topline {
     margin-bottom: 0.35rem;
-    color: #2563eb;
+    color: var(--brand-600);
     font-size: 0.78rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -197,9 +197,9 @@
 .register-field input:focus,
 .register-field select:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--brand-600);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 4px rgba(var(--brand-600-rgb), 0.12);
 }
 
 .register-hint {
@@ -238,19 +238,19 @@
     padding: 0.9rem 1.4rem;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
     color: #ffffff;
     font-size: 0.96rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(15, 98, 254, 0.22);
+    box-shadow: 0 12px 24px rgba(var(--brand-bright-rgb), 0.22);
     transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .register-button:hover {
     transform: translateY(-1px);
     filter: brightness(1.02);
-    box-shadow: 0 16px 28px rgba(15, 98, 254, 0.28);
+    box-shadow: 0 16px 28px rgba(var(--brand-bright-rgb), 0.28);
 }
 
 .register-button:active {
@@ -276,7 +276,7 @@
     min-height: auto;
     padding: 0;
     margin: 0;
-    accent-color: #2563eb;
+    accent-color: var(--brand-600);
     box-shadow: none;
     appearance: auto;
     -webkit-appearance: auto;
@@ -344,8 +344,8 @@
 
 .social-btn:focus-visible {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    border-color: var(--brand-600);
+    box-shadow: 0 0 0 4px rgba(var(--brand-600-rgb), 0.12);
 }
 
 .social-btn__icon {

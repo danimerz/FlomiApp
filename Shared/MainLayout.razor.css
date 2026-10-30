@@ -3,7 +3,7 @@
     min-height: 100vh;
     display: flex;
     background:
-        radial-gradient(circle at top left, rgba(37, 99, 235, 0.05), transparent 22%),
+        radial-gradient(circle at top left, rgba(var(--brand-600-rgb), 0.05), transparent 22%),
         linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-soft) 58%, var(--color-surface-soft-2) 100%);
     color: var(--color-text);
 }
@@ -195,7 +195,7 @@
 }
 
 .theme-switch__icon--sun  { color: #fde68a; }
-.theme-switch__icon--moon { color: #dbeafe; }
+.theme-switch__icon--moon { color: var(--brand-100); }
 
 .theme-switch__thumb {
     position: absolute;

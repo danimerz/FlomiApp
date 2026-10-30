@@ -240,7 +240,7 @@
 }
 
 .theme-switch__icon--moon {
-    color: #dbeafe;
+    color: var(--brand-100);
 }
 
 .theme-switch__thumb {

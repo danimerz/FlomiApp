@@ -11,7 +11,7 @@
     position: relative;
     overflow: hidden;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
     box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
@@ -21,7 +21,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, rgba(15, 98, 254, 0.80) 0%, rgba(36, 87, 214, 0.82) 45%, rgba(22, 62, 168, 0.86) 100%),
+        linear-gradient(135deg, rgba(var(--brand-bright-rgb), 0.80) 0%, rgba(var(--brand-hero-mid-rgb), 0.82) 45%, rgba(var(--brand-hero-end-rgb), 0.86) 100%),
         url('/img/home-hero-bg.jpg') center center / cover no-repeat;
     pointer-events: none;
     z-index: 0;
@@ -125,14 +125,14 @@
 
 .home-secondary-btn--primary {
     background: #ffffff;
-    color: #1d4ed8;
+    color: var(--brand-700);
     border-color: #ffffff;
     font-weight: 800;
 }
 
 .home-secondary-btn--primary:hover {
     background: #f0f6ff;
-    color: #1d4ed8;
+    color: var(--brand-700);
 }
 
 .home-card {

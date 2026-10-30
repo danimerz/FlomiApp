@@ -11,7 +11,7 @@
     overflow: hidden;
     margin-bottom: 2rem;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
     box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
@@ -21,7 +21,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, rgba(15, 98, 254, 0.80) 0%, rgba(36, 87, 214, 0.82) 45%, rgba(22, 62, 168, 0.86) 100%),
+        linear-gradient(135deg, rgba(var(--brand-bright-rgb), 0.80) 0%, rgba(var(--brand-hero-mid-rgb), 0.82) 45%, rgba(var(--brand-hero-end-rgb), 0.86) 100%),
         url('/img/home-hero-bg.jpg') center center / cover no-repeat;
     pointer-events: none;
     z-index: 0;
@@ -126,7 +126,7 @@
     gap: 0.75rem;
     padding: 1rem 1.25rem;
     border: none;
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 100%);
     color: #ffffff;
     cursor: pointer;
     text-align: left;
@@ -467,7 +467,7 @@
     background: var(--color-primary);
     color: #ffffff;
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+    box-shadow: 0 6px 14px rgba(var(--brand-600-rgb), 0.28);
 }
 
 .ics-icon-btn:active {

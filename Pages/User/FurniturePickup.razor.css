@@ -48,8 +48,8 @@
 }
 
 .addr-suggestion:hover {
-    background: var(--color-info-bg, #eff6ff);
-    color: var(--color-primary, #2563eb);
+    background: var(--color-info-bg, var(--brand-50));
+    color: var(--color-primary, var(--brand-600));
 }
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
@@ -66,7 +66,7 @@
     overflow: hidden;
     margin-bottom: 2rem;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
     box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
@@ -76,7 +76,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, rgba(15,98,254,.80) 0%, rgba(36,87,214,.82) 45%, rgba(22,62,168,.86) 100%),
+        linear-gradient(135deg, rgba(var(--brand-bright-rgb), .80) 0%, rgba(var(--brand-hero-mid-rgb), .82) 45%, rgba(var(--brand-hero-end-rgb), .86) 100%),
         url('/img/home-hero-bg.jpg') center center / cover no-repeat;
     pointer-events: none;
     z-index: 0;
@@ -324,8 +324,8 @@
     border-color: var(--color-primary);
     background: var(--color-surface-card);
     box-shadow:
-        0 0 0 4px rgba(59, 130, 246, 0.12),
-        0 8px 20px rgba(37, 99, 235, 0.08);
+        0 0 0 4px rgba(var(--brand-500-rgb), 0.12),
+        0 8px 20px rgba(var(--brand-600-rgb), 0.08);
 }
 
 ::deep input.form-control-modern,
@@ -401,13 +401,13 @@
     transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
     width: 100%;
     box-sizing: border-box;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 2px 8px rgba(var(--brand-600-rgb), 0.08);
 }
 
 .pickup-file-label:hover {
     background: linear-gradient(135deg, var(--color-primary-tint) 0%, var(--color-info-border) 100%);
     border-color: var(--color-primary);
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 4px 14px rgba(var(--brand-600-rgb), 0.15);
 }
 
 .pickup-file-label:active {
@@ -507,7 +507,7 @@
 .pickup-submit-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     filter: brightness(1.06);
-    box-shadow: 0 12px 24px rgba(37,99,235,.30);
+    box-shadow: 0 12px 24px rgba(var(--brand-600-rgb), .30);
 }
 
 .pickup-submit-btn:active:not(:disabled) {

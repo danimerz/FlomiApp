@@ -50,7 +50,7 @@
 .appt-select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    box-shadow: 0 0 0 3px rgba(var(--brand-500-rgb), .12);
 }
 
 /* ── KPI Bar ──────────────────────────────────────────────────────────────── */

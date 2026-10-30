@@ -2,15 +2,20 @@
 @using Microsoft.AspNetCore.Components.Web
 @namespace FlomiApp.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IConfiguration Configuration
+@{
+    var designTheme = FlomiApp.Helpers.DesignTheme.FromConfiguration(Configuration);
+    var themeStylesheet = FlomiApp.Helpers.DesignTheme.StylesheetPath(designTheme);
+}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de" data-brand="@designTheme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="~/" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="@FlomiApp.Helpers.DesignTheme.ThemeColor(designTheme)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="FlomiApp" />
@@ -20,6 +25,10 @@
     <link rel="stylesheet" href="~/css/register.css" asp-append-version="true" />
     <link href="FlomiApp.styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    @if (themeStylesheet != null)
+    {
+        <link rel="stylesheet" href="~/@themeStylesheet" asp-append-version="true" />
+    }
     <link rel="icon" type="image/png" href="favicon.png"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>

@@ -61,19 +61,85 @@
 .auth-error-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
 
 .auth-error-btn--primary {
-    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(37,99,235,.25);
+    box-shadow: 0 4px 14px rgba(var(--brand-600-rgb), .25);
 }
 
 .auth-error-btn--secondary {
     background: transparent;
-    color: var(--color-primary, #2563eb);
-    border: 1.5px solid var(--color-primary, #2563eb);
+    color: var(--color-primary, var(--brand-600));
+    border: 1.5px solid var(--color-primary, var(--brand-600));
+}
+
+/* Selbst gehostete Schriften der Morgarten-Themes (SIL Open Font License).
+   Der Browser lädt eine Datei erst, wenn ein Theme die Schrift verwendet. */
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 300 800;
+    font-display: swap;
+    src: url('../fonts/open-sans-variable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Exo 2';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/exo2-variable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Amatic SC';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/amatic-sc-700.woff2') format('woff2');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MARKE — Grundfarben und Schriften des Themes «standard».
+   Andere Themes (wwwroot/css/themes/*.css, Auswahl über Design__Theme)
+   überschreiben diese Werte auf html[data-brand="…"].
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+    --brand-50:  #eff6ff;
+    --brand-100: #dbeafe;
+    --brand-200: #bfdbfe;
+    --brand-300: #93c5fd;
+    --brand-400: #60a5fa;
+    --brand-500: #3b82f6;
+    --brand-600: #2563eb;
+    --brand-700: #1d4ed8;
+    --brand-800: #1e40af;
+    --brand-bright: #0f62fe;
+    --brand-hero-mid: #2457d6;
+    --brand-hero-end: #163ea8;
+
+    /* Für rgba(var(--brand-…-rgb), alpha) */
+    --brand-500-rgb:      59, 130, 246;
+    --brand-600-rgb:      37, 99, 235;
+    --brand-700-rgb:      29, 78, 216;
+    --brand-bright-rgb:   15, 98, 254;
+    --brand-hero-mid-rgb: 36, 87, 214;
+    --brand-hero-end-rgb: 22, 62, 168;
+
+    --font-body:    'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-heading: var(--font-body);
+    --font-title:   var(--font-heading);
 }
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: var(--font-body);
+}
+
+h1 {
+    font-family: var(--font-title);
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
 }
 
 h1:focus {
@@ -81,17 +147,17 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: var(--brand-700);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--brand-600);
+    border-color: var(--brand-700);
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--brand-500);
 }
 
 .content {
@@ -144,11 +210,11 @@ a, .btn-link {
    ════════════════════════════════════════════════════════════════════════════ */
 .app-shell {
     /* Primary */
-    --color-primary:           #2563eb;
-    --color-primary-dark:      #1d4ed8;
-    --color-primary-deeper:    #1e40af;
-    --color-primary-subtle:    #eff6ff;
-    --color-primary-tint:      #dbeafe;
+    --color-primary:           var(--brand-600);
+    --color-primary-dark:      var(--brand-700);
+    --color-primary-deeper:    var(--brand-800);
+    --color-primary-subtle:    var(--brand-50);
+    --color-primary-tint:      var(--brand-100);
 
     /* Text */
     --color-text:              #1f2937;
@@ -181,9 +247,9 @@ a, .btn-link {
     --color-border-soft:       #e2e8f0;
 
     /* Status — Info */
-    --color-info-bg:           #eff6ff;
-    --color-info-border:       #bfdbfe;
-    --color-info-text:         #1d4ed8;
+    --color-info-bg:           var(--brand-50);
+    --color-info-border:       var(--brand-200);
+    --color-info-text:         var(--brand-700);
 
     /* Status — Success */
     --color-success-bg:        #ecfdf5;
@@ -203,12 +269,12 @@ a, .btn-link {
     /* Shadows */
     --shadow-card:    0 10px 24px rgba(15, 23, 42, 0.05), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
     --shadow-card-sm: 0 4px 16px rgba(15, 23, 42, 0.06);
-    --shadow-btn:     0 8px 18px rgba(37, 99, 235, 0.22);
-    --shadow-hero:    0 20px 45px rgba(15, 98, 254, 0.18);
+    --shadow-btn:     0 8px 18px rgba(var(--brand-600-rgb), 0.22);
+    --shadow-hero:    0 20px 45px rgba(var(--brand-bright-rgb), 0.18);
 
     /* Sidebar */
-    --color-sidebar-bg-start:    rgba(15, 98, 254, 0.98);
-    --color-sidebar-bg-mid:      rgba(29, 78, 216, 0.98);
+    --color-sidebar-bg-start:    rgba(var(--brand-bright-rgb), 0.98);
+    --color-sidebar-bg-mid:      rgba(var(--brand-700-rgb), 0.98);
     --color-sidebar-bg-end:      rgba(30, 41, 59, 0.98);
     --color-sidebar-border:      rgba(255, 255, 255, 0.12);
     --color-sidebar-text:        #ffffff;
@@ -233,11 +299,11 @@ a, .btn-link {
    DESIGN TOKENS — Dark Mode
    ════════════════════════════════════════════════════════════════════════════ */
 .app-shell[data-theme="dark"] {
-    --color-primary:           #60a5fa;
-    --color-primary-dark:      #3b82f6;
-    --color-primary-deeper:    #2563eb;
-    --color-primary-subtle:    rgba(59, 130, 246, 0.12);
-    --color-primary-tint:      rgba(59, 130, 246, 0.20);
+    --color-primary:           var(--brand-400);
+    --color-primary-dark:      var(--brand-500);
+    --color-primary-deeper:    var(--brand-600);
+    --color-primary-subtle:    rgba(var(--brand-500-rgb), 0.12);
+    --color-primary-tint:      rgba(var(--brand-500-rgb), 0.20);
 
     --color-text:              #cbd5e1;
     --color-text-strong:       #e5eef8;
@@ -266,9 +332,9 @@ a, .btn-link {
     --color-border-medium:     rgba(255, 255, 255, 0.08);
     --color-border-soft:       rgba(255, 255, 255, 0.08);
 
-    --color-info-bg:           rgba(37, 99, 235, 0.15);
-    --color-info-border:       rgba(59, 130, 246, 0.28);
-    --color-info-text:         #60a5fa;
+    --color-info-bg:           rgba(var(--brand-600-rgb), 0.15);
+    --color-info-border:       rgba(var(--brand-500-rgb), 0.28);
+    --color-info-text:         var(--brand-400);
 
     --color-success-bg:        rgba(5, 150, 105, 0.12);
     --color-success-border:    rgba(16, 185, 129, 0.28);
@@ -284,8 +350,8 @@ a, .btn-link {
 
     --shadow-card:    0 10px 24px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
     --shadow-card-sm: 0 4px 16px rgba(0, 0, 0, 0.22);
-    --shadow-btn:     0 8px 18px rgba(37, 99, 235, 0.35);
-    --shadow-hero:    0 20px 45px rgba(15, 98, 254, 0.30);
+    --shadow-btn:     0 8px 18px rgba(var(--brand-600-rgb), 0.35);
+    --shadow-hero:    0 20px 45px rgba(var(--brand-bright-rgb), 0.30);
 
     --color-sidebar-bg-start:    rgba(15, 23, 42, 0.98);
     --color-sidebar-bg-mid:      rgba(30, 41, 59, 0.98);
@@ -540,7 +606,7 @@ a, .btn-link {
     outline: none;
     border-color: var(--color-primary);
     background: var(--color-surface-card);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--brand-600-rgb), 0.15);
 }
 
 .ac-textarea {
@@ -582,7 +648,7 @@ a, .btn-link {
 .afp-submit-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     filter: brightness(1.06);
-    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.30);
+    box-shadow: 0 12px 24px rgba(var(--brand-600-rgb), 0.30);
 }
 
 .ac-submit-btn:active:not(:disabled),
@@ -895,7 +961,7 @@ a, .btn-link {
 }
 
 .flomi-nav__brand:hover {
-    color: #0071c1;
+    color: var(--brand-700);
     text-decoration: none;
 }
 
@@ -914,7 +980,7 @@ a, .btn-link {
 }
 
 .flomi-nav__link:hover {
-    color: #0071c1;
+    color: var(--brand-700);
     text-decoration: none;
 }
 
@@ -931,5 +997,5 @@ a, .btn-link {
 }
 
 .flomi-nav__link--btn:hover {
-    color: #0071c1;
+    color: var(--brand-700);
 }

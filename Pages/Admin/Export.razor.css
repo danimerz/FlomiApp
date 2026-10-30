@@ -55,7 +55,7 @@
 .export-select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    box-shadow: 0 0 0 4px rgba(var(--brand-500-rgb), 0.12);
 }
 
 /* ─── Export Grid ────────────────────────────────────────────────────────── */
@@ -152,7 +152,7 @@
 .export-btn:hover {
     transform: translateY(-1px);
     filter: brightness(1.04);
-    box-shadow: 0 12px 28px rgba(37,99,235,0.28);
+    box-shadow: 0 12px 28px rgba(var(--brand-600-rgb), 0.28);
 }
 
 .export-btn:disabled {

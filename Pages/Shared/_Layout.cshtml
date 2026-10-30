@@ -1,14 +1,24 @@
 ﻿@using Microsoft.AspNetCore.Hosting
 @inject IWebHostEnvironment Environment
+@inject IConfiguration Configuration
+@{
+    var designTheme = FlomiApp.Helpers.DesignTheme.FromConfiguration(Configuration);
+    var themeStylesheet = FlomiApp.Helpers.DesignTheme.StylesheetPath(designTheme);
+}
 @inject Microsoft.AspNetCore.Identity.SignInManager<FlomiApp.Data.Models.ApplicationUser> SignInManager
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-brand="@designTheme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - FlomiApp</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/register.css" asp-append-version="true" />
+    @if (themeStylesheet != null)
+    {
+        <link rel="stylesheet" href="~/@themeStylesheet" asp-append-version="true" />
+    }
+    <meta name="theme-color" content="@FlomiApp.Helpers.DesignTheme.ThemeColor(designTheme)" />
 </head>
 <body>
 

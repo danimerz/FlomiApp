@@ -1,0 +1,125 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   THEME «morgarten-lager» — nah an pfadimorgarten.ch (Design__Theme=morgarten-lager)
+   Schwarze Leiste wie das Website-Menü, warmgrauer Grund, Seitentitel in Amatic SC.
+
+   Achtung Spezifität: «html[data-brand] .app-shell» schlägt das Dunkel-Theme in
+   site.css. Jedes Token, das hier für Hell gesetzt wird, muss deshalb auch im
+   Dunkel-Block stehen.
+   ════════════════════════════════════════════════════════════════════════════ */
+html[data-brand="morgarten-lager"] {
+    --brand-50:  #eef1fb;
+    --brand-100: #dce3f6;
+    --brand-200: #b8c6ee;
+    --brand-300: #8ea3e6;
+    --brand-400: #7f97f0;
+    --brand-500: #2f4fd0;
+    --brand-600: #0028a4;
+    --brand-700: #001f80;
+    --brand-800: #020659;
+    --brand-bright:   #0028a4;
+    --brand-hero-mid: #10153a;
+    --brand-hero-end: #1b1b1b;
+
+    --brand-500-rgb:      47, 79, 208;
+    --brand-600-rgb:      0, 40, 164;
+    --brand-700-rgb:      0, 31, 128;
+    --brand-bright-rgb:   0, 40, 164;
+    --brand-hero-mid-rgb: 16, 21, 58;
+    --brand-hero-end-rgb: 27, 27, 27;
+
+    --brand-red: #b70000;
+
+    --font-body:    'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    --font-heading: 'Exo 2', 'Trebuchet MS', sans-serif;
+    --font-title:   'Amatic SC', 'Exo 2', cursive;
+}
+
+/* ── Hell ─────────────────────────────────────────────────────────────────── */
+html[data-brand="morgarten-lager"] .app-shell {
+    --color-text:              #1b1b1b;
+    --color-text-strong:       #111111;
+    --color-text-deep:         #1b1b1b;
+    --color-text-medium:       #3a3739;
+    --color-text-muted:        #5b5759;
+    --color-text-light:        #6b6769;
+    --color-text-lighter:      #7a7678;
+
+    --color-surface:           #f5f0f1;
+    --color-surface-soft:      #f3eeef;
+    --color-surface-soft-2:    #efe9ea;
+    --color-surface-muted:     #f2eeef;
+    --color-surface-card:      #fafafa;
+    --color-surface-card-soft: #f8f6f7;
+    --color-surface-input:     #ffffff;
+
+    --color-border-light:      #e0dcde;
+    --color-border-card:       #e0dcde;
+    --color-border-form:       #c9c6c8;
+    --color-border-soft:       #e0dcde;
+
+    --color-error-text:        #b70000;
+
+    --color-sidebar-bg-start:  #1b1b1b;
+    --color-sidebar-bg-mid:    #1b1b1b;
+    --color-sidebar-bg-end:    #111111;
+}
+
+/* ── Dunkel ───────────────────────────────────────────────────────────────── */
+html[data-brand="morgarten-lager"] .app-shell[data-theme="dark"] {
+    --color-text:              #e0dcde;
+    --color-text-strong:       #f0edee;
+    --color-text-deep:         #fafafa;
+    --color-text-medium:       #b5b1b3;
+    --color-text-muted:        #a7a4a5;
+    --color-text-light:        #8a8688;
+    --color-text-lighter:      #8a8688;
+
+    --color-surface:           #141414;
+    --color-surface-soft:      #161616;
+    --color-surface-soft-2:    #121212;
+    --color-surface-muted:     #1f1f1f;
+    --color-surface-card:      #1f1f1f;
+    --color-surface-card-soft: #1b1b1b;
+    --color-surface-input:     #262626;
+
+    --color-border-light:      #333333;
+    --color-border-card:       #333333;
+    --color-border-form:       #3d3d3d;
+    --color-border-soft:       #333333;
+
+    --color-error-text:        #ff8a8a;
+
+    --color-sidebar-bg-start:  #0a0a0a;
+    --color-sidebar-bg-mid:    #0a0a0a;
+    --color-sidebar-bg-end:    #000000;
+
+    --color-white:             #1f1f1f;
+    --color-surface-input-alt: #1f1f1f;
+}
+
+/* ── Aktiver Menüpunkt als blaue Fläche wie auf der Website ──
+   !important, weil die Regel im scoped CSS des NavMenu spezifischer ist */
+html[data-brand="morgarten-lager"] .navmenu-link.active {
+    background: var(--brand-600) !important;
+    box-shadow: none !important;
+}
+
+/* ── Handschrift-Titel: Amatic SC hat sehr kleine Kleinbuchstaben.
+   font-size-adjust vergrössert die Schrift, ohne die Seitengrössen anzufassen. */
+html[data-brand="morgarten-lager"] h1 {
+    font-weight: 700;
+    font-size-adjust: 0.62;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+}
+
+html[data-brand="morgarten-lager"] h2,
+html[data-brand="morgarten-lager"] h3 {
+    font-weight: 500;
+}
+
+/* ── Login- und Konto-Seiten (Identity-Layout) ── */
+html[data-brand="morgarten-lager"] .flomi-nav {
+    border-bottom: 4px solid transparent;
+    border-image: linear-gradient(90deg, #0028a4 0 50%, #b70000 50% 100%) 1;
+}

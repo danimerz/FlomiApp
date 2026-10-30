@@ -33,6 +33,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - Admin-Aktionen mit Tragweite (löschen, sperren, Rollen, Stornierung) über `IAuditLogService` protokollieren.
 - Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`).
 - Möbelfotos nie roh speichern – immer über `PickupImageProcessor` (verkleinert, entfernt GPS). Bilddaten liegen per Table Splitting in `FurniturePickupImageData`; Listen laden sie nicht mit, angezeigt wird über `/pickup-images/{id}?thumb=true` statt Base64.
+- Farben nie fest eintragen: `--brand-*`-Tokens (`site.css`, je Theme in `wwwroot/css/themes/` überschrieben) bzw. `--color-*`. Theme-Auswahl über `Design:Theme` (`Helpers/DesignTheme.cs`). Ausnahme: Mail-HTML braucht Hex-Werte.
 - CSP in `Program.cs`: externe Scripts nur von `cdn.jsdelivr.net` (Chart.js, jsQR). Neue externe Quellen dort ergänzen.
 - `ChatService` ist Singleton (Echtzeit-Events), die übrigen Services sind Scoped.
 - Buchungslogik (`AppointmentService`, `VehicleService`) ist durch Tests abgedeckt – bei Änderungen Tests anpassen/ergänzen.

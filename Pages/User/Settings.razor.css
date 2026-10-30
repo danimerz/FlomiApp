@@ -15,7 +15,7 @@
     overflow: hidden;
     margin-bottom: 2rem;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0f62fe 0%, #2457d6 45%, #163ea8 100%);
+    background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand-hero-mid) 45%, var(--brand-hero-end) 100%);
     box-shadow: var(--shadow-hero);
     isolation: isolate;
 }
@@ -25,7 +25,7 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(135deg, rgba(15, 98, 254, 0.80) 0%, rgba(36, 87, 214, 0.82) 45%, rgba(22, 62, 168, 0.86) 100%),
+        linear-gradient(135deg, rgba(var(--brand-bright-rgb), 0.80) 0%, rgba(var(--brand-hero-mid-rgb), 0.82) 45%, rgba(var(--brand-hero-end-rgb), 0.86) 100%),
         url('/img/home-hero-bg.jpg') center center / cover no-repeat;
     pointer-events: none;
     z-index: 0;
@@ -310,8 +310,8 @@
     border-color: var(--color-primary);
     background: var(--color-surface-card);
     box-shadow:
-        0 0 0 4px rgba(59, 130, 246, 0.12),
-        0 8px 20px rgba(37, 99, 235, 0.08);
+        0 0 0 4px rgba(var(--brand-500-rgb), 0.12),
+        0 8px 20px rgba(var(--brand-600-rgb), 0.08);
 }
 
 ::deep input.form-control-modern,
@@ -399,7 +399,7 @@
 .primary-btn:hover {
     transform: translateY(-1px);
     filter: brightness(1.03);
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.28);
+    box-shadow: 0 14px 28px rgba(var(--brand-600-rgb), 0.28);
 }
 
 .secondary-btn {
@@ -656,7 +656,7 @@
 
 .toggle-switch input:checked + .toggle-slider {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.30);
+    box-shadow: 0 4px 12px rgba(var(--brand-600-rgb), 0.30);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
@@ -664,7 +664,7 @@
 }
 
 .toggle-switch input:focus-visible + .toggle-slider {
-    outline: 3px solid rgba(59, 130, 246, 0.45);
+    outline: 3px solid rgba(var(--brand-500-rgb), 0.45);
     outline-offset: 2px;
 }
 

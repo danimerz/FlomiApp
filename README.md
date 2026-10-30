@@ -489,6 +489,24 @@ ein fehlschlagender Test stoppt den Deploy.
 
 > **Sicherheit:** Connection-String und SMTP-Credentials gehören **nicht** in `appsettings.json`. Für Entwicklung `.NET User Secrets` verwenden (`dotnet user-secrets set ...`), für Produktion Umgebungsvariablen oder einen Secret Manager.
 
+### Design (Theme)
+
+Das Erscheinungsbild gilt für die ganze Installation und wird über `Design:Theme` gewählt, auf dem Server am einfachsten als Umgebungsvariable:
+
+```bash
+Design__Theme=morgarten
+```
+
+| Wert | Aussehen |
+|---|---|
+| `standard` | Blaues FlomiApp-Design (Vorgabe, auch bei leerem oder unbekanntem Wert) |
+| `morgarten` | Morgarten Navy: Farben aus dem Logo der Pfadi Morgarten, Navy-Seitenleiste mit Blau-Rot-Streifen, Exo 2 / Open Sans |
+| `morgarten-lager` | Nah an pfadimorgarten.ch: schwarze Leiste, warmgrauer Grund, Seitentitel in Amatic SC |
+
+Hell- und Dunkelmodus der Benutzer funktionieren in jedem Theme. Eine Änderung wirkt nach einem Neustart der App. Die Schriften liegen unter `wwwroot/fonts` und werden nicht von Google geladen.
+
+Für Entwickler: Farben in CSS nie fest eintragen, sondern über die Marken-Tokens `--brand-50` … `--brand-800` (bzw. `rgba(var(--brand-600-rgb), …)`) und die `--color-*`-Tokens aus `site.css`. Ein Theme ist eine Datei `wwwroot/css/themes/<name>.css` plus ein Eintrag in `Helpers/DesignTheme.cs`.
+
 ---
 
 ## Lizenz

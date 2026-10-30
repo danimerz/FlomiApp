@@ -1,0 +1,128 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   THEME «morgarten» — Morgarten Navy (Design__Theme=morgarten)
+   Farben aus dem Logo der Pfadi Morgarten: Blau #0028A4, Rot #B70000, Navy #020659.
+   Schriften wie auf pfadimorgarten.ch: Exo 2 (Titel), Open Sans (Text).
+
+   Achtung Spezifität: «html[data-brand] .app-shell» schlägt das Dunkel-Theme in
+   site.css. Jedes Token, das hier für Hell gesetzt wird, muss deshalb auch im
+   Dunkel-Block stehen.
+   ════════════════════════════════════════════════════════════════════════════ */
+html[data-brand="morgarten"] {
+    --brand-50:  #eef1fb;
+    --brand-100: #dce3f6;
+    --brand-200: #b8c6ee;
+    --brand-300: #8ea3e6;
+    --brand-400: #7f97f0;
+    --brand-500: #2f4fd0;
+    --brand-600: #0028a4;
+    --brand-700: #001f80;
+    --brand-800: #020659;
+    --brand-bright:   #0028a4;
+    --brand-hero-mid: #011880;
+    --brand-hero-end: #020659;
+
+    --brand-500-rgb:      47, 79, 208;
+    --brand-600-rgb:      0, 40, 164;
+    --brand-700-rgb:      0, 31, 128;
+    --brand-bright-rgb:   0, 40, 164;
+    --brand-hero-mid-rgb: 1, 24, 128;
+    --brand-hero-end-rgb: 2, 6, 89;
+
+    --brand-red: #b70000;
+
+    --font-body:    'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    --font-heading: 'Exo 2', 'Trebuchet MS', sans-serif;
+}
+
+/* ── Hell ─────────────────────────────────────────────────────────────────── */
+html[data-brand="morgarten"] .app-shell {
+    --color-text:              #1b1b1b;
+    --color-text-strong:       #111111;
+    --color-text-deep:         #020659;
+    --color-text-medium:       #3a3739;
+    --color-text-muted:        #5b5759;
+    --color-text-light:        #6b6769;
+    --color-text-lighter:      #7a7678;
+
+    --color-surface:           #fafafa;
+    --color-surface-soft:      #f6f4f5;
+    --color-surface-soft-2:    #f1eef0;
+    --color-surface-muted:     #f8f7f8;
+    --color-surface-card-soft: #fdfcfd;
+    --color-surface-input:     #fafafa;
+
+    --color-border-light:      #e6e2e4;
+    --color-border-card:       #e0dcde;
+    --color-border-form:       #d6d1d4;
+    --color-border-soft:       #e6e2e4;
+
+    --color-error-text:        #b70000;
+
+    --color-sidebar-bg-start:  #020659;
+    --color-sidebar-bg-mid:    #020659;
+    --color-sidebar-bg-end:    #01043c;
+}
+
+/* ── Dunkel ───────────────────────────────────────────────────────────────── */
+html[data-brand="morgarten"] .app-shell[data-theme="dark"] {
+    --color-text:              #d9d7e2;
+    --color-text-strong:       #eceaf3;
+    --color-text-deep:         #f6f5fa;
+    --color-text-medium:       #a9a6bd;
+    --color-text-muted:        #8a87a3;
+    --color-text-light:        #6f6c8c;
+    --color-text-lighter:      #6f6c8c;
+
+    --color-surface:           #0b0c1f;
+    --color-surface-soft:      #0d0f26;
+    --color-surface-soft-2:    #0a0b1c;
+    --color-surface-muted:     #15173a;
+    --color-surface-card-soft: #121433;
+    --color-surface-input:     #171a40;
+
+    --color-border-light:      #262a55;
+    --color-border-card:       #262a55;
+    --color-border-form:       #2e3364;
+    --color-border-soft:       #262a55;
+
+    --color-error-text:        #ff8a8a;
+
+    --color-sidebar-bg-start:  #01043c;
+    --color-sidebar-bg-mid:    #01043c;
+    --color-sidebar-bg-end:    #000226;
+
+    /* Karten und Eingaben: Navy statt Schiefergrau */
+    --color-white:             #15173a;
+    --color-surface-card:      #15173a;
+    --color-surface-input-alt: #15173a;
+}
+
+/* ── Seitenleiste: Blau-Rot-Streifen wie im Logo, roter Balken beim aktiven Menüpunkt ── */
+/* .sidebar ist schon positioniert (sticky, mobil relative) */
+html[data-brand="morgarten"] .sidebar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #0028a4 0 50%, var(--brand-red) 50% 100%);
+    pointer-events: none;
+}
+
+/* !important, weil die Regel im scoped CSS des NavMenu spezifischer ist */
+html[data-brand="morgarten"] .navmenu-link.active {
+    box-shadow: inset 3px 0 0 var(--brand-red) !important;
+}
+
+html[data-brand="morgarten"] h1,
+html[data-brand="morgarten"] h2 {
+    font-weight: 600;
+    letter-spacing: 0.005em;
+}
+
+/* ── Login- und Konto-Seiten (Identity-Layout) ── */
+html[data-brand="morgarten"] .flomi-nav {
+    border-bottom: 4px solid transparent;
+    border-image: linear-gradient(90deg, #0028a4 0 50%, #b70000 50% 100%) 1;
+}

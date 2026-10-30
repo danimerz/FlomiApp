@@ -112,7 +112,7 @@
 .av-day-chip--active {
     border-color: var(--color-primary);
     background: var(--color-info-bg);
-    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    box-shadow: 0 0 0 3px rgba(var(--brand-600-rgb), .12);
 }
 
 .av-day-chip--taken {
