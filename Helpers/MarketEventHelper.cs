@@ -32,6 +32,31 @@ public static class MarketEventHelper
         return $"{start.ToString("dddd, d. MMMM, HH:mm", De)} – {end.ToString("dddd, d. MMMM yyyy, HH:mm", De)} Uhr";
     }
 
+    /// <summary>
+    /// Korrigiert ein «geöffnet bis», bei dem nur die Uhrzeit gesetzt wurde und das Datum noch auf
+    /// einem anderen Tag steht: liegt das Ende vor dem Start, passt aber die Uhrzeit am Starttag,
+    /// wird es auf den Starttag gesetzt. Gibt true zurück, wenn die Zeiten danach gültig sind.
+    /// </summary>
+    public static bool NormalizeMarketTimes(Event evt)
+    {
+        if (evt.MarketStart is not { } start || evt.MarketEnd is not { } end) return true;
+        if (end > start) return true;
+
+        var sameDay = start.Date + end.TimeOfDay;
+        if (sameDay > start)
+        {
+            evt.MarketEnd = sameDay;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Beschreibung für Google, wenn beim Event keine hinterlegt ist.</summary>
+    public static string DefaultEventDescription(Event evt) =>
+        evt.HasLocation
+            ? $"{evt.Name}: Flohmarkt der Pfadi Morgarten, {evt.LocationText}. {FormatWhen(evt)}."
+            : $"{evt.Name}: Flohmarkt der Pfadi Morgarten. {FormatWhen(evt)}.";
+
     /// <summary>Aktuelle Schweizer Ortszeit, auch wenn der Server auf UTC läuft.</summary>
     public static DateTime SwissNow() =>
         Zurich != null ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zurich) : DateTime.Now;
@@ -60,9 +85,9 @@ public static class MarketEventHelper
             ["@context"]            = "https://schema.org",
             ["@type"]               = "Event",
             ["name"]                = evt.Name,
-            ["description"]         = string.IsNullOrWhiteSpace(evt.Description) ? SeoHelper.DefaultDescription : evt.Description,
+            ["description"]         = string.IsNullOrWhiteSpace(evt.Description) ? DefaultEventDescription(evt) : evt.Description.Trim(),
             ["startDate"]           = FormatSchemaDate(evt.MarketStart, evt.Date),
-            ["endDate"]             = FormatSchemaDate(evt.MarketEnd ?? evt.MarketStart, evt.Date),
+            ["endDate"]             = FormatSchemaDate(evt.MarketEnd > evt.MarketStart ? evt.MarketEnd : evt.MarketStart, evt.Date),
             ["eventStatus"]         = "https://schema.org/EventScheduled",
             ["eventAttendanceMode"] = "https://schema.org/OfflineEventAttendanceMode",
             ["location"] = new Dictionary<string, object>

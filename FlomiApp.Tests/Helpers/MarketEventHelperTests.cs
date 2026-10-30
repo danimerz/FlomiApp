@@ -75,4 +75,33 @@ public class MarketEventHelperTests
             MarketEventHelper.FormatSchemaDate(new DateTime(2027, 9, 11, 9, 0, 0), default));
         Assert.Equal("2027-09-11", MarketEventHelper.FormatSchemaDate(null, new DateTime(2027, 9, 11)));
     }
+
+    [Fact]
+    public void NormalizeMarketTimes_MovesEndToStartDay_WhenOnlyTimeWasSet()
+    {
+        // Wie im Admin passiert: Ende mit Datum von heute, Uhrzeit passt zum Markttag
+        var evt = Market(new DateTime(2027, 4, 17, 9, 0, 0), new DateTime(2026, 10, 30, 17, 0, 0));
+
+        Assert.True(MarketEventHelper.NormalizeMarketTimes(evt));
+        Assert.Equal(new DateTime(2027, 4, 17, 17, 0, 0), evt.MarketEnd);
+    }
+
+    [Fact]
+    public void NormalizeMarketTimes_RejectsEndBeforeStartOnSameDay()
+    {
+        var evt = Market(new DateTime(2027, 4, 17, 9, 0, 0), new DateTime(2027, 4, 17, 8, 0, 0));
+        Assert.False(MarketEventHelper.NormalizeMarketTimes(evt));
+    }
+
+    [Fact]
+    public void EventJsonLd_NeverHasEndBeforeStart_AndDescribesEvent()
+    {
+        var evt  = Market(new DateTime(2027, 4, 17, 9, 0, 0), new DateTime(2027, 4, 17, 8, 0, 0));
+        var json = MarketEventHelper.BuildEventJsonLd(evt, "https://pfadiflomi.ch", "img/x.jpg")!;
+
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        Assert.Equal(root.GetProperty("startDate").GetString(), root.GetProperty("endDate").GetString());
+        Assert.StartsWith("Flomi 2027: Flohmarkt der Pfadi Morgarten, Dreifachturnhalle", root.GetProperty("description").GetString());
+    }
 }

@@ -215,8 +215,11 @@ public class AreaService : IAreaService
             .OrderBy(e => e.Date)
             .ToListAsync();
 
+        // Falsch erfasste Endzeiten (nur Uhrzeit gesetzt, Datum anderer Tag) korrigieren
+        foreach (var e in candidates) Helpers.MarketEventHelper.NormalizeMarketTimes(e);
+
         // Am Markttag selbst nach Ende der Öffnungszeit nicht mehr anzeigen
-        return candidates.FirstOrDefault(e => e.MarketEnd == null || e.MarketEnd >= now);
+        return candidates.FirstOrDefault(e => e.MarketEnd == null || e.MarketEnd <= e.MarketStart || e.MarketEnd >= now);
     }
 
     public async Task ToggleCheckInAsync(int eventId)

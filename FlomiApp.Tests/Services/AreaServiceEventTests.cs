@@ -80,4 +80,26 @@ public class AreaServiceEventTests
         Assert.Equal("Turnhalle, Weg 1, 6300 Zug", saved.LocationText);
         Assert.Equal(new DateTime(2027, 3, 13, 15, 0, 0), saved.MarketEnd);
     }
+
+    [Fact]
+    public async Task GetNextPublicEventAsync_FixesEndDateEnteredOnWrongDay()
+    {
+        using var db = new TestDb();
+        using (var ctx = db.CreateContext())
+        {
+            ctx.Events.Add(new Event
+            {
+                Name        = "Flomi 2027",
+                Date        = new DateTime(2027, 4, 17),
+                MarketStart = new DateTime(2027, 4, 17, 9, 0, 0),
+                MarketEnd   = new DateTime(2026, 10, 30, 17, 0, 0),
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        using var context = db.CreateContext();
+        var next = await new AreaService(context).GetNextPublicEventAsync(new DateTime(2026, 10, 30, 18, 0, 0));
+
+        Assert.Equal(new DateTime(2027, 4, 17, 17, 0, 0), next?.MarketEnd);
+    }
 }

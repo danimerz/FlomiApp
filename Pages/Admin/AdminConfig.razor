@@ -193,16 +193,16 @@
                                 </div>
                                 <div class="ac-field">
                                     <label>Markt geöffnet ab</label>
-                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketStart" class="ac-input" />
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketStart" @bind-Value:after="NormalizeMarketTimes" class="ac-input" />
                                 </div>
                                 <div class="ac-field">
                                     <label>Markt geöffnet bis</label>
-                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketEnd" class="ac-input" />
+                                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="currentEvent.MarketEnd" @bind-Value:after="NormalizeMarketTimes" class="ac-input" />
                                 </div>
                             </div>
                             @if (currentEvent.MarketStart != null && currentEvent.MarketEnd != null && currentEvent.MarketEnd <= currentEvent.MarketStart)
                             {
-                                <p class="ac-fieldset__warn">⚠️ «Geöffnet bis» liegt vor «geöffnet ab».</p>
+                                <p class="ac-fieldset__warn">⚠️ «Geöffnet bis» liegt vor «geöffnet ab». So kann das Event nicht gespeichert werden.</p>
                             }
                         </fieldset>
 
@@ -1380,8 +1380,13 @@
         currentEvent   = new Event();
     }
 
+    private void NormalizeMarketTimes() =>
+        FlomiApp.Helpers.MarketEventHelper.NormalizeMarketTimes(currentEvent);
+
     private async Task SubmitEventForm()
     {
+        if (!FlomiApp.Helpers.MarketEventHelper.NormalizeMarketTimes(currentEvent)) return;
+
         if (isEditingEvent)
             await AreaService.UpdateEventAsync(currentEvent);
         else
