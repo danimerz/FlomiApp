@@ -54,8 +54,8 @@ public static class MarketEventHelper
     /// <summary>Beschreibung für Google, wenn beim Event keine hinterlegt ist.</summary>
     public static string DefaultEventDescription(Event evt) =>
         evt.HasLocation
-            ? $"{evt.Name}: Flohmarkt der Pfadi Morgarten, {evt.LocationText}. {FormatWhen(evt)}."
-            : $"{evt.Name}: Flohmarkt der Pfadi Morgarten. {FormatWhen(evt)}.";
+            ? $"{evt.Name}: Flohmarkt der Pfadi Morgarten, {evt.LocationText}. {FormatWhen(evt)}. Eintritt frei."
+            : $"{evt.Name}: Flohmarkt der Pfadi Morgarten. {FormatWhen(evt)}. Eintritt frei.";
 
     /// <summary>Aktuelle Schweizer Ortszeit, auch wenn der Server auf UTC läuft.</summary>
     public static DateTime SwissNow() =>
@@ -90,6 +90,16 @@ public static class MarketEventHelper
             ["endDate"]             = FormatSchemaDate(evt.MarketEnd > evt.MarketStart ? evt.MarketEnd : evt.MarketStart, evt.Date),
             ["eventStatus"]         = "https://schema.org/EventScheduled",
             ["eventAttendanceMode"] = "https://schema.org/OfflineEventAttendanceMode",
+            // Eintritt zum Flohmarkt ist gratis (steht auch sichtbar auf der Startseite)
+            ["isAccessibleForFree"] = true,
+            ["offers"] = new Dictionary<string, object>
+            {
+                ["@type"]         = "Offer",
+                ["price"]         = "0",
+                ["priceCurrency"] = "CHF",
+                ["availability"]  = "https://schema.org/InStock",
+                ["url"]           = b,
+            },
             ["location"] = new Dictionary<string, object>
             {
                 ["@type"]   = "Place",

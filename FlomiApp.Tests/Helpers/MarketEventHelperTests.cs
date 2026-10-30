@@ -66,6 +66,9 @@ public class MarketEventHelperTests
         Assert.Equal("Dreifachturnhalle", root.GetProperty("location").GetProperty("name").GetString());
         Assert.Equal("6300", root.GetProperty("location").GetProperty("address").GetProperty("postalCode").GetString());
         Assert.Equal("https://pfadiflomi.ch/img/x.jpg", root.GetProperty("image")[0].GetString());
+        Assert.True(root.GetProperty("isAccessibleForFree").GetBoolean());
+        Assert.Equal("0", root.GetProperty("offers").GetProperty("price").GetString());
+        Assert.Equal("CHF", root.GetProperty("offers").GetProperty("priceCurrency").GetString());
     }
 
     [Fact]
