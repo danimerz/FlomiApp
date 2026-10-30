@@ -466,8 +466,9 @@ SQLite-In-Memory-Datenbank, keine echte MySQL-Instanz nötig:
 dotnet test FlomiApp.sln
 ```
 
-Das Deploy-Workflow (`.github/workflows/deploy.yaml`) führt `dotnet test` vor dem Publish aus —
-ein fehlschlagender Test stoppt den Deploy.
+Der Deploy (`.github/workflows/deploy_famMerz.yaml`) läuft bei jedem Push auf `master`
+(reine `.md`-Änderungen ausgenommen) oder manuell. Er führt `dotnet test` vor dem Publish aus —
+ein fehlschlagender Test stoppt den Deploy. Die Version `1.0.<Lauf-Nummer> (<Commit>)` steht im Footer.
 
 ---
 

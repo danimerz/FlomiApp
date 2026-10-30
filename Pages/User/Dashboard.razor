@@ -96,7 +96,7 @@
                 @foreach (var eventKey in AllEventKeys)
                 {
                 var eventOpen = IsEventOpen(eventKey);
-                var isList    = listEvents.Contains(eventKey);
+                var isList    = !tileEvents.Contains(eventKey);
 
                 var dateGroups = GroupedAppointments.ContainsKey(eventKey)
                     ? GroupedAppointments[eventKey]
@@ -206,7 +206,7 @@
 
                 @if (UnassignedPickups.Any())
                 {
-                    var unassignedList = listEvents.Contains(UnassignedKey);
+                    var unassignedList = !tileEvents.Contains(UnassignedKey);
 
                     <section class="appointments-section" style="margin-top:1.5rem">
                         <div class="appointments-section__header">
@@ -386,10 +386,10 @@
     private HashSet<string> openEvents    = new();
     private HashSet<string> openSubgroups = new();
 
-    // ── Ansicht Kacheln/Liste (pro Event, im Browser gemerkt) ─────────────────
-    private const string ListViewStorageKey = "flomi.dashboard.listEvents";
+    // ── Ansicht Kacheln/Liste (Standard Liste, Kacheln pro Event im Browser gemerkt)
+    private const string TileViewStorageKey = "flomi.dashboard.tileEvents";
     private const string UnassignedKey      = "__weitere-abholungen";
-    private HashSet<string> listEvents = new();
+    private HashSet<string> tileEvents = new();
 
     // ── Gefilterte & gruppierte Appointments ──────────────────────────────────
     private List<Appointment> FilteredAppointments =>
@@ -514,13 +514,13 @@
 
     private async Task SetViewMode(string key, bool asList)
     {
-        if (asList) listEvents.Add(key); else listEvents.Remove(key);
+        if (asList) tileEvents.Remove(key); else tileEvents.Add(key);
 
         // Ein zugeklapptes Event beim Umschalten gleich öffnen, wie auf der Anmeldeseite
         if (key != UnassignedKey && !openEvents.Contains(key))
             await ToggleEvent(key);
 
-        try { await JS.InvokeVoidAsync("localStorage.setItem", ListViewStorageKey, string.Join("\n", listEvents)); }
+        try { await JS.InvokeVoidAsync("localStorage.setItem", TileViewStorageKey, string.Join("\n", tileEvents)); }
         catch (JSException) { }
     }
 
@@ -529,10 +529,10 @@
         if (!firstRender) return;
         try
         {
-            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", ListViewStorageKey);
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", TileViewStorageKey);
             if (!string.IsNullOrEmpty(stored))
             {
-                listEvents = stored.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+                tileEvents = stored.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
                 StateHasChanged();
             }
         }

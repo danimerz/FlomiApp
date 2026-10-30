@@ -40,6 +40,6 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 
 ## Deploy
 
-GitHub Actions, nur manuell (`workflow_dispatch`):
-- `deploy_famMerz.yaml` – **wird aktuell verwendet.** Tests, framework-abhängiger Publish als ZIP an `apps.familie-merz.ch` (Server braucht die passende ASP.NET Core Runtime)
-- `deploy.yaml` – Tests, self-contained Publish, rsync per SSH, `systemctl restart flomi` (Environment «Brahmsnet»)
+GitHub Actions:
+- `deploy_famMerz.yaml` – **wird aktuell verwendet.** Läuft bei jedem Push auf `master` (ausser nur `.md`) und manuell. Setzt `Version=1.0.<run_number>` (Footer, `Helpers/AppVersion.cs`). Tests, framework-abhängiger Publish als ZIP an `apps.familie-merz.ch` (Server braucht die passende ASP.NET Core Runtime)
+- `deploy.yaml` – nur manuell. Tests, self-contained Publish, rsync per SSH, `systemctl restart flomi` (Environment «Brahmsnet»)

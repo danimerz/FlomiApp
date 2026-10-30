@@ -2,6 +2,15 @@ name: Deploy flomiapp
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+
+# Nie zwei Deploys gleichzeitig; ein neuer Push wartet, bis der laufende fertig ist
+concurrency:
+  group: deploy-flomiapp
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -17,7 +26,7 @@ jobs:
         run: dotnet test FlomiApp.sln -c Release
 
       - name: Publish
-        run: dotnet publish FlomiApp.csproj -c Release -o publish
+        run: dotnet publish FlomiApp.csproj -c Release -o publish -p:Version=1.0.${{ github.run_number }}
 
       - name: ZIP erstellen
         run: cd publish && zip -qr ../app.zip .

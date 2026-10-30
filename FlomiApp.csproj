@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Lokal 1.0.0; beim Deploy setzt GitHub Actions 1.0.<Lauf-Nummer> -->
+    <Version>1.0.0</Version>
     <UserSecretsId>aspnet-FlomiApp-cae2207e-3c7f-404f-8f14-5012a2de13bb</UserSecretsId>
   </PropertyGroup>
 
