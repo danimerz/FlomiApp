@@ -99,6 +99,16 @@
                     </div>
                     <strong class="notice-box__title">@n.Title</strong>
                     <p class="notice-box__content">@n.Content</p>
+                    @if (n.Images.Count > 0)
+                    {
+                        <a href="/news" class="notice-box__image" title="Zur Meldung">
+                            <img src="/news-images/@n.Images[0].Id" alt="Bild zu «@n.Title»" loading="lazy" />
+                            @if (n.Images.Count > 1)
+                            {
+                                <span class="notice-box__image-more">+@(n.Images.Count - 1) Bilder</span>
+                            }
+                        </a>
+                    }
                 </div>
                 @if (latestNews.Count > 1)
                 {

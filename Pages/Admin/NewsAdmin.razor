@@ -47,6 +47,49 @@
                                        rows="5"
                                        placeholder="Text der Meldung..." />
                     </div>
+                    <div class="ac-field" style="margin-bottom:1rem">
+                        <label>
+                            Bilder
+                            <span class="news-img-hint">(max. @INewsService.MaxImages, je max. 10 MB; das erste erscheint auch auf der Startseite)</span>
+                        </label>
+
+                        @if (ImageCount < INewsService.MaxImages)
+                        {
+                            <label class="news-img-upload">
+                                <span>@(isProcessing ? "⏳ Bilder werden aufbereitet..." : "📷 Bilder auswählen")</span>
+                                <InputFile OnChange="HandleImageUpload" multiple accept="image/*"
+                                           class="news-img-upload__input" disabled="@isProcessing" />
+                            </label>
+                        }
+
+                        @if (imageError != null)
+                        {
+                            <p class="news-img-error">⚠️ @imageError</p>
+                        }
+
+                        @if (ImageCount > 0)
+                        {
+                            <div class="news-img-grid">
+                                @foreach (var img in current.Images.Where(i => !removedImageIds.Contains(i.Id)))
+                                {
+                                    <div class="news-img-thumb">
+                                        <img src="/news-images/@img.Id?thumb=true" alt="@img.FileName" />
+                                        <button type="button" class="news-img-remove" title="Bild entfernen"
+                                                @onclick="() => { removedImageIds.Add(img.Id); }">✕</button>
+                                    </div>
+                                }
+                                @foreach (var img in newImages)
+                                {
+                                    <div class="news-img-thumb news-img-thumb--new">
+                                        <img src="@img.PreviewUrl" alt="@img.FileName" />
+                                        <button type="button" class="news-img-remove" title="Bild entfernen"
+                                                @onclick="() => { newImages.Remove(img); }">✕</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
                     <div class="ac-checkbox-row">
                         <InputCheckbox @bind-Value="current.IsPublished" id="pubCheck" class="ac-checkbox" />
                         <label for="pubCheck">Sofort veröffentlichen</label>
@@ -57,7 +100,7 @@
                     </div>
 
                     <div class="ac-form-actions">
-                        <button type="submit" class="ac-submit-btn" disabled="@isSaving">
+                        <button type="submit" class="ac-submit-btn" disabled="@(isSaving || isProcessing)">
                             @(isSaving ? "⏳ Wird gespeichert..." : isEditing ? "💾 Aktualisieren" : "✅ Erstellen")
                         </button>
                         <button type="button" class="ac-cancel-btn" @onclick="Cancel">Abbrechen</button>
@@ -113,6 +156,10 @@
                                 <span class="ac-badge ac-badge--pinned" style="margin-right:.4rem">📌 Wichtig</span>
                             }
                             <strong>@item.Title</strong>
+                            @if (item.Images.Count > 0)
+                            {
+                                <span class="news-img-count" title="Bilder">🖼 @item.Images.Count</span>
+                            }
                         </td>
                         <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                         <td>
@@ -160,6 +207,17 @@
     private bool            isSaving   = false;
     private string?         successMsg = null;
 
+    // ── Bilder ────────────────────────────────────────────────────────────────
+    private sealed record NewImage(string FileName, FlomiApp.Helpers.ProcessedImage Image, string PreviewUrl);
+
+    private List<NewImage> newImages       = new();
+    private HashSet<int>   removedImageIds = new();
+    private string?        imageError      = null;
+    private bool           isProcessing    = false;
+
+    private int ImageCount =>
+        current.Images.Count(i => !removedImageIds.Contains(i.Id)) + newImages.Count;
+
     protected override async Task OnInitializedAsync() => await Load();
 
     private async Task Load()
@@ -173,14 +231,16 @@
         isEditing = false;
         showForm  = true;
         successMsg = null;
+        ResetImages();
     }
 
     private void Edit(NewsItem item)
     {
-        current   = new NewsItem { Id = item.Id, Title = item.Title, Content = item.Content, IsPublished = item.IsPublished, IsPinned = item.IsPinned };
+        current   = new NewsItem { Id = item.Id, Title = item.Title, Content = item.Content, IsPublished = item.IsPublished, IsPinned = item.IsPinned, Images = item.Images.ToList() };
         isEditing = true;
         showForm  = true;
         successMsg = null;
+        ResetImages();
     }
 
     private void Cancel()
@@ -188,6 +248,57 @@
         showForm  = false;
         isEditing = false;
         current   = new NewsItem { IsPublished = true };
+        ResetImages();
+    }
+
+    private void ResetImages()
+    {
+        newImages       = new();
+        removedImageIds = new();
+        imageError      = null;
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        imageError = null;
+        const long maxSizeBytes = 10 * 1024 * 1024;
+
+        var free  = INewsService.MaxImages - ImageCount;
+        var files = e.GetMultipleFiles(INewsService.MaxImages + 10);
+        if (files.Count > free)
+            imageError = $"Maximal {INewsService.MaxImages} Bilder pro Meldung, nur die ersten {free} werden übernommen.";
+
+        isProcessing = true;
+        try
+        {
+            foreach (var file in files.Take(free))
+            {
+                if (file.Size > maxSizeBytes)
+                {
+                    imageError = $"«{file.Name}» ist zu gross (max. 10 MB).";
+                    continue;
+                }
+
+                using var stream = file.OpenReadStream(maxSizeBytes);
+                using var ms     = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                // Format anhand der Datei-Signatur prüfen, dann verkleinern und GPS-Daten entfernen
+                var processed = FlomiApp.Helpers.ImageSignatureHelper.DetectContentType(bytes) == null
+                    ? null
+                    : await Task.Run(() => FlomiApp.Helpers.PickupImageProcessor.Process(bytes));
+                if (processed == null)
+                {
+                    imageError = $"«{file.Name}» ist kein erlaubtes Bildformat (JPEG, PNG, WebP, GIF).";
+                    continue;
+                }
+
+                newImages.Add(new NewImage(file.Name, processed,
+                    $"data:{FlomiApp.Helpers.ProcessedImage.ContentType};base64,{Convert.ToBase64String(processed.Thumbnail)}"));
+            }
+        }
+        finally { isProcessing = false; }
     }
 
     private async Task Save()
@@ -195,14 +306,15 @@
         isSaving = true;
         try
         {
+            var images = newImages.Select(i => (i.Image, i.FileName)).ToList();
             if (isEditing)
             {
-                await NewsService.UpdateAsync(current);
+                await NewsService.UpdateAsync(current, images, removedImageIds);
                 successMsg = $"Meldung «{current.Title}» wurde aktualisiert.";
             }
             else
             {
-                await NewsService.CreateAsync(current);
+                await NewsService.CreateAsync(current, images);
                 successMsg = $"Meldung «{current.Title}» wurde erstellt.";
             }
             await Load();

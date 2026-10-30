@@ -182,6 +182,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapPickupImages();
+app.MapNewsImages();
 app.MapSeo();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

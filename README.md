@@ -100,9 +100,9 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 
 ### News & Mitteilungen
 
-- **Startseite**: Neueste publizierte Meldung mit Datum, Titel und «Alle News»-Link
-- **Archivseite** `/news`: Alle publizierten Meldungen chronologisch, neueste zuerst mit blauem Highlight
-- **Admin** `/admin/news`: CRUD für News-Einträge — Titel, Inhalt, sofort publizieren oder als Entwurf speichern, Verbergen/Publizieren per Klick
+- **Startseite**: Neueste publizierte Meldung mit Datum, Titel, «Alle News»-Link und dem ersten Bild
+- **Archivseite** `/news`: Alle publizierten Meldungen chronologisch, neueste zuerst mit blauem Highlight; Bilder als Galerie (ein Bild gross, mehrere als Vorschau, Klick öffnet volle Grösse)
+- **Admin** `/admin/news`: CRUD für News-Einträge — Titel, Inhalt, bis 6 Bilder (verkleinert, ohne GPS-Daten), sofort publizieren oder als Entwurf speichern, Verbergen/Publizieren per Klick. Bilder von Entwürfen sind nicht öffentlich abrufbar
 
 ---
 

@@ -678,6 +678,55 @@ namespace FlomiApp.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("NewsItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NewsItemId");
+
+                    b.ToTable("NewsImages", (string)null);
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsImageData", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<byte[]>("ThumbnailData")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NewsImages", (string)null);
+                });
+
             modelBuilder.Entity("FlomiApp.Data.Models.NewsItem", b =>
                 {
                     b.Property<int>("Id")
@@ -1072,6 +1121,26 @@ namespace FlomiApp.Migrations
                     b.Navigation("Event");
                 });
 
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsImage", b =>
+                {
+                    b.HasOne("FlomiApp.Data.Models.NewsItem", "NewsItem")
+                        .WithMany("Images")
+                        .HasForeignKey("NewsItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NewsItem");
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsImageData", b =>
+                {
+                    b.HasOne("FlomiApp.Data.Models.NewsImage", null)
+                        .WithOne("Data")
+                        .HasForeignKey("FlomiApp.Data.Models.NewsImageData", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FlomiApp.Data.Models.VehicleAssignment", b =>
                 {
                     b.HasOne("FlomiApp.Data.Models.Event", "Event")
@@ -1185,6 +1254,17 @@ namespace FlomiApp.Migrations
                 });
 
             modelBuilder.Entity("FlomiApp.Data.Models.FurniturePickupRequest", b =>
+                {
+                    b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsImage", b =>
+                {
+                    b.Navigation("Data")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FlomiApp.Data.Models.NewsItem", b =>
                 {
                     b.Navigation("Images");
                 });

@@ -22,7 +22,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - `Security/Roles.cs` – Rollen-Konstanten; `Security/AuditActions.cs` – Audit-Log-Texte
 - `Security/ExternalAuth.cs` – Google/Microsoft/MiData-Login, nur aktiv wenn unter `ExternalAuth` konfiguriert; Ablauf in `Areas/Identity/Pages/Account/ExternalLogin` und `LinkLogin`. Admin-Rollen sind von externen Logins ausgeschlossen.
 - `Helpers/` – reine Hilfsfunktionen (Telefon, Zeit, Bild-Signatur, Foto-Aufbereitung mit SkiaSharp)
-- `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`)
+- `Endpoints/` – Minimal-API-Endpunkte (Möbelfotos unter `/pickup-images/{id}`, News-Bilder unter `/news-images/{id}`, robots/sitemap)
 - Routenplanung: `Helpers/RouteOptimizer.cs` (reine Tourenoptimierung, getestet), `Services/RoutePlanningService.cs` (Adresssuche `GeocodingService` via geo.admin.ch, Fahrzeiten `TravelTimeService` via OpenRouteService oder Luftlinie). Beispieldaten: `SampleDataService` (`Event.IsSample`/`Vehicle.IsSample`)
 - `FlomiApp.Tests/` – Testprojekt; wird in `FlomiApp.csproj` explizit vom Glob ausgeschlossen
 
@@ -32,7 +32,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - Admin-Seiten: `[Authorize(Roles = Roles.AdminOr…)]` **plus** `[Authorize(Policy = Roles.RequireTwoFactorForAdmins)]`. Rollen: `Admin`, `FahrzeugAdmin`, `MoebelAdmin`, `BereichsAdmin`.
 - Admin-Aktionen mit Tragweite (löschen, sperren, Rollen, Stornierung) über `IAuditLogService` protokollieren.
 - Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`).
-- Möbelfotos nie roh speichern – immer über `PickupImageProcessor` (verkleinert, entfernt GPS). Bilddaten liegen per Table Splitting in `FurniturePickupImageData`; Listen laden sie nicht mit, angezeigt wird über `/pickup-images/{id}?thumb=true` statt Base64.
+- Möbelfotos nie roh speichern – immer über `PickupImageProcessor` (verkleinert, entfernt GPS). Bilddaten liegen per Table Splitting in `FurniturePickupImageData`; Listen laden sie nicht mit, angezeigt wird über `/pickup-images/{id}?thumb=true` statt Base64. Gleiches gilt für News-Bilder (`NewsImage`/`NewsImageData`).
 - Farben nie fest eintragen: `--brand-*`-Tokens (`site.css`, je Theme in `wwwroot/css/themes/` überschrieben) bzw. `--color-*`. Theme-Auswahl über `Design:Theme` (`Helpers/DesignTheme.cs`). Ausnahme: Mail-HTML braucht Hex-Werte.
 - CSP in `Program.cs`: externe Scripts nur von `cdn.jsdelivr.net` (Chart.js, jsQR). Neue externe Quellen dort ergänzen.
 - `ChatService` ist Singleton (Echtzeit-Events), die übrigen Services sind Scoped.

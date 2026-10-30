@@ -15,4 +15,7 @@ public class NewsItem
     public DateTime CreatedAt   { get; set; } = DateTime.Now;
     public bool     IsPublished { get; set; } = true;
     public bool     IsPinned    { get; set; } = false;
+
+    /// <summary>Bilder in Anzeigereihenfolge (nur Metadaten, siehe <see cref="NewsImage"/>).</summary>
+    public List<NewsImage> Images { get; set; } = new();
 }

@@ -50,6 +50,20 @@
                     <div class="news-card__body">
                         <h2 class="news-card__title">@item.Title</h2>
                         <p class="news-card__content">@item.Content</p>
+
+                        @if (item.Images.Count > 0)
+                        {
+                            <div class="news-gallery @(item.Images.Count == 1 ? "news-gallery--single" : "")">
+                                @foreach (var img in item.Images)
+                                {
+                                    <a href="/news-images/@img.Id" target="_blank" rel="noopener" class="news-gallery__item"
+                                       title="Bild in voller Grösse öffnen">
+                                        <img src="@ImageUrl(img.Id, thumb: item.Images.Count > 1)"
+                                             alt="Bild zu «@item.Title»" loading="lazy" />
+                                    </a>
+                                }
+                            </div>
+                        }
                     </div>
                 </article>
                 isFirst = false;
@@ -61,6 +75,10 @@
 
 @code {
     private List<NewsItem>? news;
+
+    // Ein einzelnes Bild wird gross gezeigt, mehrere als Vorschaubilder
+    private static string ImageUrl(int id, bool thumb) =>
+        thumb ? $"/news-images/{id}?thumb=true" : $"/news-images/{id}";
 
     protected override async Task OnInitializedAsync()
     {

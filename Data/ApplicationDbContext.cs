@@ -22,6 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FamilyMember>           FamilyMembers           { get; set; }
     public DbSet<FurniturePickupRequest> FurniturePickupRequests { get; set; }
     public DbSet<FurniturePickupImage>   FurniturePickupImages   { get; set; }
+    public DbSet<NewsImage>              NewsImages              { get; set; }
     public DbSet<FurniturePickupSettings> FurniturePickupSettings { get; set; }
     public DbSet<Vehicle>           Vehicles           { get; set; }
     public DbSet<VehicleAssignment> VehicleAssignments { get; set; }
@@ -75,6 +76,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Navigation(i => i.Data).IsRequired();
         });
         modelBuilder.Entity<FurniturePickupImageData>().ToTable("FurniturePickupImages");
+
+        // ── NewsImage: ebenfalls Table Splitting, Bilder gehen mit der Meldung ─
+        modelBuilder.Entity<NewsImage>(b =>
+        {
+            b.ToTable("NewsImages");
+            b.Property(i => i.ContentType).HasMaxLength(50);
+            b.Property(i => i.FileName).HasMaxLength(255);
+            b.HasOne(i => i.NewsItem)
+                .WithMany(n => n.Images)
+                .HasForeignKey(i => i.NewsItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(i => i.Data)
+                .WithOne()
+                .HasForeignKey<NewsImageData>(d => d.Id);
+            b.Navigation(i => i.Data).IsRequired();
+        });
+        modelBuilder.Entity<NewsImageData>().ToTable("NewsImages");
 
         // ── AreaTemplate → AreaCategory ───────────────────────────────────────
         modelBuilder.Entity<AreaTemplate>()
