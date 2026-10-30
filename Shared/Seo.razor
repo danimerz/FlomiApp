@@ -1,0 +1,41 @@
+@* Titel, Beschreibung und Vorschau-Tags (Google, WhatsApp, Facebook) für öffentliche Seiten *@
+@using FlomiApp.Helpers
+@inject NavigationManager Navigation
+
+<PageTitle>@FullTitle</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="@Description" />
+    <link rel="canonical" href="@CanonicalUrl" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="@SeoHelper.SiteName" />
+    <meta property="og:locale" content="de_CH" />
+    <meta property="og:title" content="@FullTitle" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:image" content="@(Navigation.BaseUri + SeoHelper.DefaultImage)" />
+    <meta name="twitter:card" content="summary_large_image" />
+    @if (IsHome)
+    {
+        @((MarkupString)$"<script type=\"application/ld+json\">{SeoHelper.BuildWebSiteJsonLd(Navigation.BaseUri)}</script>")
+    }
+</HeadContent>
+
+@code {
+    /// <summary>Seitentitel ohne Seitennamen; leer = nur «Pfadi Flomi».</summary>
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public string Description { get; set; } = SeoHelper.DefaultDescription;
+
+    /// <summary>Bevorzugter Pfad, wenn eine Seite mehrere Routen hat (ohne führenden «/»).</summary>
+    [Parameter] public string? CanonicalPath { get; set; }
+
+    /// <summary>Startseite: zusätzlich strukturierte Daten (schema.org WebSite) ausgeben.</summary>
+    [Parameter] public bool IsHome { get; set; }
+
+    private string FullTitle => SeoHelper.FullTitle(Title);
+
+    private string CanonicalUrl => CanonicalPath != null
+        ? Navigation.BaseUri + CanonicalPath
+        : Navigation.Uri.Split('?', '#')[0];
+}

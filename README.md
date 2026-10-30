@@ -493,6 +493,17 @@ ein fehlschlagender Test stoppt den Deploy.
 
 > **Sicherheit:** Connection-String und SMTP-Credentials gehören **nicht** in `appsettings.json`. Für Entwicklung `.NET User Secrets` verwenden (`dotnet user-secrets set ...`), für Produktion Umgebungsvariablen oder einen Secret Manager.
 
+### Suchmaschinen (SEO)
+
+- `/robots.txt` und `/sitemap.xml` erzeugt die App selbst (`Endpoints/SeoEndpoints.cs`) mit der aufgerufenen
+  Domain. Admin- und Benutzerseiten sind für Suchmaschinen gesperrt.
+- Öffentliche Seiten (Start, News, Möbel-Abholservice, Login, Registrierung, Impressum, Datenschutz) haben
+  Titel, Beschreibung, Canonical-Link und Open-Graph-Vorschau (Bild und Text beim Teilen, z. B. in WhatsApp)
+  über die Komponente `Shared/Seo.razor`. Texte und Seitenliste stehen in `Helpers/SeoHelper.cs`.
+- Die Startseite liefert strukturierte Daten (schema.org `WebSite`), damit Google «Pfadi Flomi» als Namen zeigt.
+- Nach dem Go-live die Domain in der [Google Search Console](https://search.google.com/search-console)
+  bestätigen und `https://pfadiflomi.ch/sitemap.xml` einreichen.
+
 ### Design (Theme)
 
 Das Erscheinungsbild gilt für die ganze Installation und wird über `Design:Theme` gewählt, auf dem Server am einfachsten als Umgebungsvariable:
