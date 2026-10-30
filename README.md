@@ -361,7 +361,8 @@ zuverlässig verifiziert; bei MiData nach Rücksprache mit der PBS entscheiden.
 | MiData | `https://pfadiflomi.ch/signin-midata` |
 
 Die Adresse muss exakt stimmen: `www.pfadiflomi.ch` ist für die Anbieter eine andere Adresse als
-`pfadiflomi.ch`. Am Proxy `www` per 301 auf `https://pfadiflomi.ch` umleiten, dann reicht die eine URL.
+`pfadiflomi.ch`. Die App leitet `www.…` selbst per 301 auf die Adresse ohne `www` um (`AddRedirectToNonWwwPermanent`
+in `Program.cs`), deshalb reicht die eine URL.
 
 Die App muss hinter dem Reverse Proxy das `https`-Schema erkennen (`X-Forwarded-Proto`), sonst lehnt der
 Anbieter mit `redirect_uri_mismatch` ab. Läuft der Proxy nicht auf demselben Host, seine IP unter

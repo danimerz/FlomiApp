@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -167,6 +168,10 @@ else
 }
 
 app.UseHttpsRedirection();
+
+// www.pfadiflomi.ch → pfadiflomi.ch (301): Login-Cookies und OAuth-Callbacks gelten nur für eine Adresse.
+// Betrifft nur Hosts mit «www.», localhost bleibt unberührt.
+app.UseRewriter(new RewriteOptions().AddRedirectToNonWwwPermanent());
 
 app.UseStaticFiles();
 
