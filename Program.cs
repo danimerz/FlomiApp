@@ -110,7 +110,7 @@ builder.Services.Configure<RoutingOptions>(builder.Configuration.GetSection("Rou
 builder.Services.AddHttpClient<IGeocodingService, GeoAdminGeocodingService>(c =>
 {
     c.Timeout = TimeSpan.FromSeconds(10);
-    c.DefaultRequestHeaders.UserAgent.ParseAdd("FlomiApp/1.0 (+https://flomiapp.familie-merz.ch)");
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("FlomiApp/1.0 (+https://pfadiflomi.ch)");
 });
 builder.Services.AddHttpClient<ITravelTimeService, TravelTimeService>(c => c.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddScoped<IRoutePlanningService, RoutePlanningService>();

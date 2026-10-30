@@ -352,13 +352,16 @@ ExternalAuth__MiData__ClientSecret=...
 fest, ob die E-Mail des Anbieters als bestätigt gilt. Bei Microsoft ist sie bei Geschäftskonten nicht
 zuverlässig verifiziert; bei MiData nach Rücksprache mit der PBS entscheiden.
 
-**Callback-URLs**, die bei den Anbietern eingetragen werden müssen (öffentliche Adresse der App: `https://flomiapp.familie-merz.ch`):
+**Callback-URLs**, die bei den Anbietern eingetragen werden müssen (öffentliche Adresse der App: `https://pfadiflomi.ch`):
 
 | Anbieter | Callback-URL |
 |---|---|
-| Google | `https://flomiapp.familie-merz.ch/signin-google` |
-| Microsoft | `https://flomiapp.familie-merz.ch/signin-microsoft` |
-| MiData | `https://flomiapp.familie-merz.ch/signin-midata` |
+| Google | `https://pfadiflomi.ch/signin-google` |
+| Microsoft | `https://pfadiflomi.ch/signin-microsoft` |
+| MiData | `https://pfadiflomi.ch/signin-midata` |
+
+Die Adresse muss exakt stimmen: `www.pfadiflomi.ch` ist für die Anbieter eine andere Adresse als
+`pfadiflomi.ch`. Am Proxy `www` per 301 auf `https://pfadiflomi.ch` umleiten, dann reicht die eine URL.
 
 Die App muss hinter dem Reverse Proxy das `https`-Schema erkennen (`X-Forwarded-Proto`), sonst lehnt der
 Anbieter mit `redirect_uri_mismatch` ab. Läuft der Proxy nicht auf demselben Host, seine IP unter
@@ -368,10 +371,10 @@ Anbieter mit `redirect_uri_mismatch` ab. Läuft der Proxy nicht auf demselben Ho
 
 1. In der [Google Cloud Console](https://console.cloud.google.com/) ein Projekt anlegen (z.B. «FlomiApp»).
 2. *APIs & Dienste → OAuth-Zustimmungsbildschirm*: Typ **Extern**, App-Name, Support-E-Mail, Logo
-   optional. Bereiche: `openid`, `email`, `profile`. Autorisierte Domain `familie-merz.ch`,
-   Datenschutzerklärung `https://flomiapp.familie-merz.ch/datenschutz`.
+   optional. Bereiche: `openid`, `email`, `profile`. Autorisierte Domain `pfadiflomi.ch`,
+   Datenschutzerklärung `https://pfadiflomi.ch/datenschutz`.
 3. *Anmeldedaten → Anmeldedaten erstellen → OAuth-Client-ID*, Typ **Webanwendung**, autorisierte
-   Weiterleitungs-URI `https://flomiapp.familie-merz.ch/signin-google`.
+   Weiterleitungs-URI `https://pfadiflomi.ch/signin-google`.
 4. Client-ID und Clientschlüssel in die Konfiguration übernehmen.
 5. Den Zustimmungsbildschirm auf **In Produktion** stellen, sonst können sich nur eingetragene
    Testbenutzer anmelden.
@@ -383,7 +386,7 @@ Anbieter mit `redirect_uri_mismatch` ab. Läuft der Proxy nicht auf demselben Ho
    Azure-Konto an.
 2. *Anwendungen → App-Registrierungen → Neue Registrierung*, unterstützte Kontotypen:
    **Konten in einem beliebigen Organisationsverzeichnis und persönliche Microsoft-Konten**.
-3. Umleitungs-URI: Plattform **Web**, `https://flomiapp.familie-merz.ch/signin-microsoft`.
+3. Umleitungs-URI: Plattform **Web**, `https://pfadiflomi.ch/signin-microsoft`.
 4. *Zertifikate & Geheimnisse → Neuer geheimer Clientschlüssel*. Den **Wert** (nicht die ID) als
    `ClientSecret` übernehmen, die *Anwendungs-ID (Client)* als `ClientId`.
 5. Der Schlüssel läuft nach höchstens 24 Monaten ab – Ablaufdatum notieren und rechtzeitig erneuern.
@@ -394,7 +397,7 @@ MiData ist ein OpenID-Connect-Anbieter (hitobito). Die Anwendung muss vom IT-Sup
 werden: [Antragsformular](https://forms.cloud.microsoft/e/926Aw4Seh0),
 [Dokumentation](https://docu.scout.ch/de/documentation/article-15).
 
-- Im Antrag angeben: Callback-URL `https://flomiapp.familie-merz.ch/signin-midata`, Scopes `openid email name with_roles`,
+- Im Antrag angeben: Callback-URL `https://pfadiflomi.ch/signin-midata`, Scopes `openid email name with_roles`,
   zuerst für die **Integrationsumgebung** (`https://pbs.puzzle.ch`), danach für Produktion.
 - Technische Details: Endpunkte kommen aus `https://db.scout.ch/.well-known/openid-configuration`.
   MiData unterstützt PKCE nur im Modus `plain`, deshalb ist PKCE für MiData abgeschaltet (vertraulicher
