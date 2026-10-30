@@ -43,9 +43,9 @@
     else if (!availableEvents.Any())
     {
         <div class="state-card state-card--info">
-            <div class="state-card__icon">⏳</div>
+            <div class="state-card__icon">💤</div>
             <div class="state-card__content">
-                <h3>Daten werden geladen…</h3>
+                <h3>Zurzeit nicht verfügbar</h3>
                 <p>Der Möbel-Abholservice steht momentan für keinen Event zur Verfügung.</p>
             </div>
         </div>
@@ -388,17 +388,7 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        var allEvents    = await FurniturePickupService.GetAvailableEventsAsync();
-        var activeEvents = new List<Event>();
-
-        foreach (var ev in allEvents)
-        {
-            var settings = await FurniturePickupService.GetSettingsByEventIdAsync(ev.Id);
-            if (settings != null)
-                activeEvents.Add(ev);
-        }
-
-        availableEvents = activeEvents;
+        availableEvents = await FurniturePickupService.GetPickupEnabledEventsAsync();
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user      = authState.User;

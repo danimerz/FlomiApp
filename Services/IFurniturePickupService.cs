@@ -33,6 +33,9 @@ public interface IFurniturePickupService
     /// <summary>Alle aktiven Events für Dropdown / Auswahl</summary>
     Task<List<Event>> GetAvailableEventsAsync();
 
+    /// <summary>Aktive Events, bei denen der Abholservice eingeschaltet ist (öffentliche Seite, Menü)</summary>
+    Task<List<Event>> GetPickupEnabledEventsAsync();
+
     /// <summary>
     /// Gibt das aktive Settings-Objekt für einen bestimmten Event zurück.
     /// Null wenn kein aktives Setting für diesen Event existiert.

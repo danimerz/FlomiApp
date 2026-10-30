@@ -299,6 +299,18 @@ public class FurniturePickupService : IFurniturePickupService
             .ToListAsync();
     }
 
+    public async Task<List<Event>> GetPickupEnabledEventsAsync()
+    {
+        var enabledEventIds = _context.FurniturePickupSettings
+            .Where(s => s.IsEnabled && s.EventId != null)
+            .Select(s => s.EventId!.Value);
+
+        return await _context.Events
+            .Where(e => e.IsActive && enabledEventIds.Contains(e.Id))
+            .OrderBy(e => e.Date)
+            .ToListAsync();
+    }
+
     /// <summary>
     /// Gibt das aktive Settings-Objekt für einen bestimmten Event zurück.
     /// Null wenn kein aktives Setting für diesen Event existiert.

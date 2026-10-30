@@ -369,6 +369,9 @@
                     <span class="av-plan-legend__item av-plan-legend__item--alert">Abholungen, aber kein Fahrer</span>
                     <span class="av-plan-legend__item av-plan-legend__item--warn">Fahrzeug ohne Fahrer</span>
                     <span class="av-plan-legend__item av-plan-legend__item--ok">alles besetzt</span>
+                    <br />
+                    Angezeigte Tage: Abholzeitraum unter <a href="/admin/furniture-pickup">Möbel Abholungen → Einstellungen</a>,
+                    ohne Abholzeitraum die 8 Tage vor dem Event.
                 </p>
 
                 var openDays = planDays.Select(d => (Day: d, Crew: OpenCrew(d))).Where(x => x.Crew.Any()).ToList();
@@ -1177,10 +1180,21 @@
         vehicleSortColumn != col ? "⇅" : vehicleSortAsc ? "▲" : "▼";
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    private static List<DateTime> GetEventDays(Event ev) =>
-        Enumerable.Range(-8, 9)          // 8 Tage vor Event bis Eventtag
-                  .Select(i => ev.Date.Date.AddDays(i))
-                  .ToList();
+    // Abholzeitraum aus den Möbel-Einstellungen, sonst 8 Tage vor dem Event (VehiclePlanDays)
+    private async Task<List<DateTime>> GetEventDaysAsync(Event ev)
+    {
+        var settings = (await FurniturePickupService.GetAllSettingsAsync())
+                       .FirstOrDefault(s => s.EventId == ev.Id);
+
+        var usedDays = (assignments ?? new())
+                       .Where(a => a.EventId == ev.Id)
+                       .SelectMany(a => a.AssignedDates.Select(d => d.Date))
+                       .Concat(planDrivers.Keys)
+                       .Concat(planHelpers.Keys)
+                       .Concat((pickupRequests ?? new()).Where(r => r.EventId == ev.Id).Select(r => r.PickupDate));
+
+        return VehiclePlanDays.For(ev.Date, settings?.PickupDateFrom, settings?.PickupDateTo, usedDays);
+    }
 
     // ── Tab ───────────────────────────────────────────────────────────────────
     private void SetTab(Tab tab)
@@ -1405,7 +1419,6 @@
     {
         planEventId = eventId;
         planEvent   = events?.FirstOrDefault(e => e.Id == eventId);
-        planDays    = planEvent != null ? GetEventDays(planEvent) : new();
         planMessage = null;
 
         if (planEvent != null)
@@ -1420,6 +1433,7 @@
         }
 
         await ReloadPlanAsync();
+        planDays = planEvent != null ? await GetEventDaysAsync(planEvent) : new();
         copySourceEventId = CopySourceEvents.FirstOrDefault()?.Id ?? 0;
     }
 

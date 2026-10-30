@@ -296,8 +296,9 @@
         if (!firstRender) return;
         try
         {
-            var availableEvents = await FurniturePickupService.GetAvailableEventsAsync();
-            furniturePickupAvailable = availableEvents.Any();
+            // Menüpunkt nur, wenn der Abholservice bei einem aktiven Event eingeschaltet ist
+            furniturePickupAvailable = (await FurniturePickupService.GetPickupEnabledEventsAsync()).Any();
+            StateHasChanged();
 
             var auth = await NavAuthStateProvider.GetAuthenticationStateAsync();
             var user = await NavUserManager.GetUserAsync(auth.User);
