@@ -119,7 +119,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+// Getrennte Verbindungen (Handy gesperrt, Browser im Hintergrund) länger aufbewahren als die
+// Standard-3-Minuten, damit man nach einer Pause ohne Neuladen weitermachen kann.
+builder.Services.AddServerSideBlazor(options =>
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(15));
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 builder.Services.AddScoped<ThemeState>();
 builder.Services.AddScoped<IAreaService, AreaService>();
