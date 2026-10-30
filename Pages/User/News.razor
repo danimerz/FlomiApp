@@ -67,8 +67,13 @@
                                 }
                             </div>
                         }
-                        <div class="news-card__text">
+                        @{ var isLong = item.Content.Length > TeaserLength; var isOpen = expanded.Contains(item.Id); var newsId = item.Id; }
+                        <div class="news-card__text @(isLong ? "news-card__text--long" : "") @(isOpen ? "is-expanded" : "")">
                             <p class="news-card__content">@item.Content</p>
+                            <button type="button" class="news-card__more" aria-expanded="@(isOpen ? "true" : "false")"
+                                    @onclick="() => ToggleExpanded(newsId)">
+                                @(isOpen ? "weniger anzeigen" : "… weiterlesen")
+                            </button>
                         </div>
                         </div>
                     </div>
@@ -85,6 +90,15 @@
 @code {
     private List<NewsItem>? news;
     private ImageLightbox   lightbox = null!;
+
+    // Lange Meldungen werden auf dem Handy gekürzt und lassen sich aufklappen
+    private const int    TeaserLength = 250;
+    private HashSet<int> expanded     = new();
+
+    private void ToggleExpanded(int id)
+    {
+        if (!expanded.Remove(id)) expanded.Add(id);
+    }
 
     protected override async Task OnInitializedAsync()
     {

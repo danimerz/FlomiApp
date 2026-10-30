@@ -181,6 +181,8 @@
 .stats-chart-wrap { position: relative; width: 100%; }
 
 @media (max-width: 768px) {
+    /* Untereinander gestapelt: Höhe nicht an den Bildschirm koppeln (quer sonst fast 0 px) */
+    .adm-section { max-height: none; }
     .stats-grid { grid-template-columns: 1fr; }
     .stats-card--wide { grid-column: 1; }
 }

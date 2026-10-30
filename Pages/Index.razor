@@ -110,8 +110,9 @@
                                 }
                             </a>
                         }
-                        <div class="notice-box__text">
+                        <div class="notice-box__text @(n.Content.Length > NewsTeaserLength ? "notice-box__text--long" : "")">
                             <p class="notice-box__content">@n.Content</p>
+                            <a href="/news" class="notice-box__more">… weiterlesen</a>
                         </div>
                     </div>
                 </div>
@@ -215,6 +216,9 @@
     private bool             isAuthenticated = false;
     private List<NewsItem>?  latestNews   = null;
     private ImageLightbox    lightbox     = null!;
+
+    // Ab dieser Länge wird die News auf dem Handy gekürzt («… weiterlesen»)
+    private const int NewsTeaserLength = 180;
     private Event?           nextMarket   = null;
 
     protected override async Task OnInitializedAsync()

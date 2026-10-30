@@ -383,3 +383,24 @@
     color: var(--color-text-muted);
     line-height: 1.55;
 }
+
+/* ── News auf dem Handy kürzen ───────────────────────────────────────────── */
+.notice-box__more { display: none; }
+
+@media (max-width: 640px) {
+    .notice-box__text--long .notice-box__content {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 5;
+        line-clamp: 5;
+        overflow: hidden;
+    }
+
+    .notice-box__text--long .notice-box__more {
+        display: inline-block;
+        margin-top: .35rem;
+        font-size: .88rem;
+        font-weight: 700;
+        color: var(--color-primary);
+    }
+}

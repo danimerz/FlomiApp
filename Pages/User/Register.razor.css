@@ -790,9 +790,13 @@
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
     width: 100%;
     max-width: 480px;
+    /* Auf kleinen Handys (oder mit Tastatur) bleiben die Knöpfe erreichbar */
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .reg-modal__header {

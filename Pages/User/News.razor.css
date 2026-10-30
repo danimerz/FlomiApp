@@ -128,3 +128,29 @@
 @media (max-width: 480px) {
     .news-gallery { flex-basis: 90px; }
 }
+
+/* ── Lange Meldungen auf dem Handy kürzen ────────────────────────────────── */
+.news-card__more { display: none; }
+
+@media (max-width: 640px) {
+    .news-card__text--long:not(.is-expanded) .news-card__content {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 6;
+        line-clamp: 6;
+        overflow: hidden;
+    }
+
+    .news-card__text--long .news-card__more {
+        display: inline-block;
+        margin-top: .4rem;
+        padding: 0;
+        border: none;
+        background: none;
+        font: inherit;
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        cursor: pointer;
+    }
+}

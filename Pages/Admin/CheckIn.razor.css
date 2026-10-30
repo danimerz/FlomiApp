@@ -6,7 +6,7 @@
     flex-wrap: wrap;
 }
 
-.ci-field { display: flex; flex-direction: column; gap: .35rem; min-width: 300px; }
+.ci-field { display: flex; flex-direction: column; gap: .35rem; min-width: min(300px, 100%); }
 .ci-field label { font-size: .82rem; font-weight: 700; color: var(--color-text-medium); }
 
 .ci-select {

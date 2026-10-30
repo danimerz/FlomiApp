@@ -999,3 +999,24 @@ a, .btn-link {
 .flomi-nav__link--btn:hover {
     color: var(--brand-700);
 }
+
+/* ── Handy: nichts verschiebt sich ───────────────────────────────────────────
+   Die Seite nie seitlich verschiebbar machen (clip statt hidden, damit sticky weiter geht).
+   Eingabefelder mit mindestens 16 px: darunter zoomt das iPhone beim Antippen hinein
+   und bleibt gezoomt. Breite Tabellen scrollen in sich statt die Seite zu verbreitern. */
+html, body { overflow-x: clip; }
+
+@media (max-width: 960px) {
+    input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    .ac-table, .av-table, .afp-table, .appt-table, .adm-mini-table, .usr-table, .aud-table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

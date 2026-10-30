@@ -1,6 +1,7 @@
 /* Variablen sind in wwwroot/css/site.css definiert */
 .app-shell {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     background:
         radial-gradient(circle at top left, rgba(var(--brand-600-rgb), 0.05), transparent 22%),
@@ -22,6 +23,7 @@
     position: sticky;
     top: 0;
     height: 100vh;
+    height: 100dvh;
     z-index: 20;
 }
 
