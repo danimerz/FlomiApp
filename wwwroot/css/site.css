@@ -1020,3 +1020,21 @@ html, body { overflow-x: clip; }
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* ── Handy: Admin-Tab-Leisten seitlich wischbar statt abgeschnitten ────────── */
+@media (max-width: 960px) {
+    .ac-tabs, .av-tabs {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ac-tab, .av-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 0.6rem 0.9rem;
+    }
+
+    .ac-tab__badge, .av-tab__badge { white-space: nowrap; }
+}

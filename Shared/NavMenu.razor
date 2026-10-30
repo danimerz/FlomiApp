@@ -77,7 +77,7 @@
                                 <div class="navmenu-section__label">Administration</div>
 
                                 <!-- ── Gruppe: Übersicht ── -->
-                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("overview")'>
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("overview")' @onclick:stopPropagation="true">
                                     <span>Übersicht</span>
                                     <span class="navmenu-group-chevron @(IsOpen("overview") ? "navmenu-group-chevron--open" : "")">▾</span>
                                 </button>
@@ -110,7 +110,7 @@
                                 }
 
                                 <!-- ── Gruppe: Event & Betrieb ── -->
-                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("event")'>
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("event")' @onclick:stopPropagation="true">
                                     <span>Event & Betrieb</span>
                                     <span class="navmenu-group-chevron @(IsOpen("event") ? "navmenu-group-chevron--open" : "")">▾</span>
                                 </button>
@@ -145,7 +145,7 @@
                                 }
 
                                 <!-- ── Gruppe: Community ── -->
-                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("community")'>
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("community")' @onclick:stopPropagation="true">
                                     <span>Community</span>
                                     <span class="navmenu-group-chevron @(IsOpen("community") ? "navmenu-group-chevron--open" : "")">▾</span>
                                 </button>
@@ -178,7 +178,7 @@
                                 }
 
                                 <!-- ── Gruppe: Daten ── -->
-                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("data")'>
+                                <button class="navmenu-group-header" @onclick='() => ToggleGroup("data")' @onclick:stopPropagation="true">
                                     <span>Daten</span>
                                     <span class="navmenu-group-chevron @(IsOpen("data") ? "navmenu-group-chevron--open" : "")">▾</span>
                                 </button>

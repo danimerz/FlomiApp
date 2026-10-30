@@ -301,7 +301,7 @@
     }
 
     .sidebar.mobile-nav--open .sidebar__nav {
-        max-height: 800px;
+        max-height: 2500px; /* mit allen Admin-Gruppen offen deutlich mehr als 800 px */
         opacity: 1;
         overflow: visible;
         padding-bottom: 0.75rem;
@@ -334,4 +334,10 @@
     .main-area {
         padding: 0.85rem;
     }
+}
+
+/* Handy: Version in eigener Zeile, ohne verwaisten Trennpunkt am Zeilenende */
+@media (max-width: 640px) {
+    .app-footer__sep--version { display: none; }
+    .app-footer__version { flex-basis: 100%; text-align: center; }
 }
