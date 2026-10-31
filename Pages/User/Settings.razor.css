@@ -1006,3 +1006,89 @@
     margin-bottom: 0;
     padding-bottom: 0;
 }
+
+/* ── Verknüpfte Konten (Google, Microsoft, MiData) ───────────────────────── */
+.linked-intro {
+    margin: 0 0 1rem;
+    color: var(--color-text-light);
+}
+
+.linked-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.linked-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--color-border-light);
+    border-radius: 14px;
+    background: var(--color-surface-input);
+}
+
+.linked-item--on {
+    border-color: var(--color-success-border);
+}
+
+.linked-item__icon {
+    flex: 0 0 auto;
+    width: 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
+}
+
+.linked-item__icon ::deep svg,
+.linked-item__icon ::deep img {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.linked-item__info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.linked-item__info strong {
+    color: var(--color-text-strong);
+}
+
+.linked-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.12rem 0.55rem;
+    border-radius: 999px;
+    color: var(--color-text-light);
+    background: var(--color-surface-soft-2);
+}
+
+.linked-badge--on {
+    color: var(--color-success-text);
+    background: var(--color-success-bg);
+}
+
+.linked-item__btn {
+    flex: 0 0 auto;
+    padding: 0.6rem 0.95rem;
+    font-size: 0.88rem;
+    border-radius: 12px;
+}
+
+.linked-note {
+    margin: 0.9rem 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}

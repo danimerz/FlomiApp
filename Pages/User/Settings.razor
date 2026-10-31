@@ -485,38 +485,47 @@
                             </div>
                         </div>
                         <div class="settings-card__body">
-                            <p style="margin-top:0">Mit einem verknüpften Konto meldest du dich ohne Passwort an.</p>
-                            <div class="form-grid form-grid--single">
+                            <p class="linked-intro">Mit einem verknüpften Konto meldest du dich mit einem Klick an – ganz ohne Passwort.</p>
+                            <ul class="linked-list">
                                 @foreach (var scheme in externalSchemes)
                                 {
                                     var login = externalLogins.FirstOrDefault(l => l.LoginProvider == scheme.Name);
-                                    <div class="form-group" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-                                        <span>
+                                    <li class="linked-item @(login != null ? "linked-item--on" : "")">
+                                        <span class="linked-item__icon"><ProviderIcon Scheme="@scheme.Name" /></span>
+                                        <div class="linked-item__info">
                                             <strong>@scheme.DisplayName</strong>
-                                            <span style="color:var(--color-text-light)"> · @(login != null ? "verknüpft" : "nicht verknüpft")</span>
-                                        </span>
+                                            @if (login != null)
+                                            {
+                                                <span class="linked-badge linked-badge--on">✓ Verknüpft</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="linked-badge">Nicht verknüpft</span>
+                                            }
+                                        </div>
                                         @if (login == null)
                                         {
-                                            <button type="button" class="primary-btn" @onclick="() => LinkLogin(scheme.Name)">
+                                            <button type="button" class="primary-btn linked-item__btn" @onclick="() => LinkLogin(scheme.Name)">
                                                 Verknüpfen
                                             </button>
                                         }
                                         else if (CanRemoveLogin)
                                         {
-                                            <button type="button" class="secondary-btn" disabled="@isRemovingLogin"
+                                            <button type="button" class="secondary-btn linked-item__btn" disabled="@isRemovingLogin"
                                                     @onclick="() => RemoveLogin(login)">
                                                 Trennen
                                             </button>
                                         }
-                                        else
-                                        {
-                                            <span style="color:var(--color-text-light);font-size:.9rem">
-                                                Lege zuerst ein Passwort fest, um die Verknüpfung zu trennen.
-                                            </span>
-                                        }
-                                    </div>
+                                    </li>
                                 }
-                            </div>
+                            </ul>
+                            @if (externalLogins.Count > 0 && !CanRemoveLogin)
+                            {
+                                <p class="linked-note">
+                                    🔒 Zum Trennen brauchst du ein Passwort, damit du dich danach noch anmelden kannst.
+                                    Du kannst es unten unter «Passwort festlegen» setzen.
+                                </p>
+                            }
                         </div>
                     </section>
                 }
