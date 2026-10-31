@@ -447,8 +447,73 @@
 .usr-cancel-btn:hover { background: var(--color-surface-card-soft); }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
+.usr-sort-mobile { display: none; }
+
 @media (max-width: 768px) {
     .usr-form-grid { grid-template-columns: 1fr; }
-    .usr-actions   { flex-direction: column; }
-    .usr-table { display: block; overflow-x: auto; }
+
+    .usr-sort-mobile { display: block; }
+    .usr-filter-select { flex: 1 1 10rem; }
+    .usr-count { flex-basis: 100%; margin-left: 0; }
+
+    /* Tabelle als Karten: eine Karte pro Person */
+    .usr-table,
+    .usr-table tbody {
+        display: block;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        overflow: visible;
+    }
+
+    .usr-table thead { display: none; }
+
+    .usr-table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: .35rem .75rem;
+        margin-bottom: .75rem;
+        padding: .9rem 1rem;
+        border: 1px solid var(--color-border-soft);
+        border-radius: 16px;
+        background: var(--color-surface-card);
+        box-shadow: var(--shadow-card-sm);
+    }
+
+    .usr-table tbody tr:last-child { border-bottom: 1px solid var(--color-border-soft); }
+
+    .usr-table tbody td {
+        grid-column: 1 / -1;
+        padding: 0;
+        font-size: .85rem;
+    }
+
+    /* Zeile 1: Name links, Status rechts */
+    .usr-table tbody td.usr-td-name   { grid-column: 1; grid-row: 1; font-size: 1rem; }
+    .usr-table tbody td.usr-td-status { grid-column: 2; grid-row: 1; justify-self: end; }
+
+    .usr-email { overflow-wrap: anywhere; }
+
+    .usr-table tbody td[data-label]::before {
+        content: attr(data-label) ": ";
+        color: var(--color-text-light);
+        font-size: .78rem;
+    }
+
+    /* Rollen und Anmeldungen nebeneinander */
+    .usr-table tbody td.usr-td-roles,
+    .usr-table tbody td.usr-td-appts {
+        grid-column: auto;
+    }
+
+    .usr-table tbody td.usr-td-roles { grid-column: 1; }
+    .usr-table tbody td.usr-td-appts { grid-column: 2; justify-self: end; }
+
+    .usr-table tbody td.usr-td-actions {
+        margin-top: .4rem;
+        padding-top: .6rem;
+        border-top: 1px solid var(--color-border-soft);
+    }
+
+    .usr-actions { gap: .4rem; }
 }

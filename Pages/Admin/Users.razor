@@ -61,6 +61,13 @@
                 <option value="@s">@s</option>
             }
         </select>
+        @* Auf dem Handy gibt es keinen Tabellenkopf zum Sortieren *@
+        <select class="usr-filter-select usr-sort-mobile" value="@sortColumn" @onchange="SetSortColumn" aria-label="Sortieren nach">
+            <option value="Name">Sortiert nach Name</option>
+            <option value="Email">Sortiert nach E-Mail</option>
+            <option value="Stufe">Sortiert nach Stufe</option>
+            <option value="Anmeldungen">Sortiert nach Anmeldungen</option>
+        </select>
         <span class="usr-count">@DisplayedUsers.Count() Benutzer</span>
     </div>
 
@@ -107,13 +114,13 @@
                 var isAdmin  = adminIds.Contains(u.Id);
                 var isLocked = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow;
                 <tr class="@(isLocked ? "usr-row--locked" : "")">
-                    <td>
+                    <td class="usr-td-name">
                         <strong>@u.LastName @u.FirstName</strong>
                     </td>
                     <td class="usr-email">@u.Email</td>
-                    <td>@(u.Pfadiname ?? "–")</td>
-                    <td>@(u.Stufe ?? "–")</td>
-                    <td>
+                    <td class="usr-td-pfadi" data-label="Pfadiname">@(u.Pfadiname ?? "–")</td>
+                    <td class="usr-td-stufe" data-label="Stufe">@(u.Stufe ?? "–")</td>
+                    <td class="usr-td-roles">
                         @{ var userRoles = allUserRoles.GetValueOrDefault(u.Id, new()); }
                         @if (!userRoles.Any())
                         {
@@ -129,7 +136,7 @@
                             }
                         }
                     </td>
-                    <td>
+                    <td class="usr-td-status">
                         @if (isLocked)
                         {
                             <span class="usr-badge usr-badge--locked">🚫 Gesperrt</span>
@@ -139,7 +146,7 @@
                             <span class="usr-badge usr-badge--active">✅ Aktiv</span>
                         }
                     </td>
-                    <td>
+                    <td class="usr-td-appts">
                         @{ var apptCount = appointmentCounts.GetValueOrDefault(u.Id, 0); }
                         @if (apptCount > 0)
                         {
@@ -159,7 +166,7 @@
                             <span style="color:var(--color-text-placeholder);font-size:.82rem">–</span>
                         }
                     </td>
-                    <td>
+                    <td class="usr-td-actions">
                         <div class="usr-actions">
                             <button class="usr-btn usr-btn--edit" @onclick="async () => await OpenEdit(u)">
                                 ✏️ Edit
@@ -559,6 +566,13 @@
     {
         if (sortColumn == col) sortAsc = !sortAsc;
         else { sortColumn = col; sortAsc = true; }
+    }
+
+    // Sortier-Auswahl auf dem Handy: Anmeldungen absteigend (meiste zuerst), sonst aufsteigend
+    private void SetSortColumn(ChangeEventArgs e)
+    {
+        sortColumn = e.Value?.ToString() ?? "Name";
+        sortAsc    = sortColumn != "Anmeldungen";
     }
 
     private string SortIcon(string col) =>
