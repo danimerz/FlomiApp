@@ -168,7 +168,7 @@ public class AppointmentServiceTests : IDisposable
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => CreateService(ctx).RegisterForAppointmentAsync("kid", area.Id));
 
-        Assert.Contains("Mindestalter", ex.Message);
+        Assert.StartsWith("Ab 18 Jahren", ex.Message);
     }
 
     // ── Zeitkonflikt ─────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ public class AppointmentServiceTests : IDisposable
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
             () => CreateService(ctx).RegisterForAppointmentAsync("u2", area.Id));
 
-        Assert.Equal("Der Bereich ist voll.", ex.Message);
+        Assert.Equal("Alle Plätze sind vergeben.", ex.Message);
     }
 
     [Fact]
@@ -430,5 +430,134 @@ public class AppointmentServiceTests : IDisposable
         await service.RegisterForAppointmentAsync("u1", spontaneous.Id);
 
         Assert.False(await service.CanRegisterAsync("u2", spontaneous.Id));
+    }
+
+    // ── Gründe, warum es nicht geht (Text auf der Anmeldeseite) ─────────────
+
+    [Fact]
+    public async Task CheckRegistrationAsync_AlreadyRegistered_BeforeFullOrConflict()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var area = MakeArea(evt, template, capacity: 1);
+        ctx.Areas.Add(area);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+        ctx.Appointments.Add(new Appointment { UserId = "u1", AreaId = area.Id, Status = AppointmentStatus.Registered });
+        await ctx.SaveChangesAsync();
+
+        var check = await CreateService(ctx).CheckRegistrationAsync("u1", area.Id);
+
+        Assert.Equal(RegistrationBlock.AlreadyRegistered, check.Block);
+    }
+
+    [Fact]
+    public async Task CheckRegistrationAsync_TimeConflict_NamesOtherArea()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, sammeln) = await SeedBaseAsync(ctx);
+        var fahrer = new AreaTemplate { Name = "Fahrer", AreaCategoryId = sammeln.AreaCategoryId };
+        ctx.AreaTemplates.Add(fahrer);
+        await ctx.SaveChangesAsync();
+        var driving    = MakeArea(evt, fahrer,  capacity: 5, timeSlot: "08:00-12:00");
+        var collecting = MakeArea(evt, sammeln, capacity: 5, timeSlot: "09:00-17:00");
+        ctx.Areas.AddRange(driving, collecting);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+        ctx.Appointments.Add(new Appointment { UserId = "u1", AreaId = driving.Id, Status = AppointmentStatus.Registered });
+        await ctx.SaveChangesAsync();
+
+        var check = await CreateService(ctx).CheckRegistrationAsync("u1", collecting.Id);
+
+        Assert.Equal(RegistrationBlock.TimeConflict, check.Block);
+        Assert.Equal("Fahrer", check.OtherAreaName);
+        Assert.Equal("08:00-12:00", check.OtherTimeSlot);
+        Assert.Equal(evt.Date, check.OtherDate);
+    }
+
+    [Fact]
+    public async Task CheckRegistrationAsync_ComparesWithBookedHalfDay_NotFullDay()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        // Ganzer Tag 08-17, halber Tag 08-12: wer den Halbtag hat, ist am Nachmittag frei
+        var morning   = MakeArea(evt, template, capacity: 5, timeSlot: "08:00-17:00", altSlot: "08:00-12:00", altCapacity: 5);
+        var afternoon = MakeArea(evt, template, capacity: 5, timeSlot: "13:00-17:00");
+        ctx.Areas.AddRange(morning, afternoon);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+        ctx.Appointments.Add(new Appointment
+        {
+            UserId = "u1", AreaId = morning.Id, Status = AppointmentStatus.Registered, UseAlternativeSlot = true,
+        });
+        await ctx.SaveChangesAsync();
+
+        Assert.True((await CreateService(ctx).CheckRegistrationAsync("u1", afternoon.Id)).CanRegister);
+    }
+
+    [Fact]
+    public async Task CheckRegistrationAsync_FullDayOnly_ForMandatoryStufe()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        template.MandatoryStufen = "Pfadi, Pio, Leiter";
+        var area = MakeArea(evt, template, capacity: 5, altSlot: "08:00-10:00", altCapacity: 5);
+        ctx.Areas.Add(area);
+        var pio = MakeUser("pio");
+        pio.Stufe = "Pio";
+        var wolf = MakeUser("wolf");
+        wolf.Stufe = "Wolf";
+        ctx.Users.AddRange(pio, wolf);
+        await ctx.SaveChangesAsync();
+
+        var service = CreateService(ctx);
+        Assert.Equal(RegistrationBlock.FullDayOnly,
+            (await service.CheckRegistrationAsync("pio", area.Id, useAlternativeSlot: true)).Block);
+        Assert.True((await service.CheckRegistrationAsync("pio", area.Id)).CanRegister);
+        Assert.True((await service.CheckRegistrationAsync("wolf", area.Id, useAlternativeSlot: true)).CanRegister);
+    }
+
+    [Fact]
+    public async Task CheckRegistrationAsync_SaleLimit_NamesExistingSaleArea()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, geschirr) = await SeedBaseAsync(ctx, categoryName: "Verkauf");
+        var buecher = new AreaTemplate { Name = "Bücher", AreaCategoryId = geschirr.AreaCategoryId };
+        ctx.AreaTemplates.Add(buecher);
+        await ctx.SaveChangesAsync();
+        var first  = MakeArea(evt, geschirr, capacity: 5, timeSlot: "08:00-12:00");
+        var second = MakeArea(evt, buecher,  capacity: 5, timeSlot: "13:00-17:00");
+        ctx.Areas.AddRange(first, second);
+        ctx.Users.Add(MakeUser("u1"));
+        await ctx.SaveChangesAsync();
+        ctx.Appointments.Add(new Appointment { UserId = "u1", AreaId = first.Id, Status = AppointmentStatus.Registered });
+        await ctx.SaveChangesAsync();
+
+        var check = await CreateService(ctx).CheckRegistrationAsync("u1", second.Id);
+
+        Assert.Equal(RegistrationBlock.SaleLimit, check.Block);
+        Assert.Equal("Geschirr", check.OtherAreaName);
+    }
+
+    [Fact]
+    public async Task RegisterForAppointmentAsync_ConflictMessage_UsesFamilyMemberName()
+    {
+        using var ctx = _db.CreateContext();
+        var (evt, _, template) = await SeedBaseAsync(ctx);
+        var morning = MakeArea(evt, template, capacity: 5, timeSlot: "08:00-12:00");
+        var overlap = MakeArea(evt, template, capacity: 5, timeSlot: "11:00-15:00");
+        ctx.Areas.AddRange(morning, overlap);
+        ctx.Users.Add(MakeUser("u1"));
+        var kid = new FamilyMember { UserId = "u1", FirstName = "Lena", LastName = "u1", Stufe = "Wolf", Birthday = new DateTime(2015, 1, 1) };
+        ctx.FamilyMembers.Add(kid);
+        await ctx.SaveChangesAsync();
+        ctx.Appointments.Add(new Appointment { UserId = "u1", AreaId = morning.Id, FamilyMemberId = kid.Id, Status = AppointmentStatus.Registered });
+        await ctx.SaveChangesAsync();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => CreateService(ctx).RegisterForAppointmentAsync("u1", overlap.Id, kid.Id));
+
+        Assert.Equal("Lena ist zu dieser Zeit schon für «Geschirr» eingetragen (Fr 20.11., 08:00-12:00). " +
+                     "Beides gleichzeitig geht nicht.", ex.Message);
     }
 }

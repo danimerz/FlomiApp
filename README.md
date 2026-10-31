@@ -84,7 +84,14 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
 **Anmeldung für Benutzer:**
 - Bestätigungs-Modal mit optionalem Kommentar vor der Buchung
 - Toggle-Switch für Halbtagsschicht (wenn konfiguriert, für freie Stufen)
-- Kapazitätsprüfung, Altersminimum, Zeitkonflikt-Prüfung
+- Kapazitätsprüfung, Altersminimum, Zeitkonflikt-Prüfung (gegen die tatsächlich gebuchte Schicht, bei Halbtag also die halbe), Pflicht-Stufen auch serverseitig
+- **Klare Meldung, warum es nicht geht** (`AppointmentService.CheckRegistrationAsync` → `Helpers/RegistrationMessages`), mit Vorname bei Familienmitgliedern:
+  - schon angemeldet → grün «✓ Du bist hier bereits angemeldet.» und Knopf «Im Dashboard ansehen»
+  - Zeitüberschneidung → «Du bist zu dieser Zeit schon für «Fahrer» eingetragen (Sa 10.04., 08:00-12:00). Beides gleichzeitig geht nicht.»
+  - zweiter Verkaufsbereich / zweiter Kuchen am Tag → nennt den bestehenden Bereich
+  - voll → «Alle Plätze sind vergeben.», bzw. Hinweis auf die andere Schicht, wenn dort noch Platz ist und die Person den Halbtag buchen darf (nicht für Pflicht-Stufen)
+  - Mindestalter → «Ab 16 Jahren – Lena ist 14.»
+  - Bei Überschneidung, Verkauf und Kuchen zusätzlich der Link «Lieber wechseln? Im Dashboard stornieren»
 - **Bestätigungs-E-Mail** mit Event, Bereich, Datum, Zeit und Kommentar nach erfolgreicher Anmeldung; enthält eingebetteten **QR-Code** wenn Check-in für das Event aktiviert ist (nur Kategorie Verkauf)
 
 **Admin-Hilfsfunktionen:**

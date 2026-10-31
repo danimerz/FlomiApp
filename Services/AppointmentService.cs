@@ -93,32 +93,17 @@ public class AppointmentService : IAppointmentService
 
     public async Task RegisterForAppointmentAsync(string userId, int areaId, int? familyMemberId = null, string? comment = null, bool useAlternativeSlot = false)
     {
-        var area = await _areaService.GetAreaByIdAsync(areaId);
-        if (area == null)
-            throw new InvalidOperationException("Area not found.");
-
-        var minAge = area.AreaTemplate?.MinAge ?? 0;
-        if (minAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, minAge))
-            throw new InvalidOperationException(
-                $"Person erfüllt das Mindestalter von {minAge} Jahren nicht.");
-
-        if (!await CanRegisterAsync(userId, areaId, familyMemberId, useAlternativeSlot))
+        var check = await CheckRegistrationAsync(userId, areaId, familyMemberId, useAlternativeSlot);
+        if (!check.CanRegister)
         {
-            var slotCurrent = await _areaService.GetCurrentRegistrationsAsync(areaId, useAlternativeSlot);
-            var slotCap     = useAlternativeSlot && area.AlternativeMaxCapacity.HasValue
-                                ? area.AlternativeMaxCapacity.Value
-                                : area.MaxCapacity;
-            string message;
-            if (slotCurrent >= slotCap)
-                message = "Der Bereich ist voll.";
-            else if (IsVerkauf(area))
-                message = "Du kannst dich nur für einen Verkauf-Bereich registrieren.";
-            else if (IsKuchen(area))
-                message = "Du kannst dich pro Tag nur einmal für Kuchen anmelden.";
-            else
-                message = "Registrierung aktuell nicht möglich.";
-            throw new InvalidOperationException(message);
+            var firstName = familyMemberId.HasValue
+                ? (await _context.FamilyMembers.AsNoTracking()
+                    .FirstOrDefaultAsync(f => f.Id == familyMemberId.Value && f.UserId == userId))?.FirstName
+                : null;
+            throw new InvalidOperationException(RegistrationMessages.Describe(check, firstName));
         }
+
+        var area = (await _areaService.GetAreaByIdAsync(areaId))!;
 
         if (familyMemberId.HasValue)
         {
@@ -204,38 +189,74 @@ public class AppointmentService : IAppointmentService
     }
 
     public async Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false)
+        => (await CheckRegistrationAsync(userId, areaId, familyMemberId, useAlternativeSlot)).CanRegister;
+
+    public async Task<RegistrationCheck> CheckRegistrationAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false)
     {
         var area = await _areaService.GetAreaByIdAsync(areaId);
-        if (area == null) return false;
+        if (area == null) return new RegistrationCheck(RegistrationBlock.AreaNotFound);
+
+        // Zuerst: schon hier angemeldet (ganzer oder halber Tag) – das ist die verständlichste Antwort
+        if (await PersonIsRegisteredForAreaAsync(userId, familyMemberId, areaId))
+            return new RegistrationCheck(RegistrationBlock.AlreadyRegistered);
+
+        if (useAlternativeSlot && !await PersonMayUseAlternativeSlotAsync(userId, familyMemberId, area))
+            return new RegistrationCheck(RegistrationBlock.FullDayOnly);
 
         var minAge = area.AreaTemplate?.MinAge ?? 0;
-        if (minAge > 0 && await IsPersonBelowMinAgeAsync(userId, familyMemberId, minAge))
-            return false;
+        if (minAge > 0)
+        {
+            var age = await GetPersonAgeAsync(userId, familyMemberId);
+            if (age.HasValue && age.Value < minAge)
+                return new RegistrationCheck(RegistrationBlock.MinAge, MinAge: minAge, PersonAge: age);
+        }
 
-        var timeSlot = useAlternativeSlot && !string.IsNullOrEmpty(area.AlternativeTimeSlot)
-            ? area.AlternativeTimeSlot
-            : area.TimeSlot;
+        var timeSlot = AreaSchedule.TimeSlot(area, useAlternativeSlot);
         var capacity = useAlternativeSlot && area.AlternativeMaxCapacity.HasValue
             ? area.AlternativeMaxCapacity.Value
             : area.MaxCapacity;
 
         var current = await _areaService.GetCurrentRegistrationsAsync(areaId, useAlternativeSlot);
-        if (current >= capacity) return false;
+        if (current >= capacity) return new RegistrationCheck(RegistrationBlock.Full);
 
-        // Spontan: keine fixe Zeit, also auch keine Überschneidung – aber nur einmal pro Bereich
-        if (area.IsSpontaneous)
-            return !await PersonIsRegisteredForAreaAsync(userId, familyMemberId, areaId);
+        // Spontan: keine fixe Zeit, also auch keine Überschneidung
+        if (area.IsSpontaneous) return RegistrationCheck.Ok;
 
-        if (await PersonHasConflictingRegistrationAsync(userId, familyMemberId, area.Date, timeSlot))
-            return false;
+        var conflict = await FindConflictingRegistrationAsync(userId, familyMemberId, area.Date, timeSlot);
+        if (conflict != null)
+            return new RegistrationCheck(RegistrationBlock.TimeConflict,
+                OtherAreaName: conflict.Area.AreaTemplate?.Name,
+                OtherDate:     conflict.Area.Date,
+                OtherTimeSlot: AreaSchedule.TimeSlot(conflict.Area, conflict.UseAlternativeSlot));
 
         if (IsVerkauf(area))
-            return !await PersonHasRegisteredSaleAreaAsync(userId, familyMemberId, area.EventId);
+        {
+            var sale = await FindRegisteredSaleAreaAsync(userId, familyMemberId, area.EventId);
+            if (sale != null)
+                return new RegistrationCheck(RegistrationBlock.SaleLimit, OtherAreaName: sale.Area.AreaTemplate?.Name);
+        }
 
         if (IsKuchen(area))
-            return !await PersonHasRegisteredCategoryOnDateAsync(userId, familyMemberId, "Kuchen", area.Date.Date);
+        {
+            var cake = await FindRegisteredCategoryOnDateAsync(userId, familyMemberId, "Kuchen", area.Date.Date);
+            if (cake != null)
+                return new RegistrationCheck(RegistrationBlock.CakeLimit, OtherAreaName: cake.Area.AreaTemplate?.Name);
+        }
 
-        return true;
+        return RegistrationCheck.Ok;
+    }
+
+    // Halbtag: Stufen in AreaTemplate.MandatoryStufen (z.B. Pfadis, Pios, Leiter) können nur ganze Tage
+    private async Task<bool> PersonMayUseAlternativeSlotAsync(string userId, int? familyMemberId, Area area)
+    {
+        if (string.IsNullOrEmpty(area.AreaTemplate?.MandatoryStufen)) return true;
+
+        var stufe = familyMemberId.HasValue
+            ? (await _context.FamilyMembers.AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == familyMemberId.Value && f.UserId == userId))?.Stufe
+            : (await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId))?.Stufe;
+
+        return !AreaSchedule.IsFullDayOnly(area, stufe);
     }
 
     private async Task SendRegistrationMailsAsync(string userId, int? familyMemberId, Area area,
@@ -295,11 +316,12 @@ public class AppointmentService : IAppointmentService
         return member != null ? $"{member.FirstName} {member.LastName}" : null;
     }
 
-    private async Task<bool> PersonHasConflictingRegistrationAsync(
+    private async Task<Appointment?> FindConflictingRegistrationAsync(
         string userId, int? familyMemberId, DateTime date, string timeSlot)
     {
         var existingAppointments = await _context.Appointments
             .Include(a => a.Area)
+                .ThenInclude(ar => ar.AreaTemplate)
             .Where(a => a.UserId == userId && a.Status == AppointmentStatus.Registered)
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
@@ -307,13 +329,9 @@ public class AppointmentService : IAppointmentService
             .Where(a => a.Area.Date.Date == date.Date && !a.Area.IsSpontaneous)
             .ToListAsync();
 
-        foreach (var existing in existingAppointments)
-        {
-            if (TimeSlotConflict(timeSlot, existing.Area.TimeSlot))
-                return true;
-        }
-
-        return false;
+        // Mit der tatsächlich gebuchten Zeit vergleichen (bei Halbtag die halbe Schicht)
+        return existingAppointments.FirstOrDefault(existing =>
+            TimeSlotConflict(timeSlot, AreaSchedule.TimeSlot(existing.Area, existing.UseAlternativeSlot)));
     }
 
     private async Task<bool> PersonIsRegisteredForAreaAsync(string userId, int? familyMemberId, int areaId) =>
@@ -322,12 +340,6 @@ public class AppointmentService : IAppointmentService
             .AnyAsync(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null);
-
-    private async Task<bool> IsPersonBelowMinAgeAsync(string userId, int? familyMemberId, int minAge)
-    {
-        int? age = await GetPersonAgeAsync(userId, familyMemberId);
-        return age.HasValue && age.Value < minAge;
-    }
 
     private async Task<int?> GetPersonAgeAsync(string userId, int? familyMemberId)
     {
@@ -355,7 +367,7 @@ public class AppointmentService : IAppointmentService
         return age;
     }
 
-    private async Task<bool> PersonHasRegisteredCategoryOnDateAsync(
+    private async Task<Appointment?> FindRegisteredCategoryOnDateAsync(
         string userId, int? familyMemberId, string categoryName, DateTime date)
     {
         return await _context.Appointments
@@ -371,10 +383,10 @@ public class AppointmentService : IAppointmentService
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null)
-            .AnyAsync();
+            .FirstOrDefaultAsync();
     }
 
-    private async Task<bool> PersonHasRegisteredSaleAreaAsync(
+    private async Task<Appointment?> FindRegisteredSaleAreaAsync(
         string userId, int? familyMemberId, int eventId)
     {
         return await _context.Appointments
@@ -387,7 +399,7 @@ public class AppointmentService : IAppointmentService
             .Where(a => familyMemberId.HasValue
                 ? a.FamilyMemberId == familyMemberId
                 : a.FamilyMemberId == null)
-            .AnyAsync(a => a.Area.AreaTemplate != null
+            .FirstOrDefaultAsync(a => a.Area.AreaTemplate != null
                         && a.Area.AreaTemplate.AreaCategory != null
                         && a.Area.AreaTemplate.AreaCategory.Name == "Verkauf");
     }

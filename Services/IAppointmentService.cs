@@ -15,4 +15,7 @@ public interface IAppointmentService
     Task<bool>         CheckOutAsync(int appointmentId);
     Task CancelAppointmentAsync(int appointmentId, string userId);
     Task<bool> CanRegisterAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false);
+
+    /// <summary>Wie <see cref="CanRegisterAsync"/>, aber mit dem Grund, falls es nicht geht.</summary>
+    Task<RegistrationCheck> CheckRegistrationAsync(string userId, int areaId, int? familyMemberId = null, bool useAlternativeSlot = false);
 }

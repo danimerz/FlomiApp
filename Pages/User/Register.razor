@@ -234,9 +234,9 @@
                                             <div class="area-row">
                                                 <div class="area-row__name">
                                                     <span class="area-row__title">@area.AreaTemplate?.Name</span>
-                                                    @if (!string.IsNullOrEmpty(note))
+                                                    @if (note != null)
                                                     {
-                                                        <span class="area-row__note">@note</span>
+                                                        <span class="area-row__note @NoteModifier(note)">@NoteBody(note)</span>
                                                     }
                                                 </div>
                                                 <div class="area-row__cell @(slot.AltOk ? "area-row__cell--choice" : "")" data-label="Zeit">
@@ -316,10 +316,10 @@
 
                                                     @RegisterAction(area, slot, area.IsSpontaneous ? "🙋 Ich komme spontan vorbei" : "Jetzt registrieren")
 
-                                                    @if (!string.IsNullOrEmpty(GetRegistrationNote(area)))
+                                                    @if (GetRegistrationNote(area) is { } tileNote)
                                                     {
-                                                        <p class="registration-note">
-                                                            @GetRegistrationNote(area)
+                                                        <p class="registration-note @NoteModifier(tileNote)">
+                                                            @NoteBody(tileNote)
                                                         </p>
                                                     }
                                                 </div>
@@ -419,7 +419,7 @@
     private List<FamilyMember>   familyMembers        = new();
     private int                  selectedMemberId     = 0;
     private Dictionary<int, int> currentRegistrations = new();
-    private Dictionary<int,bool> canRegister          = new();
+    private Dictionary<int, RegistrationCheck> checks = new(); // areaId → Prüfung ganzer Tag
     private string               userId               = string.Empty;
     private ApplicationUser?     currentUser;
     private int?                 selectedPersonAge;
@@ -444,7 +444,7 @@
     // ── Alternative Zeitslot-Auswahl ──────────────────────────────────────────
     private Dictionary<int, bool>  useAltSlot       = new(); // areaId → true = alternativ
     private Dictionary<int, int>   altRegistrations = new(); // areaId → Anzahl
-    private Dictionary<int, bool>  canRegisterAlt   = new(); // areaId → canRegister für Alt-Slot
+    private Dictionary<int, RegistrationCheck> checksAlt = new(); // areaId → Prüfung halber Tag
 
     private void OpenConfirmModal(Area area)
     {
@@ -472,13 +472,10 @@
 
     private bool IsAlternativeAllowed(Area area)
     {
-        if (string.IsNullOrEmpty(area.AreaTemplate?.MandatoryStufen)) return true;
-        var mandatory = area.AreaTemplate.MandatoryStufen
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var stufe = selectedMemberId == 0
             ? currentUser?.Stufe
             : familyMembers.FirstOrDefault(m => m.Id == selectedMemberId)?.Stufe;
-        return !mandatory.Contains(stufe ?? "", StringComparer.OrdinalIgnoreCase);
+        return !AreaSchedule.IsFullDayOnly(area, stufe);
     }
 
     private void SetAltSlot(int areaId, bool alternative)
@@ -571,16 +568,16 @@
         areas        = await AreaService.GetAreasByEventAsync(selectedEventId) ?? new List<Area>();
 
         currentRegistrations.Clear();
-        canRegister.Clear();
-        canRegisterAlt.Clear();
+        checks.Clear();
+        checksAlt.Clear();
 
         foreach (var area in areas)
         {
             currentRegistrations[area.Id] = await AreaService.GetCurrentRegistrationsAsync(area.Id, false);
             altRegistrations[area.Id]     = await AreaService.GetCurrentRegistrationsAsync(area.Id, true);
             var memberId = selectedMemberId == 0 ? (int?)null : selectedMemberId;
-            canRegister[area.Id]    = await AppointmentService.CanRegisterAsync(userId, area.Id, memberId);
-            canRegisterAlt[area.Id] = await AppointmentService.CanRegisterAsync(userId, area.Id, memberId, true);
+            checks[area.Id]    = await AppointmentService.CheckRegistrationAsync(userId, area.Id, memberId);
+            checksAlt[area.Id] = await AppointmentService.CheckRegistrationAsync(userId, area.Id, memberId, true);
         }
 
         collapsedCategories = areas
@@ -714,10 +711,10 @@
         return isAlt
             ? new SlotInfo(altOk, true, area.AlternativeTimeSlot,
                            altRegistrations.GetValueOrDefault(area.Id, 0), area.AlternativeMaxCapacity!.Value,
-                           canRegisterAlt.GetValueOrDefault(area.Id, false))
+                           CheckFor(area, alternative: true).CanRegister)
             : new SlotInfo(altOk, false, AreaSchedule.TimeSlot(area),
                            currentRegistrations.GetValueOrDefault(area.Id, 0), area.MaxCapacity,
-                           canRegister.GetValueOrDefault(area.Id, false));
+                           CheckFor(area, alternative: false).CanRegister);
     }
 
     // ── Bausteine für Kachel- und Listenansicht ──────────────────────────────
@@ -758,6 +755,10 @@
                     <span>Wird registriert...</span>
                 </div>
             }
+            else if (CheckFor(area, slot.IsAlt).Block == RegistrationBlock.AlreadyRegistered)
+            {
+                <a class="register-btn register-btn--done" href="/user/dashboard">Im Dashboard ansehen</a>
+            }
             else
             {
                 <button class="register-btn"
@@ -769,51 +770,45 @@
         </text>;
 
     // ── Hinweis-Text pro Area-Karte ───────────────────────────────────────────
-    private string GetRegistrationNote(Area area)
+    private sealed record RegistrationNote(string Text, RegistrationBlock Block, bool CanSwitch);
+
+    private RegistrationCheck CheckFor(Area area, bool alternative) =>
+        (alternative ? checksAlt : checks).GetValueOrDefault(area.Id) ?? RegistrationCheck.Ok;
+
+    private string? SelectedMemberFirstName =>
+        selectedMemberId == 0 ? null : familyMembers.FirstOrDefault(m => m.Id == selectedMemberId)?.FirstName;
+
+    private RegistrationNote? GetRegistrationNote(Area area)
     {
-        var isAltActive = useAltSlot.GetValueOrDefault(area.Id, false);
+        var slot  = GetSlot(area);
+        var check = CheckFor(area, slot.IsAlt);
+        if (check.CanRegister) return null;
 
-        if (isAltActive)
+        var text = RegistrationMessages.Describe(check, SelectedMemberFirstName);
+
+        // Voll: auf die andere Schicht hinweisen – nur wenn die Person den Halbtag überhaupt buchen
+        // darf (nicht z.B. Pfadis, Pios und Leiter, siehe AreaSchedule.IsFullDayOnly)
+        if (check.Block == RegistrationBlock.Full && slot.AltOk && CheckFor(area, !slot.IsAlt).CanRegister)
         {
-            if (canRegisterAlt.TryGetValue(area.Id, out var canAlt) && canAlt)
-                return string.Empty;
-
-            var altReg = altRegistrations.GetValueOrDefault(area.Id, 0);
-            var altCap = area.AlternativeMaxCapacity ?? 0;
-            if (altReg >= altCap)
-                return "Bereich ist bereits belegt.";
-
-            if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
-                return "Nur eine Verkauf-Registrierung ist möglich.";
-
-            if (area.AreaTemplate?.AreaCategory?.Name == "Kuchen")
-                return "Pro Tag ist nur eine Kuchen-Anmeldung möglich.";
-
-            return "Registrierung aktuell nicht möglich.";
+            text = slot.IsAlt
+                ? $"Der halbe Tag ist voll – am ganzen Tag ({area.TimeSlot}) hat es noch Platz."
+                : $"Der ganze Tag ist voll – am halben Tag ({area.AlternativeTimeSlot}) hat es noch Platz.";
         }
 
-        // ── Ganztags-Slot ─────────────────────────────────────────────────────
-        if (canRegister.TryGetValue(area.Id, out var can) && can)
-            return string.Empty;
-
-        var minAge = area.AreaTemplate?.MinAge ?? 0;
-        if (minAge > 0 && selectedPersonAge.HasValue && selectedPersonAge.Value < minAge)
-            return $"Mindestalter {minAge} Jahre erforderlich.";
-
-        if (currentRegistrations.TryGetValue(area.Id, out var current) && current >= area.MaxCapacity)
-            return "Bereich ist bereits belegt.";
-
-        if (area.IsSpontaneous)
-            return "Du bist hier bereits angemeldet.";
-
-        if (area.AreaTemplate?.AreaCategory?.Name == "Verkauf")
-            return "Nur eine Verkauf-Registrierung ist möglich.";
-
-        if (area.AreaTemplate?.AreaCategory?.Name == "Kuchen")
-            return "Pro Tag ist nur eine Kuchen-Anmeldung möglich.";
-
-        return "Registrierung aktuell nicht möglich.";
+        return new RegistrationNote(text, check.Block, RegistrationMessages.CanSwitch(check));
     }
+
+    private static string NoteModifier(RegistrationNote note) =>
+        note.Block == RegistrationBlock.AlreadyRegistered ? "is-ok" : "";
+
+    private RenderFragment NoteBody(RegistrationNote note) =>
+        @<text>
+            @note.Text
+            @if (note.CanSwitch)
+            {
+                <a class="registration-note__link" href="/user/dashboard">Lieber wechseln? Im Dashboard stornieren</a>
+            }
+        </text>;
 
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
     private int CalculateAge(DateTime birthDate, DateTime referenceDate)

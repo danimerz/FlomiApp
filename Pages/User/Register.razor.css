@@ -974,3 +974,34 @@
         padding: 0.65rem 0.85rem;
     }
 }
+
+/* Schon angemeldet: grüner Hinweis und Link ins Dashboard statt ausgegrautem Knopf */
+.registration-note.is-ok,
+.area-row__note.is-ok {
+    color: var(--color-success-text);
+    font-weight: 700;
+}
+
+.register-btn--done {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
+    border: 1px solid var(--color-success-border);
+    box-shadow: none;
+}
+
+.register-btn--done:hover {
+    color: var(--color-success-text);
+    box-shadow: none;
+}
+
+/* «Lieber wechseln? Im Dashboard stornieren» unter Hinweisen, die man durch Stornieren lösen kann */
+.registration-note__link {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: underline;
+}

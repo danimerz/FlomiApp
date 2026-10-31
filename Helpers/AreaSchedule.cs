@@ -18,6 +18,19 @@ public static class AreaSchedule
             : area.TimeSlot;
     }
 
+    /// <summary>
+    /// Ob diese Stufe hier nur den ganzen Tag buchen kann (<see cref="AreaTemplate.MandatoryStufen"/>,
+    /// z.B. «Pfadi,Pio,Leiter»). Gilt für Anmeldeseite und Service gleich.
+    /// </summary>
+    public static bool IsFullDayOnly(Area? area, string? stufe)
+    {
+        var mandatory = area?.AreaTemplate?.MandatoryStufen;
+        if (string.IsNullOrEmpty(mandatory) || string.IsNullOrEmpty(stufe)) return false;
+        return mandatory
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Contains(stufe, StringComparer.OrdinalIgnoreCase);
+    }
+
     /// <summary>Datum für Mails und Übersichten; <c>null</c> bei spontanen Bereichen.</summary>
     public static DateTime? Date(Area? area) =>
         area == null || area.IsSpontaneous ? null : area.Date;
