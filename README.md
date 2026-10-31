@@ -40,6 +40,7 @@
 | ORM | Entity Framework Core 9 (bleibt auf 9, bis Pomelo EF Core 10 unterstützt) |
 | Authentifizierung | ASP.NET Core Identity |
 | E-Mail | SMTP via MailKit; asynchrone Mail-Queue als `IHostedService` (`Channel<T>`) |
+| Verbindung | Eigene deutsche Anzeige bei Unterbruch (`#components-reconnect-modal` in `_Host.cshtml`, Ablauf in `wwwroot/js/reconnect.js`): erst Leiste oben, nach 8 s Karte mit Pfadi-Logo, Versuchszähler, Offline-Hinweis und «Neu laden»; danach kurz «✓ Wieder verbunden». Kennt der Server die Sitzung nicht mehr, lädt die Seite selbst neu. Nach einer Pause im Hintergrund prüft ein Ping die Verbindung; getrennte Sitzungen hält der Server 15 Min. |
 | QR-Code | QRCoder (PNG-Generierung) + jsQR (Browser-Scan) |
 | Excel-Export | ClosedXML |
 | Diagramme | Chart.js 4 (via CDN + JS Interop) |
@@ -93,6 +94,7 @@ Benutzer können sich für **Einsatzbereiche** des Flomi-Events anmelden.
   - Mindestalter → «Ab 16 Jahren – Lena ist 14.»
   - Bei Überschneidung, Verkauf und Kuchen zusätzlich der Link «Lieber wechseln? Im Dashboard stornieren»
 - **Bestätigungs-E-Mail** mit Event, Bereich, Datum, Zeit und Kommentar nach erfolgreicher Anmeldung; enthält eingebetteten **QR-Code** wenn Check-in für das Event aktiviert ist (nur Kategorie Verkauf)
+- **Erinnerung am Vortag** (`ReminderService`, Hintergrund-Job alle 15 Min.): am Vorabend um **18:00** (Schweizer Zeit) eine Mail pro Konto mit allen Einsätzen des nächsten Tages, auch für Familienmitglieder und Spontan-Bereiche. Pro Einsatz Bereich, Zeit, Standort, Kommentar; Fahrer und Beifahrer sehen ihr Fahrzeug und wer mitfährt; bei Verkauf mit Check-in nochmals der QR-Code. Link zum Dashboard aus `App:PublicUrl`. Wer «Bestätigungs-Mails» ausgeschaltet hat, bekommt keine. Wer sich erst nach 18:00 am Vorabend anmeldet, auch nicht (die Bestätigung kam ja gerade). `Appointment.ReminderSentAt` verhindert Doppelversand, auch nach einem Neustart. Pro Event abschaltbar («⏰ Erinnerung am Vortag» in der Event-Konfiguration, dort auch «Testmail an mich»); Beispiel-Events bekommen nie Erinnerungen
 
 **Admin-Hilfsfunktionen:**
 - Bereiche können zwischen Events **kopiert** werden (inkl. alternativer Zeitslot)
@@ -183,6 +185,7 @@ Zentrale Verwaltung unter `/admin/config` mit 4 Tabs:
 **Tab «Übersicht»:**
 - 6 KPI-Kacheln: Anmeldungen, Offene Plätze, Offene Abholungen, Fahrzeuge, Benutzer, Stornierungen
 - Hinweis auf kommende Tage, an denen Fahrer fehlen (Abholungen ohne Fahrzeug mit Fahrer, Fahrzeuge ohne Fahrer)
+- «⏰ Erinnerung für morgen»: Anzahl Einsätze und Personen, vor 18:00 «geht heute um 18:00 raus», danach «verschickt an X von Y»
 - Bereichs-Auslastungsbalken (Top 8)
 - Aktivitäts-Feed: Chronologische Timeline (Heute/Gestern/Datum) aller Anmeldungen, Stornierungen und Möbelanfragen
 - Neueste ausstehende Möbelanfragen

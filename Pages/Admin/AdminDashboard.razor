@@ -7,6 +7,7 @@
 @inject IAreaService AreaService
 @inject IFurniturePickupService FurniturePickupService
 @inject IVehicleService VehicleService
+@inject IReminderService ReminderService
 @inject IJSRuntime JS
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.AnyAdmin)]
@@ -117,6 +118,25 @@
                             </div>
                         </div>
                     }
+                </div>
+            }
+
+            <!-- Erinnerung am Vortag: nur wenn morgen jemand im Einsatz ist -->
+            @if (reminderStatus is { Appointments: > 0 } rs)
+            {
+                <div class="adm-section adm-section--full">
+                    <h2 class="adm-section__title">⏰ Erinnerung für morgen</h2>
+                    <ul class="adm-gaps">
+                        <li class="adm-gap adm-gap--info">
+                            <strong>@rs.Date.ToString("ddd dd.MM", new CultureInfo("de-CH"))</strong>
+                            <span>
+                                @rs.Appointments Einsätze von @rs.People Person(en) ·
+                                @(rs.SendTimePassed
+                                    ? $"Erinnerung verschickt an {rs.PeopleReminded} von {rs.People}"
+                                    : "Erinnerung geht heute um 18:00 raus")
+                            </span>
+                        </li>
+                    </ul>
                 </div>
             }
 
@@ -376,6 +396,7 @@
     private List<ActivityItem>           activityFeed   = new();
     private List<(string EventName, int EventId, List<PickupDayStat> Days)> pickupCalendar = new();
     private List<VehicleDayCoverage>     vehicleGaps    = new();
+    private ReminderStatus?              reminderStatus;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -539,6 +560,8 @@
         vehicleGaps = (await VehicleService.GetDayCoverageAsync(activeEventIds))
             .Where(c => c.NeedsAttention && c.Date >= DateTime.Today)
             .ToList();
+
+        reminderStatus = await ReminderService.GetTomorrowStatusAsync(DateTime.UtcNow);
 
         isLoading = false;
     }

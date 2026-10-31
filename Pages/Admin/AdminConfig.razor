@@ -5,6 +5,8 @@
 @inject IAreaService AreaService
 @inject IMailService MailService
 @inject IVehicleService VehicleService
+@inject IReminderService ReminderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject FlomiApp.Data.ApplicationDbContext Db
 @using FlomiApp.Security
 @attribute [Authorize(Roles = Roles.Admin)]
@@ -216,6 +218,27 @@
                                            id="checkinCheck" class="ac-checkbox" />
                             <label for="checkinCheck">🎫 QR Check-in aktivieren</label>
                         </div>
+                        <div class="ac-checkbox-row">
+                            <InputCheckbox @bind-Value="currentEvent.RemindersEnabled"
+                                           id="reminderCheck" class="ac-checkbox" />
+                            <label for="reminderCheck">⏰ Erinnerung am Vortag (Mail um 18:00 an alle mit Einsatz am nächsten Tag)</label>
+                        </div>
+                        @if (isEditingEvent)
+                        {
+                            <div class="ac-checkbox-row">
+                                <button type="button" class="ac-cancel-btn" disabled="@isSendingTestReminder"
+                                        @onclick="SendTestReminder">
+                                    ✉️ Erinnerung als Testmail an mich
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(testReminderMessage))
+                            {
+                                <div class="ac-state-card @(testReminderOk ? "ac-state-card--success" : "ac-state-card--error")">
+                                    <div class="ac-state-card__icon">@(testReminderOk ? "✅" : "⚠️")</div>
+                                    <div class="ac-state-card__content"><p>@testReminderMessage</p></div>
+                                </div>
+                            }
+                        }
 
                         <div class="ac-form-actions">
                             <button type="submit" class="ac-submit-btn">
@@ -1396,8 +1419,32 @@
         CancelEventEdit();
     }
 
+    // ── Erinnerung am Vortag: Testmail ────────────────────────────────────────
+    private bool    isSendingTestReminder;
+    private bool    testReminderOk;
+    private string? testReminderMessage;
+
+    private async Task SendTestReminder()
+    {
+        isSendingTestReminder = true;
+        try
+        {
+            var auth   = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            testReminderOk = userId != null && await ReminderService.SendTestReminderAsync(userId, currentEvent.Id);
+            testReminderMessage = testReminderOk
+                ? "Testmail ist unterwegs – mit deinen Einsätzen in diesem Event oder, falls du keine hast, mit einem Beispielbereich."
+                : "Testmail ging nicht: Das Event hat noch keine Bereiche oder dein Konto keine E-Mail-Adresse.";
+        }
+        finally
+        {
+            isSendingTestReminder = false;
+        }
+    }
+
     private void EditEvent(Event evt)
     {
+        testReminderMessage = null;
         isEditingEvent = true;
         showEventForm  = true;
         currentEvent   = new Event
@@ -1408,6 +1455,7 @@
             Description    = evt.Description,
             IsActive       = evt.IsActive,
             CheckInEnabled = evt.CheckInEnabled,
+            RemindersEnabled = evt.RemindersEnabled,
             LocationName   = evt.LocationName,
             Street         = evt.Street,
             PostalCode     = evt.PostalCode,

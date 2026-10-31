@@ -8,6 +8,13 @@ public class RecordingMailService : IMailService
 {
     public List<(string To, AdminNewUserMail Mail)>      NewUserMails      { get; } = new();
     public List<(string To, AdminRegistrationMail Mail)> RegistrationMails { get; } = new();
+    public List<(string To, ReminderMail Mail)>          Reminders         { get; } = new();
+
+    public Task SendDayBeforeReminderAsync(string toEmail, string toName, ReminderMail mail)
+    {
+        Reminders.Add((toEmail, mail));
+        return Task.CompletedTask;
+    }
 
     public Task SendAdminNewUserAsync(string toEmail, AdminNewUserMail mail)
     {

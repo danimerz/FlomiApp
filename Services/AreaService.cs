@@ -245,6 +245,8 @@ public class AreaService : IAreaService
             existing.Date        = evt.Date;
             existing.Description = evt.Description;
             existing.IsActive    = evt.IsActive;
+            existing.CheckInEnabled   = evt.CheckInEnabled;   // fehlte: Checkbox im Bearbeiten-Formular blieb wirkungslos
+            existing.RemindersEnabled = evt.RemindersEnabled;
             existing.LocationName = evt.LocationName;
             existing.Street       = evt.Street;
             existing.PostalCode   = evt.PostalCode;

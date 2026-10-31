@@ -380,3 +380,4 @@
 
 .adm-gap--alert { background: var(--color-error-bg);   color: var(--color-error-text);   border-color: var(--color-error-border); }
 .adm-gap--warn  { background: var(--color-warning-bg); color: var(--color-warning-text); border-color: var(--color-warning-border); }
+.adm-gap--info  { background: var(--color-info-bg);    color: var(--color-info-text);    border-color: var(--color-info-border); }

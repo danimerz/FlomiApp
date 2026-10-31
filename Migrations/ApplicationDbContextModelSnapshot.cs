@@ -148,6 +148,9 @@ namespace FlomiApp.Migrations
                     b.Property<int?>("FamilyMemberId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ReminderSentAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -457,6 +460,9 @@ namespace FlomiApp.Migrations
                     b.Property<string>("PostalCode")
                         .HasMaxLength(10)
                         .HasColumnType("varchar(10)");
+
+                    b.Property<bool>("RemindersEnabled")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Street")
                         .HasMaxLength(200)

@@ -201,6 +201,90 @@ public class MailService : IMailService
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    // ─── Erinnerung am Vortag ─────────────────────────────────────────────────
+    public async Task SendDayBeforeReminderAsync(string toEmail, string toName, ReminderMail mail)
+    {
+        var (subject, body) = BuildDayBeforeReminder(mail);
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
+    public static (string Subject, string Body) BuildDayBeforeReminder(ReminderMail mail)
+    {
+        var swiss    = new System.Globalization.CultureInfo("de-CH");
+        var dayText  = mail.Date.ToString("dddd dd.MM.", swiss);
+        var onlySpontaneous = mail.Items.All(i => i.IsSpontaneous);
+
+        var subject = mail.Items.Count == 1 && !mail.Items[0].IsSpontaneous
+            ? $"⏰ Morgen: {mail.Items[0].AreaName} {mail.Items[0].TimeSlot} · {mail.EventName}"
+            : onlySpontaneous
+                ? $"⏰ Morgen ist {mail.EventName} – wir freuen uns auf dich"
+                : $"⏰ Morgen: {mail.Items.Count} Einsätze · {mail.EventName}";
+        if (mail.IsTest) subject = "[Test] " + subject;
+
+        var rows = new System.Text.StringBuilder();
+        foreach (var item in mail.Items)
+        {
+            var title = Html(item.AreaName)
+                + (string.IsNullOrEmpty(item.ForPerson) ? "" : $" <span style='color:#854d0e;'>({Html(item.ForPerson)})</span>");
+            var details = new List<string>();
+            if (!string.IsNullOrWhiteSpace(item.Location)) details.Add($"📍 {Html(item.Location)}");
+            if (!string.IsNullOrWhiteSpace(item.VehicleInfo)) details.Add($"🚚 {Html(item.VehicleInfo)}");
+            if (!string.IsNullOrWhiteSpace(item.Comment)) details.Add($"💬 <i>{Html(item.Comment)}</i>");
+
+            rows.Append($"""
+                <tr>
+                  <td style="padding:12px;border-top:1px solid #e2e8f0;vertical-align:top;">
+                    <div style="font-weight:800;color:#0f172a;">{title}</div>
+                    <div style="color:#475569;font-size:.9rem;margin-top:2px;">{string.Join("<br>", details)}</div>
+                    {(item.WithQrCode ? QrCodeBlock(item.AppointmentId) : "")}
+                  </td>
+                  <td style="padding:12px;border-top:1px solid #e2e8f0;vertical-align:top;text-align:right;white-space:nowrap;font-weight:700;color:#1d4ed8;">{Html(item.TimeSlot)}</td>
+                </tr>
+                """);
+        }
+
+        var intro = onlySpontaneous
+            ? $"morgen, {Html(dayText)}, ist {Html(mail.EventName)}. Du hast angekündigt, spontan vorbeizukommen – wir freuen uns!"
+            : $"morgen, {Html(dayText)}, bist du eingetragen:";
+        var button = string.IsNullOrEmpty(mail.DashboardUrl) ? "" :
+            $"<p style='margin:20px 0 0;'><a href='{Html(mail.DashboardUrl)}' style='display:inline-block;background:#1d4ed8;color:#fff;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:10px;'>Im Dashboard ansehen</a></p>";
+        var testNote = mail.IsTest
+            ? "<p style='margin:0 0 16px;padding:8px 12px;background:#fef9c3;border-radius:8px;color:#854d0e;font-size:.85rem;'>Testmail – so sieht die Erinnerung am Vorabend aus.</p>"
+            : "";
+
+        var body = $"""
+            <div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:16px 16px 0 0;padding:24px 32px;">
+                <h1 style="margin:0;color:#fff;font-size:1.4rem;">Bis morgen! ⏰</h1>
+              </div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:24px 32px;">
+                {testNote}
+                <p style="color:#374151;margin-top:0;">Hallo <strong>{Html(mail.FirstName)}</strong>,<br>{intro}</p>
+                <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:12px;">
+                  {rows}
+                </table>
+                {button}
+                <p style="color:#64748b;font-size:.9rem;margin:20px 0 0;">Kannst du doch nicht? Bitte storniere im Dashboard, damit jemand anderes einspringen kann.</p>
+                <p style="color:#374151;font-weight:700;margin-bottom:0;">Danke für deinen Einsatz! 🙌</p>
+              </div>
+            </div>
+            """;
+
+        return (subject, body);
+    }
+
+    private static string QrCodeBlock(int appointmentId)
+    {
+        var qrData = new QRCodeGenerator().CreateQrCode($"flomi-apt:{appointmentId}", QRCodeGenerator.ECCLevel.Q);
+        var png    = Convert.ToBase64String(new PngByteQRCode(qrData).GetGraphic(6));
+        return $"""
+            <div style="margin-top:10px;">
+              <img src="data:image/png;base64,{png}" style="width:140px;height:140px;border-radius:8px;" alt="QR-Code" />
+              <div style="font-size:.78rem;color:#64748b;">Check-in-Code für den Verkauf</div>
+            </div>
+            """;
+    }
+
     // ─── Admin-Mails ──────────────────────────────────────────────────────────
     // Empfänger und Inhalt stellt der AdminNotificationService zusammen. Alle Werte stammen
     // aus Eingaben der Benutzer und werden deshalb HTML-kodiert.

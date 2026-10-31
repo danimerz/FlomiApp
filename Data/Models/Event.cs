@@ -16,6 +16,8 @@ public class Event
 
     public bool IsActive        { get; set; } = true;
     public bool CheckInEnabled  { get; set; } = false;
+    /// <summary>Erinnerungsmail am Vorabend (18:00) an alle mit Einsatz am nächsten Tag.</summary>
+    public bool RemindersEnabled { get; set; } = true;
 
     /// <summary>Beispieldaten zum Testen der Routenplanung – lassen sich gesammelt wieder entfernen.</summary>
     public bool IsSample        { get; set; } = false;

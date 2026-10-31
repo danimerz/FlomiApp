@@ -120,7 +120,9 @@ public class AppointmentService : IAppointmentService
             FamilyMemberId     = familyMemberId,
             Status             = AppointmentStatus.Registered,
             Comment            = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(),
-            UseAlternativeSlot = useAlternativeSlot
+            UseAlternativeSlot = useAlternativeSlot,
+            // Nach 18:00 am Vorabend (oder am Tag selbst) keine Erinnerung mehr – die Bestätigung kam ja gerade
+            ReminderSentAt     = ReminderSchedule.IsPastSendMoment(area.Date, DateTime.UtcNow) ? DateTime.UtcNow : null
         };
 
         _context.Appointments.Add(appointment);

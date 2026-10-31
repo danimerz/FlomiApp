@@ -141,6 +141,8 @@ builder.Services.AddScoped<IPasskeyService, PasskeyService>();
 builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<PickupImageMaintenanceService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 // Routenplanung: Adresssuche (geo.admin.ch) und Fahrzeiten (OpenRouteService, optional)
 builder.Services.Configure<RoutingOptions>(builder.Configuration.GetSection("Routing"));

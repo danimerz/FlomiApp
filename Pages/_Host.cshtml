@@ -47,6 +47,36 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    @* Eigene Anzeige bei Verbindungsunterbruch statt des englischen Blazor-Fensters. Blazor setzt nur
+       die Klassen components-reconnect-*; Ablauf (Leiste → Karte, «Wieder verbunden») in js/reconnect.js *@
+    <div id="components-reconnect-modal" class="reconnect" role="status" aria-live="polite">
+        <div class="reconnect__bar">
+            <span class="reconnect__spinner" aria-hidden="true"></span>
+            <span>📶 Verbindung kurz unterbrochen – einen Moment …</span>
+        </div>
+        <div class="reconnect__ok">✓ Wieder verbunden</div>
+        <div class="reconnect__backdrop">
+            <div class="reconnect__card">
+                <img src="/img/pfadi_logo.png" alt="" class="reconnect__logo" />
+                <div class="reconnect__waiting">
+                    <h2>Verbindung wird wiederhergestellt</h2>
+                    <p class="reconnect__attempt">
+                        <span class="reconnect__spinner" aria-hidden="true"></span>
+                        Versuch <span id="components-reconnect-current-attempt">1</span>
+                    </p>
+                    <p>Keine Sorge: Deine Anmeldungen sind gespeichert.</p>
+                </div>
+                <div class="reconnect__failed">
+                    <h2>Verbindung verloren</h2>
+                    <p>Die App wurde vielleicht gerade aktualisiert oder das Netz ist weg. Deine Anmeldungen sind gespeichert.</p>
+                    <button type="button" class="reconnect__btn" data-reconnect-retry>Erneut verbinden</button>
+                </div>
+                <p class="reconnect__offline">📶 Du bist offline – prüfe WLAN oder mobile Daten.</p>
+                <button type="button" class="reconnect__btn reconnect__btn--ghost" data-reconnect-reload>Seite neu laden</button>
+            </div>
+        </div>
+    </div>
+
     <script src="~/js/themeManager.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="~/js/charts.js" asp-append-version="true"></script>

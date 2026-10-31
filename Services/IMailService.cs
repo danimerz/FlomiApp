@@ -15,6 +15,9 @@ public interface IMailService
     Task SendAppointmentSummaryAsync(string toEmail, string toName,
         List<AppointmentSummaryItem> appointments);
 
+    // Erinnerung am Vortag (ReminderService)
+    Task SendDayBeforeReminderAsync(string toEmail, string toName, ReminderMail mail);
+
     // Admin-Mails (Empfänger bestimmt IAdminNotificationService)
     Task SendAdminNewUserAsync(string toEmail, AdminNewUserMail mail);
 

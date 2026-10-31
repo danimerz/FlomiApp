@@ -26,6 +26,12 @@ public class Appointment
     public DateTime?  CheckedOutAt         { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// Erinnerung am Vortag erledigt (UTC): verschickt, oder nicht mehr nötig, weil die Anmeldung
+    /// erst nach dem Versandzeitpunkt kam. Siehe ReminderService.
+    /// </summary>
+    public DateTime? ReminderSentAt { get; set; }
 }
 
 public enum AppointmentStatus
