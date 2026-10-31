@@ -6,16 +6,8 @@
     margin-bottom: 2rem;
 }
 
-@media (max-width: 1100px) {
-    .adm-sections { grid-template-columns: repeat(2, 1fr); }
-}
-
 @media (max-width: 900px) {
     .adm-kpi-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .adm-sections { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {
@@ -79,6 +71,15 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
+}
+
+/* Muss nach der Grundregel stehen, sonst gewinnt immer «3 Spalten» */
+@media (max-width: 1100px) {
+    .adm-sections { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .adm-sections { grid-template-columns: 1fr; }
 }
 
 .adm-section {
