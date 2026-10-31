@@ -290,8 +290,8 @@
                     {
                         <tr>
                             <td><strong>@evt.Name</strong></td>
-                            <td>@evt.Date.ToShortDateString()</td>
-                            <td>@evt.Description</td>
+                            <td data-label="Datum">@evt.Date.ToShortDateString()</td>
+                            <td class="ac-td-desc" data-label="Beschreibung">@evt.Description</td>
                             <td>
                                 @if (evt.IsActive)
                                 {
@@ -302,7 +302,7 @@
                                     <span class="ac-badge ac-badge--inactive">🔴 Inaktiv</span>
                                 }
                             </td>
-                            <td>
+                            <td class="ac-td-actions">
                                 <div class="ac-actions">
                                     <button class="ac-btn ac-btn--edit"
                                             @onclick="() => EditEvent(evt)">
@@ -451,9 +451,9 @@
                                     @(t.AreaCategory?.Name ?? "–")
                                 </span>
                             </td>
-                            <td>@t.MinAge</td>
-                            <td>@t.Location</td>
-                            <td>
+                            <td data-label="Mindestalter">@t.MinAge</td>
+                            <td data-label="Standort">@t.Location</td>
+                            <td data-label="Pflicht-Stufen">
                                 @if (!string.IsNullOrEmpty(t.MandatoryStufen))
                                 {
                                     @foreach (var s in t.MandatoryStufen.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -466,12 +466,12 @@
                                     <span style="color:var(--color-text-placeholder);font-size:.82rem">–</span>
                                 }
                             </td>
-                            <td>
+                            <td data-label="Zuweisungen">
                                 <span class="ac-badge ac-badge--category">
                                     @t.Areas.Count
                                 </span>
                             </td>
-                            <td>
+                            <td class="ac-td-actions">
                                 <div class="ac-actions">
                                     <button class="ac-btn ac-btn--edit"
                                             @onclick="() => EditTemplate(t)">
@@ -779,17 +779,17 @@
                                         @(area.AreaTemplate?.AreaCategory?.Name ?? "–")
                                     </span>
                                 </td>
-                                <td>@(area.AreaTemplate?.MinAge ?? 0)</td>
+                                <td data-label="Min. Alter">@(area.AreaTemplate?.MinAge ?? 0)</td>
                                 @if (area.IsSpontaneous)
                                 {
                                     <td colspan="2"><span class="ac-badge ac-badge--category">🙋 Spontan</span></td>
                                 }
                                 else
                                 {
-                                    <td>@area.Date.ToShortDateString()</td>
-                                    <td>@area.TimeSlot</td>
+                                    <td data-label="Datum">@area.Date.ToShortDateString()</td>
+                                    <td data-label="Zeit">@area.TimeSlot</td>
                                 }
-                                <td>
+                                <td data-label="Kapazität">
                                     @if (area.MaxCapacity >= 999)
                                     {
                                         <span class="ac-badge ac-badge--unlimited">∞</span>
@@ -799,13 +799,13 @@
                                         @area.MaxCapacity
                                     }
                                 </td>
-                                <td>@(area.AlternativeTimeSlot ?? "–")</td>
-                                <td>@(area.AlternativeMaxCapacity?.ToString() ?? "–")</td>
+                                <td data-label="Halber Tag">@(area.AlternativeTimeSlot ?? "–")</td>
+                                <td data-label="Kap. halber Tag">@(area.AlternativeMaxCapacity?.ToString() ?? "–")</td>
                                 <td>
                                     <span class="ac-event-pill">🎪 @area.Event?.Name</span>
                                 </td>
-                                <td>@(area.AreaTemplate?.Location ?? "–")</td>
-                                <td>
+                                <td data-label="Standort">@(area.AreaTemplate?.Location ?? "–")</td>
+                                <td class="ac-td-actions">
                                     <div class="ac-actions">
                                         <button class="ac-btn ac-btn--edit"
                                                 @onclick="() => EditArea(area)">
@@ -911,7 +911,7 @@
                                     @templateCount Vorlagen
                                 </span>
                             </td>
-                            <td>
+                            <td class="ac-td-actions">
                                 <div class="ac-actions">
                                     <button class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
                                             @onclick="() => MoveCategory(cat.Id, -1)"

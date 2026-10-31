@@ -265,7 +265,6 @@ public class MailService : IMailService
                   {rows}
                 </table>
                 {button}
-                <p style="color:#64748b;font-size:.9rem;margin:20px 0 0;">Kannst du doch nicht? Bitte storniere im Dashboard, damit jemand anderes einspringen kann.</p>
                 <p style="color:#374151;font-weight:700;margin-bottom:0;">Danke für deinen Einsatz! 🙌</p>
               </div>
             </div>
