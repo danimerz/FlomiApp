@@ -127,6 +127,7 @@ public class ReminderServiceTests : IDisposable
         Assert.Equal("Lena Muster", sale.ForPerson);
         Assert.True(sale.WithQrCode);
         var collect = mail.Items.Single(i => i.AreaName == "Sammeln");
+        Assert.Equal("dani Muster", collect.ForPerson); // auch der Kontoinhaber steht mit Namen
         Assert.Equal("Ägerihalle", collect.Location);
         Assert.Equal("Bringe Kisten mit", collect.Comment);
     }

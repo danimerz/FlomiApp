@@ -10,7 +10,7 @@ public interface IMailService
         string? comment = null, int? appointmentId = null, string? forPerson = null);
 
     Task SendCancellationConfirmationAsync(string toEmail, string toName,
-        string areaName, string eventName, DateTime? date, string timeSlot);
+        string areaName, string eventName, DateTime? date, string timeSlot, string? forPerson = null);
 
     Task SendAppointmentSummaryAsync(string toEmail, string toName,
         List<AppointmentSummaryItem> appointments);

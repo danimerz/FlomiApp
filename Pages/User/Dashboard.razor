@@ -730,7 +730,7 @@
                 Location  = a.Area?.AreaTemplate?.Location,
                 ForPerson = a.FamilyMember != null
                                 ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}"
-                                : null
+                                : $"{currentUser.FirstName} {currentUser.LastName}".Trim()
             })
             .ToList();
 

@@ -108,13 +108,14 @@ public class MailService : IMailService
 
     public async Task SendCancellationConfirmationAsync(
         string toEmail, string toName, string areaName,
-        string eventName, DateTime? date, string timeSlot)
+        string eventName, DateTime? date, string timeSlot, string? forPerson = null)
     {
         var subject = $"Stornierung – {areaName}";
         var body = $"""
             <h2>Hallo {toName}</h2>
             <p>Deine Anmeldung wurde erfolgreich storniert.</p>
             <table cellpadding="8" style="border-collapse:collapse;">
+                {(string.IsNullOrEmpty(forPerson) ? "" : $"<tr><td><strong>Person:</strong></td><td>{System.Net.WebUtility.HtmlEncode(forPerson)}</td></tr>")}
                 <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
                 <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
                 <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>

@@ -33,7 +33,7 @@ public class RecordingMailService : IMailService
         => Task.CompletedTask;
 
     public Task SendCancellationConfirmationAsync(string toEmail, string toName, string areaName, string eventName,
-        DateTime? date, string timeSlot) => Task.CompletedTask;
+        DateTime? date, string timeSlot, string? forPerson = null) => Task.CompletedTask;
 
     public Task SendAppointmentSummaryAsync(string toEmail, string toName, List<AppointmentSummaryItem> appointments)
         => Task.CompletedTask;

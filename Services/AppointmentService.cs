@@ -278,7 +278,7 @@ public class AppointmentService : IAppointmentService
         var email       = user.Email;
         var date        = AreaSchedule.Date(area);
         var aptId       = appointmentId;
-        var person      = forPerson;
+        var person      = forPerson ?? userName.Trim(); // immer «Angemeldet für», auch beim Kontoinhaber
 
         if (notifications)
         {
@@ -298,12 +298,13 @@ public class AppointmentService : IAppointmentService
         var eventName = appointment.Area?.Event?.Name ?? "";
         var date      = AreaSchedule.Date(appointment.Area);
         var timeSlot  = AreaSchedule.TimeSlot(appointment.Area, appointment.UseAlternativeSlot);
+        var person    = await GetPersonNameAsync(userId, appointment.FamilyMemberId) ?? userName.Trim();
         var notifications = user.EmailNotificationsEnabled;
 
         if (notifications)
         {
             _mailQueue.Enqueue(m => m.SendCancellationConfirmationAsync(
-                email, userName, areaName, eventName, date, timeSlot));
+                email, userName, areaName, eventName, date, timeSlot, person));
         }
     }
 

@@ -163,7 +163,10 @@ public class ReminderService : IReminderService
                 TimeSlot:      AreaSchedule.TimeSlot(a.Area, a.UseAlternativeSlot),
                 IsSpontaneous: a.Area.IsSpontaneous,
                 Location:      a.Area.AreaTemplate?.Location,
-                ForPerson:     a.FamilyMember != null ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}".Trim() : null,
+                // Immer mit Namen – auch beim Kontoinhaber, damit klar ist, für wen der Einsatz gilt
+                ForPerson:     a.FamilyMember != null
+                                   ? $"{a.FamilyMember.FirstName} {a.FamilyMember.LastName}".Trim()
+                                   : $"{user.FirstName} {user.LastName}".Trim(),
                 Comment:       a.Comment,
                 VehicleInfo:   a.FamilyMember == null ? VehicleInfo(user.Id, a.Area.EventId, vehicles) : null,
                 WithQrCode:    a.Id > 0
