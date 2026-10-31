@@ -51,7 +51,7 @@
                       rows="2"
                       @bind="newMessage"
                       @onkeydown="OnKeyDown"></textarea>
-            <button class="chat-send-btn"
+            <button aria-label="Nachricht senden" class="chat-send-btn"
                     @onclick="Send"
                     disabled="@(sending || string.IsNullOrWhiteSpace(newMessage))">
                 ▶

@@ -31,6 +31,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 ## Konventionen
 
 - UI-Texte, Kommentare und Audit-Texte auf **Deutsch** (Schweizer Schreibweise: «ss» statt «ß», «Guillemets»).
+- Knöpfe und Links nur mit Emoji/Symbol (✕, 🗑️, ‹ ›, ▶) brauchen ein deutsches `aria-label` für Screenreader.
 - Admin-Seiten: `[Authorize(Roles = Roles.AdminOr…)]` **plus** `[Authorize(Policy = Roles.RequireTwoFactorForAdmins)]`. Rollen: `Admin`, `FahrzeugAdmin`, `MoebelAdmin`, `BereichsAdmin`.
 - Admin-Aktionen mit Tragweite (löschen, sperren, Rollen, Stornierung) über `IAuditLogService` protokollieren.
 - Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`). Mails an Admins (neues Konto, Anmeldung/Stornierung) über `IAdminNotificationService`: Empfänger sind Rolle `Admin` mit `NotifyNewUsers`/`NotifyRegistrations`; Benutzereingaben in Mail-HTML immer kodieren.

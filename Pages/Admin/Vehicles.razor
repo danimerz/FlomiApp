@@ -658,7 +658,7 @@
 
             <div class="av-modal__header">
                 <h3>✏️ Fahrzeug bearbeiten</h3>
-                <button class="av-modal__close" @onclick="CloseEditVehicle">✕</button>
+                <button aria-label="Schliessen" class="av-modal__close" @onclick="CloseEditVehicle">✕</button>
             </div>
 
             <EditForm Model="editVehicle" OnValidSubmit="SaveEditVehicle">

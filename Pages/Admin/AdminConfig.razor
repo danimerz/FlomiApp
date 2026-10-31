@@ -913,12 +913,12 @@
                             </td>
                             <td class="ac-td-actions">
                                 <div class="ac-actions">
-                                    <button class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
+                                    <button aria-label="Kategorie nach oben verschieben" class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
                                             @onclick="() => MoveCategory(cat.Id, -1)"
                                             disabled="@(catIdx == 0)" title="Nach oben">
                                         ▲
                                     </button>
-                                    <button class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
+                                    <button aria-label="Kategorie nach unten verschieben" class="ac-btn ac-btn--edit" style="padding:.38rem .65rem"
                                             @onclick="() => MoveCategory(cat.Id, 1)"
                                             disabled="@(catIdx == catList.Count - 1)" title="Nach unten">
                                         ▼

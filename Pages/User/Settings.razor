@@ -230,7 +230,7 @@
                             <div class="family-form-panel">
                                 <div class="family-form-panel__header">
                                     <h3>@(isEditingFamilyMember ? "Mitglied bearbeiten" : "Neues Mitglied")</h3>
-                                    <button class="icon-close-btn"
+                                    <button aria-label="Schliessen" class="icon-close-btn"
                                             disabled="@isSavingMember"
                                             @onclick="CancelFamilyEdit"
                                             title="Schliessen">✕</button>

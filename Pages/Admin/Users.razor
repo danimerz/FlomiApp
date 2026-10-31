@@ -204,7 +204,7 @@
                                     🔑 Passkeys (@pkCount)
                                 </button>
                             }
-                            <button class="usr-btn usr-btn--delete"
+                            <button aria-label="Benutzer löschen" class="usr-btn usr-btn--delete"
                                     @onclick="() => confirmDeleteUser = u"
                                     title="Benutzer löschen">
                                 🗑️
@@ -227,7 +227,7 @@
         <div class="usr-modal" @onclick:stopPropagation="true">
             <div class="usr-modal__header">
                 <h3>✏️ Benutzer bearbeiten</h3>
-                <button class="usr-modal__close" @onclick="CloseEdit">✕</button>
+                <button aria-label="Schliessen" class="usr-modal__close" @onclick="CloseEdit">✕</button>
             </div>
             <div class="usr-modal__body">
                 <div class="usr-form-grid">
@@ -295,7 +295,7 @@
         <div class="usr-modal" @onclick:stopPropagation="true">
             <div class="usr-modal__header">
                 <h3>🔑 Passwort zurücksetzen</h3>
-                <button class="usr-modal__close" @onclick="ClosePwReset">✕</button>
+                <button aria-label="Schliessen" class="usr-modal__close" @onclick="ClosePwReset">✕</button>
             </div>
             <div class="usr-modal__body">
                 <p class="usr-pw-hint">
@@ -311,7 +311,7 @@
                         <button type="button" class="usr-pw-toggle" @onclick="() => showPw = !showPw">
                             @(showPw ? "🙈" : "👁️")
                         </button>
-                        <button type="button" class="usr-pw-generate" @onclick="GeneratePassword"
+                        <button aria-label="Zufälliges Passwort generieren" type="button" class="usr-pw-generate" @onclick="GeneratePassword"
                                 title="Zufälliges Passwort generieren">
                             🎲
                         </button>
@@ -342,7 +342,7 @@
         <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
             <div class="usr-modal__header" style="background:linear-gradient(135deg,#991b1b,#dc2626)">
                 <h3>🗑️ Benutzer löschen</h3>
-                <button class="usr-modal__close" @onclick="() => confirmDeleteUser = null">✕</button>
+                <button aria-label="Schliessen" class="usr-modal__close" @onclick="() => confirmDeleteUser = null">✕</button>
             </div>
             <div class="usr-modal__body">
                 <p style="margin:0;font-size:.95rem">
@@ -374,7 +374,7 @@
         <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
             <div class="usr-modal__header">
                 <h3>🔐 2FA zurücksetzen</h3>
-                <button class="usr-modal__close" @onclick="() => confirmResetTfa = null">✕</button>
+                <button aria-label="Schliessen" class="usr-modal__close" @onclick="() => confirmResetTfa = null">✕</button>
             </div>
             <div class="usr-modal__body">
                 <p style="margin:0;font-size:.95rem">
@@ -402,7 +402,7 @@
         <div class="usr-modal" style="max-width:420px" @onclick:stopPropagation="true">
             <div class="usr-modal__header">
                 <h3>🔑 Passkeys entfernen</h3>
-                <button class="usr-modal__close" @onclick="() => confirmResetPasskeys = null">✕</button>
+                <button aria-label="Schliessen" class="usr-modal__close" @onclick="() => confirmResetPasskeys = null">✕</button>
             </div>
             <div class="usr-modal__body">
                 <p style="margin:0;font-size:.95rem">

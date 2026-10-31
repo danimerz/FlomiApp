@@ -254,7 +254,7 @@
                                     <span class="ci-recent__area">@(w.Info ?? "–")</span>
                                     @if (!w.CheckedOutAt.HasValue)
                                     {
-                                        <button class="ci-action-btn ci-action-btn--out" @onclick="() => CheckOutWalkIn(w.Id)">🏁</button>
+                                        <button aria-label="Auschecken" class="ci-action-btn ci-action-btn--out" @onclick="() => CheckOutWalkIn(w.Id)">🏁</button>
                                     }
                                 </div>
                             }

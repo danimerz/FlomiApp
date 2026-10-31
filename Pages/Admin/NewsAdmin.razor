@@ -74,7 +74,7 @@
                                 {
                                     <div class="news-img-thumb">
                                         <img src="/news-images/@img.Id?thumb=true" alt="@img.FileName" />
-                                        <button type="button" class="news-img-remove" title="Bild entfernen"
+                                        <button aria-label="Bild entfernen" type="button" class="news-img-remove" title="Bild entfernen"
                                                 @onclick="() => { removedImageIds.Add(img.Id); }">✕</button>
                                     </div>
                                 }
@@ -82,7 +82,7 @@
                                 {
                                     <div class="news-img-thumb news-img-thumb--new">
                                         <img src="@img.PreviewUrl" alt="@img.FileName" />
-                                        <button type="button" class="news-img-remove" title="Bild entfernen"
+                                        <button aria-label="Bild entfernen" type="button" class="news-img-remove" title="Bild entfernen"
                                                 @onclick="() => { newImages.Remove(img); }">✕</button>
                                     </div>
                                 }

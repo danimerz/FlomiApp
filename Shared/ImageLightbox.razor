@@ -9,14 +9,14 @@
          @onclick="Close" @onkeydown="OnKey"
          @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
 
-        <button type="button" class="lightbox__close" title="Schliessen (Esc)"
+        <button aria-label="Schliessen" type="button" class="lightbox__close" title="Schliessen (Esc)"
                 @onclick="Close" @onclick:stopPropagation>✕</button>
 
         @if (images.Count > 1)
         {
-            <button type="button" class="lightbox__nav lightbox__nav--prev" title="Vorheriges Bild"
+            <button aria-label="Vorheriges Bild" type="button" class="lightbox__nav lightbox__nav--prev" title="Vorheriges Bild"
                     @onclick="Prev" @onclick:stopPropagation>‹</button>
-            <button type="button" class="lightbox__nav lightbox__nav--next" title="Nächstes Bild"
+            <button aria-label="Nächstes Bild" type="button" class="lightbox__nav lightbox__nav--next" title="Nächstes Bild"
                     @onclick="Next" @onclick:stopPropagation>›</button>
         }
 
@@ -38,7 +38,7 @@
                 @for (var i = 0; i < images.Count; i++)
                 {
                     var target = i;
-                    <button type="button" class="lightbox__thumb @(i == index ? "is-active" : "")"
+                    <button aria-label="Bild @(i + 1) anzeigen" type="button" class="lightbox__thumb @(i == index ? "is-active" : "")"
                             title="Bild @(i + 1)" @onclick="() => Show(target)">
                         <img src="/news-images/@images[i].Id?thumb=true" alt="" />
                     </button>

@@ -231,7 +231,7 @@
                             <div class="appointments-section__controls">
                                 @ViewSwitch(UnassignedKey, "Weitere Abholungen", unassignedList, light: true)
                                 <span class="appointments-section__count">@UnassignedPickups.Count Anfrage(n)</span>
-                                <button class="pickup-collapse-btn" @onclick="ToggleUnassignedPickup">
+                                <button aria-label="@(unassignedPickupOpen ? "Weitere Abholungen zuklappen" : "Weitere Abholungen aufklappen")" aria-expanded="@(unassignedPickupOpen ? "true" : "false")" class="pickup-collapse-btn" @onclick="ToggleUnassignedPickup">
                                     <span class="group-chevron group-chevron--dark @(unassignedPickupOpen ? "group-chevron--open" : "")">▾</span>
                                 </button>
                             </div>
@@ -247,12 +247,12 @@
             {
                 <!-- ── Kalenderansicht ── -->
                 <div class="cal-nav">
-                    <button class="cal-nav-btn" @onclick="CalPrev">‹</button>
+                    <button aria-label="Vorheriger Monat" class="cal-nav-btn" @onclick="CalPrev">‹</button>
                     <span class="cal-nav-title">
                         @(new DateTime(calYear, calMonth, 1)
                             .ToString("MMMM yyyy", new System.Globalization.CultureInfo("de-CH")))
                     </span>
-                    <button class="cal-nav-btn" @onclick="CalNext">›</button>
+                    <button aria-label="Nächster Monat" class="cal-nav-btn" @onclick="CalNext">›</button>
                 </div>
 
                 <div class="cal-grid">
@@ -818,7 +818,7 @@
                     </button>
                     @if (appointment.Area?.IsSpontaneous != true)
                     {
-                        <button class="ics-icon-btn @(compact ? "ics-icon-btn--compact" : "")"
+                        <button aria-label="Zum Kalender hinzufügen" class="ics-icon-btn @(compact ? "ics-icon-btn--compact" : "")"
                                 title="Zum Kalender hinzufügen"
                                 @onclick="() => DownloadIcs(appointment)">
                             📅

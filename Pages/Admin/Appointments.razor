@@ -229,7 +229,7 @@
                                                     </td>
                                                     <td class="appt-td-date" data-label="Angemeldet">@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                                                     <td class="appt-td-action">
-                                                        <button class="appt-cancel-btn"
+                                                        <button aria-label="Anmeldung stornieren" class="appt-cancel-btn"
                                                                 @onclick="() => AdminCancelAppointment(ap.Id)"
                                                                 title="Anmeldung stornieren">
                                                             🗑️

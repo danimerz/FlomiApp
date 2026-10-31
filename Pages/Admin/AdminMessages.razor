@@ -49,7 +49,7 @@
                             <span class="adm-chat-contact__badge">@unread</span>
                         }
                     </button>
-                    <button class="adm-chat-delete-btn"
+                    <button aria-label="Chat löschen" class="adm-chat-delete-btn"
                             title="Chat löschen"
                             @onclick:stopPropagation="true"
                             @onclick="() => confirmDeleteUser = u">
@@ -117,7 +117,7 @@
                               rows="2"
                               @bind="newMessage"
                               @onkeydown="OnKeyDown"></textarea>
-                    <button class="chat-send-btn"
+                    <button aria-label="Nachricht senden" class="chat-send-btn"
                             @onclick="Send"
                             disabled="@(sending || string.IsNullOrWhiteSpace(newMessage))">
                         ▶
