@@ -1092,3 +1092,10 @@
     font-size: 0.85rem;
     color: var(--color-text-light);
 }
+
+.linked-item__btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

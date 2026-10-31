@@ -509,9 +509,10 @@
                                                 Verknüpfen
                                             </button>
                                         }
-                                        else if (CanRemoveLogin)
+                                        else
                                         {
-                                            <button type="button" class="secondary-btn linked-item__btn" disabled="@isRemovingLogin"
+                                            <button type="button" class="secondary-btn linked-item__btn"
+                                                    disabled="@(isRemovingLogin || !CanRemoveLogin)"
                                                     @onclick="() => RemoveLogin(login)">
                                                 Trennen
                                             </button>
@@ -522,8 +523,8 @@
                             @if (externalLogins.Count > 0 && !CanRemoveLogin)
                             {
                                 <p class="linked-note">
-                                    🔒 Zum Trennen brauchst du ein Passwort, damit du dich danach noch anmelden kannst.
-                                    Du kannst es unten unter «Passwort festlegen» setzen.
+                                    🔒 Zum Trennen brauchst du einen anderen Anmeldeweg, damit du danach noch in dein Konto
+                                    kommst: einen Passkey (oben) oder ein Passwort (unten unter «Passwort festlegen»).
                                 </p>
                             }
                         </div>
@@ -731,7 +732,10 @@
     private bool isRemovingLogin = false;
 
     // Ohne Passwort muss mindestens ein Login übrig bleiben
-    private bool CanRemoveLogin => hasPassword || externalLogins.Count > 1;
+    // Nach dem Trennen bzw. Entfernen muss noch ein Anmeldeweg übrig bleiben:
+    // Passwort, ein anderes verknüpftes Konto oder ein Passkey.
+    private bool CanRemoveLogin   => hasPassword || externalLogins.Count > 1 || passkeys.Count > 0;
+    private bool CanRemovePasskey => hasPassword || externalLogins.Count > 0 || passkeys.Count > 1;
 
     // ── Passkeys ──────────────────────────────────────────────────────────────
     private List<UserPasskey> passkeys       = new();
@@ -887,6 +891,14 @@
     private async Task DeletePasskey(int passkeyId)
     {
         ClearPasskeyMessages();
+        if (!CanRemovePasskey)
+        {
+            confirmDeletePasskeyId = null;
+            passkeyError = "Das ist dein einziger Anmeldeweg. Lege zuerst ein Passwort fest oder verknüpfe ein Konto, " +
+                           "sonst kommst du nicht mehr in dein Konto.";
+            return;
+        }
+
         isSavingPasskey = true;
         try
         {
