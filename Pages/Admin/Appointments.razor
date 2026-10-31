@@ -202,7 +202,7 @@
                                 }
                                 else
                                 {
-                                    <table class="appt-table">
+                                    <table class="appt-table appt-table--people">
                                         <thead>
                                             <tr>
                                                 <th>Person</th>
@@ -220,15 +220,15 @@
                                                 var nachname = ap.FamilyMember?.LastName ?? ap.User?.LastName ?? "";
                                                 var pfadi   = ap.FamilyMember?.Pfadiname ?? ap.User?.Pfadiname ?? "–";
                                                 <tr>
-                                                    <td><strong>@vorname @nachname</strong></td>
-                                                    <td>@pfadi</td>
-                                                    <td>
+                                                    <td class="appt-td-name"><strong>@vorname @nachname</strong></td>
+                                                    <td class="appt-td-pfadi" data-label="Pfadiname">@pfadi</td>
+                                                    <td class="appt-td-comment" data-label="Kommentar">
                                                         @if (!string.IsNullOrEmpty(ap.Comment))
                                                         { <span class="appt-comment">@ap.Comment</span> }
                                                         else { <span class="appt-no-comment">–</span> }
                                                     </td>
-                                                    <td>@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                                                    <td>
+                                                    <td class="appt-td-date" data-label="Angemeldet">@ap.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                                    <td class="appt-td-action">
                                                         <button class="appt-cancel-btn"
                                                                 @onclick="() => AdminCancelAppointment(ap.Id)"
                                                                 title="Anmeldung stornieren">

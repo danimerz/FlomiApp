@@ -376,3 +376,78 @@
     .appt-accordion__right { flex-wrap: wrap; }
     .appt-capacity     { min-width: 90px; }
 }
+
+/* Handy: Kopf zweizeilig (Name + Datum oben, Badges + Balken unten), Personen als Karten */
+@media (max-width: 640px) {
+    .appt-accordion__header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .55rem;
+        padding: .8rem 1rem;
+    }
+
+    .appt-accordion__title {
+        flex-wrap: wrap;
+        row-gap: .15rem;
+    }
+
+    .appt-accordion__name { white-space: normal; }
+
+    /* Datum und Zeit auf eigene Zeile, eingerückt unter den Namen */
+    .appt-accordion__date {
+        flex-basis: 100%;
+        padding-left: 1.6rem;
+    }
+
+    .appt-accordion__right {
+        flex-wrap: wrap;
+        gap: .5rem;
+        padding-left: 1.6rem;
+    }
+
+    .appt-capacity {
+        flex: 1 1 8rem;
+        min-width: 0;
+    }
+
+    .appt-accordion__body { padding: 0 .75rem .9rem; }
+
+    .appt-table--people thead { display: none; }
+
+    .appt-table--people,
+    .appt-table--people tbody { display: block; }
+
+    .appt-table--people tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: .75rem;
+        row-gap: .15rem;
+        padding: .7rem .25rem;
+        border-bottom: 1px solid var(--color-border-soft);
+    }
+
+    .appt-table--people tbody tr:last-child { border-bottom: none; }
+
+    .appt-table--people tbody td {
+        grid-column: 1;
+        padding: 0;
+        border: none;
+        font-size: .85rem;
+    }
+
+    .appt-table--people tbody td.appt-td-name { font-size: .95rem; }
+
+    .appt-table--people tbody td.appt-td-action {
+        grid-column: 2;
+        grid-row: 1 / span 4;
+        align-self: center;
+    }
+
+    .appt-table--people tbody td[data-label]::before {
+        content: attr(data-label) ": ";
+        color: var(--color-text-light);
+        font-size: .78rem;
+    }
+
+    .appt-table--people tbody td.appt-td-date { color: var(--color-text-light); font-size: .78rem; }
+}
