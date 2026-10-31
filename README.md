@@ -55,6 +55,10 @@
 - **Benutzerprofil** mit Vorname, Nachname, Pfadiname, Stufe, Geburtstag, Telefon, E-Mail
 - **Familienmitglieder** können pro Konto hinterlegt werden (eigene Anmeldungen für Kinder / Begleitpersonen)
 - **E-Mail-Benachrichtigungen** können pro Benutzer aktiviert/deaktiviert werden
+- **Admin-Mails** an alle Konten mit Rolle `Admin` (einzeln abschaltbar unter *Einstellungen → Profil → E-Mail Einstellungen*):
+  - **Neues Konto**: Name, Pfadiname, Stufe, Geburtstag mit Alter, E-Mail (bestätigt oder nicht), Telefon, Registrierungsweg (E-Mail und Passwort, Google, Microsoft, MiData), Zeitpunkt, Anzahl Konten total, Link zur Benutzerverwaltung
+  - **Anmeldung / Stornierung für einen Bereich**: angemeldete Person (auch Familienmitglied) mit Stufe und Alter, Konto mit E-Mail und Telefon, Event, Bereich mit Kategorie, Datum, Zeit, Kommentar, Belegung des Zeitfensters («3 von 4 Plätzen, 1 frei»), Anzahl aktiver Anmeldungen des Kontos im Event, Zeitpunkt, Link zur Anmeldeübersicht
+  - Empfänger: Rolle `Admin` mit bestätigter E-Mail und eingeschaltetem Schalter (Standard: an). Andere Admin-Rollen bekommen keine Admin-Mails. Ablauf: `AdminNotificationService` stellt den Inhalt zusammen, die Mail-Queue verschickt sie; ein Fehler dabei verhindert nie die Anmeldung
 - **Passwort vergessen**: Reset-Link per E-Mail, gestylte Reset-Seite mit PW-Generator und Stärke-Indikator
 - **Passkeys**: Anmeldung mit Face ID, Fingerabdruck oder Geräte-PIN statt Passwort, siehe [Passkeys](#passkeys-anmeldung-ohne-passwort)
 - **Admin-Rollen**: Vollzugriff (`Admin`) oder auf einen Bereich beschränkte Rollen (`BereichsAdmin`, `FahrzeugAdmin`, `MoebelAdmin`), siehe [Rollen & Berechtigungen](#rollen--berechtigungen)
@@ -530,7 +534,7 @@ Beim ersten Start werden automatisch angelegt:
 Automatisierte Tests (xUnit) decken die zentrale Buchungslogik ab — Kapazitäts-, Alters- und
 Zeitkonflikt-Prüfung, Verkauf-/Kuchen-Sonderregeln, Stornierung inkl. Fahrzeugzuweisung, sowie die
 reinen Helper (Telefonnummer-/Zeit-Formatierung, Bild-Signatur-Erkennung, Foto-Aufbereitung) und die
-Löschfrist der Möbelfotos. Sie laufen gegen eine
+Löschfrist der Möbelfotos, Passkeys und die Admin-Mails (Empfänger, Inhalt, HTML-Kodierung). Sie laufen gegen eine
 SQLite-In-Memory-Datenbank, keine echte MySQL-Instanz nötig:
 
 ```bash

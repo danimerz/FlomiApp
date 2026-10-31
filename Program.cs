@@ -138,6 +138,8 @@ builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddSingleton<IChatService, ChatService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IPasskeyService, PasskeyService>();
+builder.Services.AddScoped<IAdminNotificationService, AdminNotificationService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<PickupImageMaintenanceService>();
 
 // Routenplanung: Adresssuche (geo.admin.ch) und Fahrzeiten (OpenRouteService, optional)

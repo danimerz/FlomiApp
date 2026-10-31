@@ -75,6 +75,12 @@ namespace FlomiApp.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<bool>("NotifyNewUsers")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("NotifyRegistrations")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
 

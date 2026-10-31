@@ -994,3 +994,15 @@
     font-size: 0.85rem;
     color: var(--color-text-light);
 }
+
+/* Admin-Mails: abgesetzt unter dem Status der eigenen Bestätigungs-Mails */
+.toggle-status + .notification-toggle--admin {
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-border-card);
+}
+
+.notification-toggle--admin:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}

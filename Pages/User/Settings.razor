@@ -150,7 +150,6 @@
                                 <p class="notification-toggle__title">Bestätigungs-Mails</p>
                                 <p class="notification-toggle__desc">
                                     Erhalte eine E-Mail bei Anmeldung und Stornierung.
-                                    Admin-Benachrichtigungen werden immer gesendet.
                                 </p>
                             </div>
                             <label class="toggle-switch">
@@ -165,6 +164,39 @@
                                 ? "✅ E-Mail Benachrichtigungen sind aktiv"
                                 : "🔕 E-Mail Benachrichtigungen sind deaktiviert")
                         </p>
+
+                        @if (isFullAdmin)
+                        {
+                            <div class="notification-toggle notification-toggle--admin">
+                                <div class="notification-toggle__info">
+                                    <p class="notification-toggle__title">Admin: Neue Konten</p>
+                                    <p class="notification-toggle__desc">
+                                        Mail mit allen Angaben, sobald sich jemand neu bei der App registriert.
+                                    </p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox"
+                                           @bind="user.NotifyNewUsers"
+                                           @bind:after="SaveAdminNotificationSetting" />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-toggle notification-toggle--admin">
+                                <div class="notification-toggle__info">
+                                    <p class="notification-toggle__title">Admin: Anmeldungen für Events</p>
+                                    <p class="notification-toggle__desc">
+                                        Mail bei jeder Anmeldung und Stornierung für einen Bereich – mit Person,
+                                        Kontakt, Kommentar und Belegung.
+                                    </p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox"
+                                           @bind="user.NotifyRegistrations"
+                                           @bind:after="SaveAdminNotificationSetting" />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        }
                     </div>
                 </section>
             </div>
@@ -686,6 +718,7 @@
     private IList<UserLoginInfo>       externalLogins  = new List<UserLoginInfo>();
     private bool hasPassword     = true;
     private bool isAdmin         = false;
+    private bool isFullAdmin     = false; // nur Rolle «Admin» bekommt Admin-Mails
     private bool isRemovingLogin = false;
 
     // Ohne Passwort muss mindestens ein Login übrig bleiben
@@ -757,6 +790,7 @@
         hasPassword     = await UserManager.HasPasswordAsync(user);
         var roles       = await UserManager.GetRolesAsync(user);
         isAdmin         = roles.Any(FlomiApp.Security.Roles.AllAdminRoles.Contains);
+        isFullAdmin     = roles.Contains(FlomiApp.Security.Roles.Admin);
         passkeys        = await PasskeyService.GetForUserAsync(user.Id);
     }
 
@@ -906,6 +940,21 @@
                 ? "E-Mail Benachrichtigungen aktiviert."
                 : "E-Mail Benachrichtigungen deaktiviert.";
             errorMessage = string.Empty;
+        }
+        catch
+        {
+            errorMessage   = "Einstellung konnte nicht gespeichert werden.";
+            successMessage = string.Empty;
+        }
+    }
+
+    private async Task SaveAdminNotificationSetting()
+    {
+        try
+        {
+            await UserManager.UpdateAsync(user);
+            successMessage = "Admin-Benachrichtigungen gespeichert.";
+            errorMessage   = string.Empty;
         }
         catch
         {

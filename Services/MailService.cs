@@ -202,43 +202,132 @@ public class MailService : IMailService
     }
 
     // ─── Admin-Mails ──────────────────────────────────────────────────────────
-    public async Task SendAdminNewRegistrationAsync(
-        string areaName, string eventName,
-        string userName, DateTime? date, string timeSlot)
+    // Empfänger und Inhalt stellt der AdminNotificationService zusammen. Alle Werte stammen
+    // aus Eingaben der Benutzer und werden deshalb HTML-kodiert.
+    public async Task SendAdminNewUserAsync(string toEmail, AdminNewUserMail mail)
     {
-        var subject = $"Neue Anmeldung – {userName}";
-        var body = $"""
-            <h2>Neue Anmeldung eingegangen</h2>
-            <table cellpadding="8" style="border-collapse:collapse;">
-                <tr><td><strong>Person:</strong></td><td>{userName}</td></tr>
-                <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
-                <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>
-                <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
-            </table>
-            """;
-
-        await SendAsync(_smtp.FromAddress, "Admin", subject, body);
+        var (subject, body) = BuildAdminNewUser(mail);
+        await SendAsync(toEmail, "Admin", subject, body);
     }
 
-    // ✅ NEU
-    public async Task SendAdminCancellationAsync(
-        string areaName, string eventName,
-        string userName, DateTime? date, string timeSlot)
+    public async Task SendAdminRegistrationAsync(string toEmail, AdminRegistrationMail mail)
     {
-        var subject = $"Stornierung – {userName}";
-        var body = $"""
-            <h2>Anmeldung storniert</h2>
-            <table cellpadding="8" style="border-collapse:collapse;">
-                <tr><td><strong>Person:</strong></td><td>{userName}</td></tr>
-                <tr><td><strong>Event:</strong></td><td>{eventName}</td></tr>
-                <tr><td><strong>Bereich:</strong></td><td>{areaName}</td></tr>
-                <tr><td><strong>Datum:</strong></td><td>{AreaSchedule.FormatDate(date, "dd.MM.yyyy")}</td></tr>
-                <tr><td><strong>Zeit:</strong></td><td>{timeSlot}</td></tr>
-            </table>
-            """;
+        var (subject, body) = BuildAdminRegistration(mail);
+        await SendAsync(toEmail, "Admin", subject, body);
+    }
 
-        await SendAsync(_smtp.FromAddress, "Admin", subject, body);
+    public static (string Subject, string Body) BuildAdminNewUser(AdminNewUserMail mail)
+    {
+        var subject = $"👤 Neues Konto – {mail.FullName}";
+        var rows = new List<(string, string?)>
+        {
+            ("Name",          mail.FullName),
+            ("Pfadiname",     mail.Pfadiname),
+            ("Stufe",         mail.Stufe),
+            ("Geburtstag",    BirthdayWithAge(mail.Birthday)),
+            ("E-Mail",        mail.Email + (mail.EmailConfirmed ? " (bestätigt)" : " (noch nicht bestätigt)")),
+            ("Telefon",       mail.PhoneNumber),
+            ("Registriert über", mail.Method),
+            ("Zeitpunkt",     FormatSwiss(mail.CreatedAtUtc)),
+            ("Konten total",  mail.TotalUsers.ToString()),
+        };
+
+        var body = AdminCard("#1d4ed8", "Neues Konto 👤",
+            "Jemand hat sich neu bei der FlomiApp registriert.",
+            "Konto", rows, mail.AdminUrl, "Zur Benutzerverwaltung");
+
+        return (subject, body);
+    }
+
+    public static (string Subject, string Body) BuildAdminRegistration(AdminRegistrationMail mail)
+    {
+        var subject = mail.Cancelled
+            ? $"❌ Stornierung – {mail.AreaName} · {mail.PersonName}"
+            : $"📝 Neue Anmeldung – {mail.AreaName} · {mail.PersonName}";
+
+        var area = string.IsNullOrEmpty(mail.CategoryName) || mail.CategoryName == mail.AreaName
+            ? mail.AreaName
+            : $"{mail.AreaName} ({mail.CategoryName})";
+        var free = Math.Max(0, mail.Capacity - mail.Registered);
+
+        var rows = new List<(string, string?)>
+        {
+            ("Person",     mail.PersonName),
+            ("Stufe",      mail.PersonStufe),
+            ("Geburtstag", BirthdayWithAge(mail.PersonBirthday)),
+            ("Event",      mail.EventName),
+            ("Bereich",    area),
+            ("Datum",      AreaSchedule.FormatDate(mail.Date, "dddd, dd. MMMM yyyy")),
+            ("Zeit",       mail.TimeSlot),
+            ("Kommentar",  mail.Cancelled ? null : mail.Comment),
+            ("Belegung",   $"{mail.Registered} von {mail.Capacity} Plätzen ({free} frei)"),
+            ("Konto",      mail.ForFamilyMember ? $"{mail.AccountName} (meldet Familienmitglied an)" : mail.AccountName),
+            ("E-Mail",     mail.AccountEmail),
+            ("Telefon",    mail.AccountPhone),
+            ("Anmeldungen im Event", $"{mail.AccountRegistrationsInEvent} aktiv (ganzes Konto inkl. Familie)"),
+            ("Zeitpunkt",  FormatSwiss(mail.AtUtc)),
+        };
+
+        var body = mail.Cancelled
+            ? AdminCard("#b91c1c", "Anmeldung storniert ❌",
+                "Eine Anmeldung wurde storniert. Der Platz ist wieder frei.",
+                "Stornierte Anmeldung", rows, mail.AdminUrl, "Zu den Anmeldungen")
+            : AdminCard("#15803d", "Neue Anmeldung 📝",
+                "Für einen Bereich ist eine neue Anmeldung eingegangen.",
+                "Anmeldung", rows, mail.AdminUrl, "Zu den Anmeldungen");
+
+        return (subject, body);
+    }
+
+    private static string AdminCard(string color, string title, string intro, string tableTitle,
+        IEnumerable<(string Label, string? Value)> rows, string? linkUrl, string linkText)
+    {
+        var tableRows = new System.Text.StringBuilder();
+        var odd = false;
+        foreach (var (label, value) in rows)
+        {
+            if (string.IsNullOrWhiteSpace(value)) continue;
+            var bg = odd ? " style='background:#f8fafc;'" : "";
+            tableRows.Append($"<tr{bg}><td style='padding:6px 12px;color:#64748b;width:40%;vertical-align:top;'>{Html(label)}:</td>" +
+                             $"<td style='padding:6px 12px;font-weight:700;white-space:pre-line;'>{Html(value)}</td></tr>");
+            odd = !odd;
+        }
+
+        var link = string.IsNullOrEmpty(linkUrl) ? "" :
+            $"<p style='margin:20px 0 0;'><a href='{Html(linkUrl)}' style='display:inline-block;background:{color};color:#fff;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:10px;'>{Html(linkText)}</a></p>";
+
+        return $"""
+            <div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+              <div style="background:{color};border-radius:16px 16px 0 0;padding:24px 32px;">
+                <h1 style="margin:0;color:#fff;font-size:1.4rem;">{Html(title)}</h1>
+              </div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;padding:24px 32px;">
+                <p style="color:#374151;margin-top:0;">{Html(intro)}</p>
+                <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:16px 0 0;background:#fff;border:1px solid #e2e8f0;">
+                  <tr style="background:#f1f5f9;">
+                    <td colspan="2" style="padding:10px 12px;font-weight:800;color:{color};font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;">{Html(tableTitle)}</td>
+                  </tr>
+                  {tableRows}
+                </table>
+                {link}
+                <p style="color:#94a3b8;font-size:.8rem;margin:20px 0 0;">Diese Mails kannst du in der App unter Einstellungen → Profil → E-Mail Einstellungen abschalten.</p>
+              </div>
+            </div>
+            """;
+    }
+
+    private static string Html(string? value) => System.Net.WebUtility.HtmlEncode(value ?? "");
+
+    private static string FormatSwiss(DateTime utc) =>
+        TimeHelper.ToSwissTime(utc).ToString("dd.MM.yyyy, HH:mm 'Uhr'", new System.Globalization.CultureInfo("de-CH"));
+
+    private static string? BirthdayWithAge(DateTime? birthday)
+    {
+        if (birthday == null) return null;
+        var today = TimeHelper.ToSwissTime(DateTime.UtcNow).Date;
+        var age   = today.Year - birthday.Value.Year;
+        if (birthday.Value.Date > today.AddYears(-age)) age--;
+        return $"{birthday.Value:dd.MM.yyyy} ({age} Jahre)";
     }
 
     // ─── Event-Ankündigung ────────────────────────────────────────────────────

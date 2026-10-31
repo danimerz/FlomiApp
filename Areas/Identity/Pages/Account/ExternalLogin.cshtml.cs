@@ -26,6 +26,7 @@ public class ExternalLoginModel : PageModel
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ExternalLoginSettings _externalSettings;
     private readonly IMailQueue _mailQueue;
+    private readonly IAdminNotificationService _adminNotifications;
     private readonly ILogger<ExternalLoginModel> _logger;
 
     public ExternalLoginModel(
@@ -33,13 +34,15 @@ public class ExternalLoginModel : PageModel
         UserManager<ApplicationUser> userManager,
         ExternalLoginSettings externalSettings,
         IMailQueue mailQueue,
+        IAdminNotificationService adminNotifications,
         ILogger<ExternalLoginModel> logger)
     {
-        _signInManager    = signInManager;
-        _userManager      = userManager;
-        _externalSettings = externalSettings;
-        _mailQueue        = mailQueue;
-        _logger           = logger;
+        _signInManager      = signInManager;
+        _userManager        = userManager;
+        _externalSettings   = externalSettings;
+        _mailQueue          = mailQueue;
+        _adminNotifications = adminNotifications;
+        _logger             = logger;
     }
 
     [BindProperty]
@@ -211,6 +214,7 @@ public class ExternalLoginModel : PageModel
         }
 
         _logger.LogInformation("Neues Konto über {Provider} erstellt.", info.LoginProvider);
+        await _adminNotifications.NotifyNewUserAsync(user.Id, ProviderDisplayName);
 
         if (emailConfirmed)
         {

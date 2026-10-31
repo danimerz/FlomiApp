@@ -19,17 +19,20 @@ public class RegisterModel : PageModel
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMailQueue _mailQueue;
+    private readonly IAdminNotificationService _adminNotifications;
     private readonly ILogger<RegisterModel> _logger;
 
     public RegisterModel(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IMailQueue mailQueue,
+        IAdminNotificationService adminNotifications,
         ILogger<RegisterModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _mailQueue = mailQueue;
+        _adminNotifications = adminNotifications;
         _logger = logger;
     }
 
@@ -111,6 +114,7 @@ public class RegisterModel : PageModel
                 var fullName = $"{user.FirstName} {user.LastName}";
 
                 _mailQueue.Enqueue(m => m.SendEmailConfirmationAsync(user.Email!, fullName, confirmLink));
+                await _adminNotifications.NotifyNewUserAsync(user.Id, "E-Mail und Passwort");
 
                 return RedirectToPage("RegisterConfirmation");
             }

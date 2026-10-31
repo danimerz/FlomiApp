@@ -15,13 +15,10 @@ public interface IMailService
     Task SendAppointmentSummaryAsync(string toEmail, string toName,
         List<AppointmentSummaryItem> appointments);
 
-    // Admin-Mails
-    Task SendAdminNewRegistrationAsync(string areaName, string eventName,
-        string userName, DateTime? date, string timeSlot);
+    // Admin-Mails (Empfänger bestimmt IAdminNotificationService)
+    Task SendAdminNewUserAsync(string toEmail, AdminNewUserMail mail);
 
-    // ✅ NEU
-    Task SendAdminCancellationAsync(string areaName, string eventName,
-        string userName, DateTime? date, string timeSlot);
+    Task SendAdminRegistrationAsync(string toEmail, AdminRegistrationMail mail);
 
     // Event-Ankündigung
     Task SendEventAnnouncementAsync(List<string> toEmails,

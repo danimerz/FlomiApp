@@ -13,7 +13,9 @@ public class AppointmentServiceTests : IDisposable
     private readonly NoOpMailQueue _mailQueue = new();
 
     private AppointmentService CreateService(ApplicationDbContext context)
-        => new(context, new AreaService(context), _mailQueue, NullLogger<AppointmentService>.Instance);
+        => new(context, new AreaService(context), _mailQueue,
+            new AdminNotificationService(_db.CreateContextFactory(), _mailQueue, NullLogger<AdminNotificationService>.Instance),
+            NullLogger<AppointmentService>.Instance);
 
     private static ApplicationUser MakeUser(string id, DateTime? birthday = null) => new()
     {

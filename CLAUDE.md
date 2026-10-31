@@ -32,7 +32,7 @@ Connection-String und `AdminPassword` kommen aus User Secrets – nicht in `apps
 - UI-Texte, Kommentare und Audit-Texte auf **Deutsch** (Schweizer Schreibweise: «ss» statt «ß», «Guillemets»).
 - Admin-Seiten: `[Authorize(Roles = Roles.AdminOr…)]` **plus** `[Authorize(Policy = Roles.RequireTwoFactorForAdmins)]`. Rollen: `Admin`, `FahrzeugAdmin`, `MoebelAdmin`, `BereichsAdmin`.
 - Admin-Aktionen mit Tragweite (löschen, sperren, Rollen, Stornierung) über `IAuditLogService` protokollieren.
-- Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`).
+- Mails nie synchron senden – über `IMailQueue` (Hintergrund-Queue `MailQueueService`). Mails an Admins (neues Konto, Anmeldung/Stornierung) über `IAdminNotificationService`: Empfänger sind Rolle `Admin` mit `NotifyNewUsers`/`NotifyRegistrations`; Benutzereingaben in Mail-HTML immer kodieren.
 - Möbelfotos nie roh speichern – immer über `PickupImageProcessor` (verkleinert, entfernt GPS). Bilddaten liegen per Table Splitting in `FurniturePickupImageData`; Listen laden sie nicht mit, angezeigt wird über `/pickup-images/{id}?thumb=true` statt Base64. Gleiches gilt für News-Bilder (`NewsImage`/`NewsImageData`).
 - Farben nie fest eintragen: `--brand-*`-Tokens (`site.css`, je Theme in `wwwroot/css/themes/` überschrieben) bzw. `--color-*`. Theme-Auswahl über `Design:Theme` (`Helpers/DesignTheme.cs`). Ausnahme: Mail-HTML braucht Hex-Werte.
 - CSP in `Program.cs`: externe Scripts nur von `cdn.jsdelivr.net` (Chart.js, jsQR). Neue externe Quellen dort ergänzen.

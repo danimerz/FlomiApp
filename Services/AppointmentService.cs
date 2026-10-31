@@ -10,18 +10,21 @@ public class AppointmentService : IAppointmentService
     private readonly ApplicationDbContext _context;
     private readonly IAreaService _areaService;
     private readonly IMailQueue _mailQueue;
+    private readonly IAdminNotificationService _adminNotifications;
     private readonly ILogger<AppointmentService> _logger;
 
     public AppointmentService(
         ApplicationDbContext context,
         IAreaService areaService,
         IMailQueue mailQueue,
+        IAdminNotificationService adminNotifications,
         ILogger<AppointmentService> logger)
     {
-        _context     = context;
-        _areaService = areaService;
-        _mailQueue   = mailQueue;
-        _logger      = logger;
+        _context            = context;
+        _areaService        = areaService;
+        _mailQueue          = mailQueue;
+        _adminNotifications = adminNotifications;
+        _logger             = logger;
     }
 
     public async Task<List<Appointment>> GetUserAppointmentsAsync(string userId)
@@ -141,6 +144,7 @@ public class AppointmentService : IAppointmentService
         var sendQr = area.Event?.CheckInEnabled == true && IsVerkauf(area);
         await SendRegistrationMailsAsync(userId, familyMemberId, area, comment,
             sendQr ? appointment.Id : null, useAlternativeSlot);
+        await _adminNotifications.NotifyRegistrationAsync(appointment.Id);
     }
 
     public async Task CancelAppointmentAsync(int appointmentId, string userId)
@@ -162,6 +166,7 @@ public class AppointmentService : IAppointmentService
         await ClearVehicleAssignmentOnCancelAsync(userId, appointment);
 
         await SendCancellationMailAsync(userId, appointment);
+        await _adminNotifications.NotifyRegistrationAsync(appointment.Id, cancelled: true);
     }
 
     private async Task ClearVehicleAssignmentOnCancelAsync(string userId, Appointment appointment)
@@ -251,16 +256,12 @@ public class AppointmentService : IAppointmentService
         var date        = AreaSchedule.Date(area);
         var aptId       = appointmentId;
         var person      = forPerson;
-        var adminEmail  = default(string?); // resolved inside queue via IMailService
 
         if (notifications)
         {
             _mailQueue.Enqueue(m => m.SendRegistrationConfirmationAsync(
                 email, userName, areaName, eventName, date, timeSlot, comment, aptId, person));
         }
-
-        _mailQueue.Enqueue(m => m.SendAdminNewRegistrationAsync(
-            areaName, eventName, person ?? userName, date, timeSlot));
     }
 
     private async Task SendCancellationMailAsync(string userId, Appointment appointment)
@@ -281,9 +282,6 @@ public class AppointmentService : IAppointmentService
             _mailQueue.Enqueue(m => m.SendCancellationConfirmationAsync(
                 email, userName, areaName, eventName, date, timeSlot));
         }
-
-        _mailQueue.Enqueue(m => m.SendAdminCancellationAsync(
-            areaName, eventName, userName, date, timeSlot));
     }
 
     private async Task<string?> GetPersonNameAsync(string userId, int? familyMemberId)
